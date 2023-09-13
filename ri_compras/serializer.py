@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Departamento
 from .models import Usuarios
+from .models import Producto
+from .models import Componente
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +32,14 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class ProductoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Producto
+        fields = ['id', 'nombre', 'descripcion', 'cantidad', 'precio']
+
+class ComponenteSerializer(serializers.ModelSerializer):
+    material = ProductoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Componente
+        fields = ['id', 'nombre', 'descripcion', 'material', 'cantidad', 'precio']
