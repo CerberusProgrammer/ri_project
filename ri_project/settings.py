@@ -9,6 +9,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'ri_compras.Usuarios'
+
 INSTALLED_APPS = [
     'ri_compras',
     'django.contrib.admin',

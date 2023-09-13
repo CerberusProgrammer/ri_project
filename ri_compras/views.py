@@ -1,60 +1,95 @@
-import random
-import string
-from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, permissions
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authtoken.models import Token
 from .models import Usuarios
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.db import IntegrityError
+from django.contrib.auth.password_validation import validate_password
+from rest_framework.decorators import action
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
-@csrf_exempt
-def crear_usuario(request):
-    if request.method == 'POST':
-        data = request.POST  # O utiliza request.body para obtener datos JSON
+class UsuariosViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
 
-        # Verificar si ya existe un usuario con el mismo username
-        username = data.get('username')
-        if Usuarios.objects.filter(username=username).exists():
-            return JsonResponse({'error': 'El username ya está en uso'}, status=400)
-
-        # Verificar si ya existe un usuario con el mismo correo
-        correo = data.get('correo')
-        if Usuarios.objects.filter(correo=correo).exists():
-            return JsonResponse({'error': 'El correo ya está en uso'}, status=400)
-
-        # Verificar si el rol es válido (coincide con los roles disponibles)
-        rol = data.get('rol')
-        roles_disponibles = [choice[0] for choice in Usuarios.PUESTOS]
-        if rol not in roles_disponibles:
-            return JsonResponse({'error': 'El rol no es válido'}, status=400)
-
-        # Generar un token aleatorio
-        token = ''.join(random.choices(string.ascii_letters + string.digits, k=50))
-
-        # Crear un nuevo usuario
-        usuario = Usuarios(
-            token=token,
-            joined_at=timezone.now(),
-            is_active=True,
-            username=username,
-            nombre=data.get('nombre'),
-            telefono=data.get('telefono'),
-            correo=correo,
-            rol=rol
-        )
-        usuario.save()
-
-        # Crear una respuesta JSON con los datos del usuario creado
-        response_data = {
-            'id': usuario.id,
-            'token': usuario.token,
-            'joined_at': usuario.joined_at,
-            'is_active': usuario.is_active,
-            'username': usuario.username,
-            'nombre': usuario.nombre,
-            'telefono': usuario.telefono,
-            'correo': usuario.correo,
-            'rol': usuario.rol,
-        }
+    def create(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        nombre = request.data.get('nombre')
+        telefono = request.data.get('telefono')
+        correo = request.data.get('correo')
+        rol = request.data.get('rol')
         
-        return JsonResponse(response_data, status=201)  # 201 Created
-    else:
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        if not all([username, password, nombre, telefono, correo, rol]):
+            return Response({"error": "Todos los campos son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            validate_password(password)
+        except Exception as e:
+            return Response({"Contraseña invalida": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = Usuarios.objects.create(
+                username=username,
+                nombre=nombre,
+                telefono=telefono,
+                correo=correo,
+                rol=rol,
+            )
+        except IntegrityError as e:
+            return Response({"error": "El correo o nombre de usuario ya están en uso"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Asignar la contraseña cifrada al usuario
+        user.set_password(password)
+        user.save()
+
+        # Crear un token para el usuario
+        token, _ = Token.objects.get_or_create(user=user)
+
+        return Response({
+            "username": username,
+            "nombre": nombre,
+            "telefono": telefono,
+            "correo": correo,
+            "rol": rol,
+            "token": token.key
+        }, status=status.HTTP_201_CREATED)
+        
+    @action(detail=False, methods=['GET'], authentication_classes=[TokenAuthentication], permission_classes=[IsAuthenticated])
+    def details(self, request):
+        user = request.user  # El usuario autenticado se almacena en request.user
+        data = {
+            "id": user.id,
+            "joined_at": user.joined_at,
+            "is_active": user.is_active,
+            "username": user.username,
+            "nombre": user.nombre,
+            "telefono": user.telefono,
+            "correo": user.correo,
+            "rol": user.rol
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['PUT'], authentication_classes=[TokenAuthentication], permission_classes=[IsAuthenticated])
+    def update_user(self, request):
+        user = request.user  # Obtén el usuario autenticado a través del token
+
+        # Realizar la actualización de los datos del usuario
+        user.nombre = request.data.get('nombre', user.nombre)
+        user.telefono = request.data.get('telefono', user.telefono)
+        user.correo = request.data.get('correo', user.correo)
+        user.rol = request.data.get('rol', user.rol)
+        user.save()
+
+        data = {
+            "id": user.id,
+            "joined_at": user.joined_at,
+            "is_active": user.is_active,
+            "username": user.username,
+            "nombre": user.nombre,
+            "telefono": user.telefono,
+            "correo": user.correo,
+            "rol": user.rol
+        }
+        return Response(data, status=status.HTTP_200_OK)
