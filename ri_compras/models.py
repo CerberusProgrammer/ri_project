@@ -6,6 +6,13 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
 from django.contrib.auth.hashers import make_password
 
+class Departamento(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.nombre
+
 class UsuariosManager(BaseUserManager):
     def create_user(self, username, correo=None, password=None):
         if not username:
@@ -27,7 +34,6 @@ class UsuariosManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
-
 
     def get_by_natural_key(self, username):
         return self.get(username=username)
@@ -51,6 +57,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
     correo = models.EmailField(unique=True)
     rol = models.CharField(max_length=15, choices=PUESTOS)
     is_staff = models.BooleanField(default=False)
+    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='usuarios', null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['correo']
