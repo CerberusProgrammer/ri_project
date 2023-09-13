@@ -3,10 +3,18 @@ from .models import Departamento
 from .models import Usuarios
 from .models import Producto
 from .models import Componente
+from .models import Servicio
+from .models import Requisicion
+from .models import Proveedor
+from .models import OrdenDeCompra
 from .serializer import DepartamentoSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
 from .serializer import ComponenteSerializer
+from .serializer import ServicioSerializer
+from .serializer import RequisicionSerializer
+from .serializer import ProveedorSerializer
+from .serializer import OrdenDeCompraSerializer
 from rest_framework import filters
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
@@ -27,3 +35,19 @@ class ProductoViewSet(viewsets.ModelViewSet):
 class ComponenteViewSet(viewsets.ModelViewSet):
     queryset = Componente.objects.all()
     serializer_class = ComponenteSerializer
+
+class ServicioViewSet(viewsets.ModelViewSet):
+    queryset = Servicio.objects.all()
+    serializer_class = ServicioSerializer
+
+class RequisicionViewSet(viewsets.ModelViewSet):
+    queryset = Requisicion.objects.all()
+    serializer_class = RequisicionSerializer
+
+class ProveedorViewSet(viewsets.ModelViewSet):
+    queryset = Proveedor.objects.all()
+    serializer_class = ProveedorSerializer
+    
+class OrdenDeCompraViewSet(viewsets.ModelViewSet):
+    queryset = OrdenDeCompra.objects.all()
+    serializer_class = OrdenDeCompraSerializer

@@ -5,12 +5,18 @@ from .views import DepartamentoViewSet
 from .views import UsuariosViewSet
 from .views import ProductoViewSet
 from .views import ComponenteViewSet
+from .views import RequisicionViewSet
+from .views import ProveedorViewSet
+from .views import OrdenDeCompraViewSet
 
 router = DefaultRouter()
 router.register(r'departamentos', DepartamentoViewSet)
 router.register(r'usuarios', UsuariosViewSet)
 router.register(r'productos', ProductoViewSet)
 router.register(r'componentes', ComponenteViewSet)
+router.register(r'requisiciones', RequisicionViewSet)
+router.register(r'proveedores', ProveedorViewSet)
+router.register(r'ordenesdecompras', OrdenDeCompraViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

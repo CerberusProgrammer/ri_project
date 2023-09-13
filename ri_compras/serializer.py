@@ -3,11 +3,20 @@ from .models import Departamento
 from .models import Usuarios
 from .models import Producto
 from .models import Componente
+from .models import Servicio
+from .models import Requisicion
+from .models import Proveedor
+from .models import OrdenDeCompra
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departamento
         fields = ['id', 'nombre', 'presupuesto']
+
+class RequisicionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Requisicion
+        fields = '__all__'
 
 class UsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
@@ -15,7 +24,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuarios
-        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'is_staff', 'departamento', 'password']
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'is_staff', 'departamento', 'requisiciones', 'password']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -43,3 +52,21 @@ class ComponenteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Componente
         fields = ['id', 'nombre', 'descripcion', 'material', 'cantidad', 'precio']
+
+class ServicioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Servicio
+        fields = ['nombre', 'descripcion', 'costo']
+
+class ProveedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Proveedor
+        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina']
+
+class OrdenDeCompraSerializer(serializers.ModelSerializer):
+    proveedor = ProveedorSerializer(read_only=True)
+    requisiciones = RequisicionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = OrdenDeCompra
+        fields = ['id', 'fecha_emision', 'proveedor', 'total', 'requisiciones']

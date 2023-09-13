@@ -9,6 +9,33 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.auth.hashers import make_password
 
+class Producto(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
+    cantidad = models.IntegerField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.nombre
+    
+class Componente(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True)
+    material = models.ManyToManyField(Producto, blank=True)
+    cantidad = models.IntegerField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.nombre
+
+class Servicio(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.nombre
+
 class Departamento(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
@@ -80,6 +107,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_name="ri_compras_usuarios_set",
         related_query_name="user",
     )
+    
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name=('user permissions'),
@@ -89,21 +117,34 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_query_name="user",
     )
 
-class Producto(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField()
-    cantidad = models.IntegerField()
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return self.nombre
-    
-class Componente(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    descripcion = models.TextField(blank=True)
+class Requisicion(models.Model):
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
     material = models.ManyToManyField(Producto, blank=True)
-    cantidad = models.IntegerField()
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    componente = models.ManyToManyField(Componente, blank=True)
+    servicio = models.ManyToManyField(Servicio, blank=True)
+    motivo = models.TextField(blank=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    aprobado = models.BooleanField(default=False)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+
+    def __str__(self):
+        return self.motivo
+
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=100, blank=True)
+    telefono = models.CharField(max_length=15, blank=True)
+    correo = models.EmailField(blank=True)
+    pagina = models.URLField(blank=True)
 
     def __str__(self):
         return self.nombre
+
+class OrdenDeCompra(models.Model):
+    fecha_emision = models.DateTimeField(auto_now_add=True)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    requisiciones = models.ManyToManyField(Requisicion)
+
+    def __str__(self):
+        return f'Orden de compra #{self.id}'
