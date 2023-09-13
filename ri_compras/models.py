@@ -3,7 +3,10 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
 from django.contrib.auth.hashers import make_password
 
 class Departamento(models.Model):
@@ -85,3 +88,4 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_name="ri_compras_usuarios_set",
         related_query_name="user",
     )
+

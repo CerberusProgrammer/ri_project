@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Departamento, Usuarios
+from .models import Departamento
+from .models import Usuarios
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,3 +29,4 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+

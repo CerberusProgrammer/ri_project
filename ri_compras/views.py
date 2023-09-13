@@ -1,6 +1,8 @@
 from rest_framework import viewsets
-from .models import Departamento, Usuarios
-from .serializer import DepartamentoSerializer, UsuariosSerializer
+from .models import Departamento
+from .models import Usuarios
+from .serializer import DepartamentoSerializer
+from .serializer import UsuariosSerializer
 from rest_framework import filters
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
