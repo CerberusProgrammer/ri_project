@@ -3,7 +3,9 @@ import string
 from django.http import JsonResponse
 from .models import Usuarios
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def crear_usuario(request):
     if request.method == 'POST':
         data = request.POST  # O utiliza request.body para obtener datos JSON
