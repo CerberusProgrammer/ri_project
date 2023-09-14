@@ -7,6 +7,7 @@ from .models import Servicio
 from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
+from .models import Recibo
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,9 +65,17 @@ class ProveedorSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina']
 
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
+    usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     proveedor = ProveedorSerializer(read_only=True)
     requisiciones = RequisicionSerializer(many=True, read_only=True)
 
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'proveedor', 'total', 'requisiciones']
+        fields = ['id', 'fecha_emision', 'proveedor', 'total', 'requisiciones', 'usuario']
+
+class ReciboSerializer(serializers.ModelSerializer):
+    orden = OrdenDeCompraSerializer(many=True)
+
+    class Meta:
+        model = Recibo
+        fields = ['orden', 'estado', 'descripcion']

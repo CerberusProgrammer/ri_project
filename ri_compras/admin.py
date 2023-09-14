@@ -7,6 +7,7 @@ from .models import Servicio
 from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
+from .models import Recibo
 
 admin.site.register(Usuarios)
 admin.site.register(Departamento)
@@ -16,3 +17,4 @@ admin.site.register(Servicio)
 admin.site.register(Requisicion)
 admin.site.register(Proveedor)
 admin.site.register(OrdenDeCompra)
+admin.site.register(Recibo)

@@ -145,6 +145,15 @@ class OrdenDeCompra(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     requisiciones = models.ManyToManyField(Requisicion)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
 
     def __str__(self):
         return f'Orden de compra #{self.id}'
+
+class Recibo(models.Model):
+    orden = models.ManyToManyField(OrdenDeCompra, blank=False)
+    estado = models.BooleanField(default=False)
+    descripcion = models.CharField(max_length=255, default="Sin descripcion")
+
+    def __str__(self):
+        return f'Recibo #{self.id}'
