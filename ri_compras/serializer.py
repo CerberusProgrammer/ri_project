@@ -20,12 +20,18 @@ class RequisicionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UsuariosSerializer(serializers.ModelSerializer):
-    departamento = DepartamentoSerializer(read_only=True)
+    departamento = serializers.PrimaryKeyRelatedField(queryset=Departamento.objects.all())
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = Usuarios
         fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'is_staff', 'departamento', 'requisiciones', 'password']
+        read_only_fields = ['requisiciones'] 
+
+    def validate_departamento(self, value):
+        if not value:
+            raise serializers.ValidationError("El departamento es obligatorio")
+        return value
 
     def create(self, validated_data):
         password = validated_data.pop('password')
