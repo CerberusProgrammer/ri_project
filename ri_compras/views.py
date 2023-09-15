@@ -29,7 +29,7 @@ class UsuariosViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['departamento__nombre'] # usuarios?search=""
     ordering_fields = ['username'] # usuarios?ordering=username
-    
+
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
