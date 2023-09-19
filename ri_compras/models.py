@@ -13,17 +13,6 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     cantidad = models.IntegerField()
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return self.nombre
-    
-class Componente(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    descripcion = models.TextField(blank=True)
-    material = models.ManyToManyField(Producto, blank=True)
-    cantidad = models.IntegerField()
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.nombre
@@ -31,14 +20,15 @@ class Componente(models.Model):
 class Servicio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    costo = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.nombre
 
 class Departamento(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(max_length=400, blank=True)
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
+    limite = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     def __str__(self):
         return self.nombre
@@ -78,7 +68,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         ('DISEÑADOR', 'Diseñador'),
         ('OPERADOR', 'Operador'),
     )
-    
+
     joined_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
     username = models.CharField(max_length=50, unique=True)
@@ -91,9 +81,9 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['correo']
-    
+
     password = models.CharField(max_length=128, default=make_password('default'))
-    
+
     objects = UsuariosManager()
 
     groups = models.ManyToManyField(
@@ -107,7 +97,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_name="ri_compras_usuarios_set",
         related_query_name="user",
     )
-    
+
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name=('user permissions'),
@@ -119,11 +109,9 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
 
 class Requisicion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    material = models.ManyToManyField(Producto, blank=True)
-    componente = models.ManyToManyField(Componente, blank=True)
-    servicio = models.ManyToManyField(Servicio, blank=True)
+    productos = models.ManyToManyField(Producto, blank=True)
+    servicios = models.ManyToManyField(Servicio, blank=True)
     motivo = models.TextField(blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
     aprobado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
 
@@ -136,6 +124,8 @@ class Proveedor(models.Model):
     telefono = models.CharField(max_length=15, blank=True)
     correo = models.EmailField(blank=True)
     pagina = models.URLField(blank=True)
+    calidad = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    tiempo_de_entegra_estimado = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.nombre
