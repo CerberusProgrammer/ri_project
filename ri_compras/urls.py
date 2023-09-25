@@ -9,6 +9,7 @@ from .views import ProveedorViewSet
 from .views import OrdenDeCompraViewSet
 from .views import ReciboViewSet
 from .views import ServicioViewSet
+from .views import CustomObtainAuthToken
 
 router = DefaultRouter()
 router.register(r'departamentos', DepartamentoViewSet)
@@ -22,4 +23,6 @@ router.register(r'recibos', ReciboViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('login/', CustomObtainAuthToken.as_view(), name='obtener-token'),
+
 ]

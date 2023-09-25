@@ -13,10 +13,7 @@ class DepartamentoSerializer(serializers.ModelSerializer):
         model = Departamento
         fields = ['id', 'nombre', 'presupuesto']
 
-class RequisicionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Requisicion
-        fields = '__all__'
+
 
 class UsuariosSerializer(serializers.ModelSerializer):
     departamento = serializers.PrimaryKeyRelatedField(queryset=Departamento.objects.all())
@@ -46,6 +43,11 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+    
+class RequisicionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Requisicion
+        fields = '__all__'
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:

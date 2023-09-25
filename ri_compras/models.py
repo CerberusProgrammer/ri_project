@@ -133,12 +133,12 @@ class Proveedor(models.Model):
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0) # type: ignore
     requisiciones = models.ManyToManyField(Requisicion)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
 
     def __str__(self):
-        return f'Orden de compra #{self.id}'
+        return f'Orden de compra #{self.id}' # type: ignore
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)
@@ -146,4 +146,4 @@ class Recibo(models.Model):
     descripcion = models.CharField(max_length=255, default="Sin descripcion")
 
     def __str__(self):
-        return f'Recibo #{self.id}'
+        return f'Recibo #{self.id}' # type: ignore
