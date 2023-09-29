@@ -28,8 +28,9 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
+from rest_framework.views import APIView
 
-class CustomObtainAuthToken(ObtainAuthToken):
+class CustomObtainAuthToken(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -38,9 +39,28 @@ class CustomObtainAuthToken(ObtainAuthToken):
 
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
+            # Serializa el objeto de usuario
+            user_serializer = UsuariosSerializer(user)
+            return Response({'token': token.key, 'user': user_serializer.data})
         else:
             return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_400_BAD_REQUEST)
+
+class GetUserFromToken(APIView):
+    def get(self, request, *args, **kwargs):
+        token_header = request.META.get('HTTP_AUTHORIZATION')
+        if token_header is not None:
+            try:
+                # El encabezado de autorización generalmente tiene el formato 'Token abc123'
+                # Así que necesitamos dividirlo para obtener el token real
+                token_key = token_header.split(' ')[1]
+                token = Token.objects.get(key=token_key)
+                user = token.user
+                user_serializer = UsuariosSerializer(user)
+                return Response({'user': user_serializer.data})
+            except (Token.DoesNotExist, IndexError):
+                return Response({'error': 'Token inválido'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error': 'No se proporcionó ningún token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -64,9 +84,6 @@ class UsuariosViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['departamento__nombre']
     ordering_fields = ['username']
-    
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()

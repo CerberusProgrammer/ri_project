@@ -10,9 +10,11 @@ from django.contrib.auth.models import Permission
 from django.contrib.auth.hashers import make_password
 
 class Producto(models.Model):
+    identificador = models.CharField(max_length=100, null=True)
     nombre = models.CharField(max_length=100)
-    descripcion = models.TextField()
-    cantidad = models.IntegerField()
+    divisa = models.CharField(max_length=5, default="MXN")
+    descripcion = models.TextField(default="Sin descripcion")
+    cantidad = models.IntegerField(default=1)
     costo = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
@@ -22,6 +24,7 @@ class Servicio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     costo = models.DecimalField(max_digits=10, decimal_places=2)
+    divisa = models.CharField(max_length=5, default="MXN")
 
     def __str__(self):
         return self.nombre
@@ -69,15 +72,16 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         ('CALIDAD', 'Calidad'),
         ('DISEÑADOR', 'Diseñador'),
         ('OPERADOR', 'Operador'),
+        ('PENDIENTE', 'Pendiente'),
     )
 
     joined_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
     username = models.CharField(max_length=50, unique=True)
     nombre = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=15)
+    telefono = models.CharField(max_length=15, null=True)
     correo = models.EmailField(unique=True)
-    rol = models.CharField(max_length=15, choices=PUESTOS)
+    rol = models.CharField(max_length=15, choices=PUESTOS, null=True)
     is_staff = models.BooleanField(default=False)
     departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='usuarios', null=True)
 
@@ -85,9 +89,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['correo']
 
     password = models.CharField(max_length=128, default=make_password('default'))
-
     objects = UsuariosManager()
-
     groups = models.ManyToManyField(
         Group,
         verbose_name=('groups'),
