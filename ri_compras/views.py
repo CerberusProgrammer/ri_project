@@ -13,6 +13,7 @@ from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
+from .models import Project
 from .serializer import DepartamentoSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -21,6 +22,7 @@ from .serializer import RequisicionSerializer
 from .serializer import ProveedorSerializer
 from .serializer import OrdenDeCompraSerializer
 from .serializer import ReciboSerializer
+from .serializer import ProjectSerializer
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
@@ -40,6 +42,14 @@ class CustomObtainAuthToken(ObtainAuthToken):
         else:
             return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_400_BAD_REQUEST)
 
+class ProjectViewSet(viewsets.ModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    search_fields =['project__nombre']
+    ordering_fields = ['nombre']
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
     queryset = Departamento.objects.all()

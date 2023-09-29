@@ -7,6 +7,7 @@ from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
+from .models import Project
 
 admin.site.register(Usuarios)
 admin.site.register(Departamento)

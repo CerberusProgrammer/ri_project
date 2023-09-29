@@ -7,13 +7,12 @@ from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
+from .models import Project
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departamento
         fields = ['id', 'nombre', 'presupuesto']
-
-
 
 class UsuariosSerializer(serializers.ModelSerializer):
     departamento = serializers.PrimaryKeyRelatedField(queryset=Departamento.objects.all())
@@ -43,7 +42,14 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+
+class ProjectSerializer(serializers.ModelSerializer):
+    usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     
+    class Meta:
+        model = Project
+        fields = '__all__'
+
 class RequisicionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requisicion
@@ -52,12 +58,12 @@ class RequisicionSerializer(serializers.ModelSerializer):
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = ['id', 'nombre', 'descripcion', 'cantidad']
+        fields = ['id', 'nombre', 'descripcion', 'cantidad', 'costo']
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['nombre', 'descripcion']
+        fields = ['nombre', 'descripcion', 'costo']
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:

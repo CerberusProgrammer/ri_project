@@ -13,6 +13,7 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     cantidad = models.IntegerField()
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.nombre
@@ -20,6 +21,7 @@ class Producto(models.Model):
 class Servicio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.nombre
@@ -106,6 +108,12 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_name="ri_compras_usuarios_set",
         related_query_name="user",
     )
+
+class Project(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(max_length=400, blank=True)
+    presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos', null=True)
 
 class Requisicion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
