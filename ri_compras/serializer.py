@@ -7,21 +7,20 @@ from .models import Requisicion
 from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
+from .models import Project
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departamento
         fields = ['id', 'nombre', 'presupuesto']
 
-
-
 class UsuariosSerializer(serializers.ModelSerializer):
-    departamento = serializers.PrimaryKeyRelatedField(queryset=Departamento.objects.all())
+    departamento = DepartamentoSerializer(read_only=True)
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = Usuarios
-        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'is_staff', 'departamento', 'requisiciones', 'password']
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento', 'requisiciones', 'password']
         read_only_fields = ['requisiciones'] 
 
     def validate_departamento(self, value):
@@ -43,7 +42,14 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+
+class ProjectSerializer(serializers.ModelSerializer):
+    usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     
+    class Meta:
+        model = Project
+        fields = '__all__'
+
 class RequisicionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requisicion
@@ -52,17 +58,17 @@ class RequisicionSerializer(serializers.ModelSerializer):
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = ['id', 'nombre', 'descripcion', 'cantidad']
+        fields = ['id', 'nombre', 'descripcion', 'cantidad', 'costo', 'identificador', 'divisa']
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['nombre', 'descripcion']
+        fields = ['id', 'nombre', 'descripcion', 'costo', 'divisa']
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina']
+        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina','calidad', 'tiempo_de_entegra_estimado']
 
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
     usuario = serializers.PrimaryKeyRelatedField(read_only=True)
