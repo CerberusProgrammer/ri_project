@@ -44,7 +44,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
         return user
 
 class ProjectSerializer(serializers.ModelSerializer):
-    usuario = serializers.PrimaryKeyRelatedField(read_only=True)
+    usuario = UsuariosSerializer(read_only=True)
     
     class Meta:
         model = Project

@@ -135,7 +135,7 @@ class Proveedor(models.Model):
     correo = models.EmailField(blank=True)
     pagina = models.URLField(blank=True)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True)
-    tiempo_de_entegra_estimado = models.DateTimeField(blank=True)
+    tiempo_de_entegra_estimado = models.CharField(max_length=120, blank=True)
 
     def __str__(self):
         return self.nombre

@@ -70,6 +70,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     search_fields =['project__nombre']
     ordering_fields = ['nombre']
+    
+
+class UsuariosViewSet(viewsets.ModelViewSet):
+    queryset = Usuarios.objects.all()
+    serializer_class = UsuariosSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['departamento__nombre']
+    ordering_fields = ['username']
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
     queryset = Departamento.objects.all()
@@ -78,12 +86,7 @@ class DepartamentoViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-class UsuariosViewSet(viewsets.ModelViewSet):
-    queryset = Usuarios.objects.all()
-    serializer_class = UsuariosSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['departamento__nombre']
-    ordering_fields = ['username']
+
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
