@@ -115,7 +115,7 @@ class Project(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(max_length=400, blank=True)
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos', null=True)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
 
 class Requisicion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
@@ -134,8 +134,8 @@ class Proveedor(models.Model):
     telefono = models.CharField(max_length=15, blank=True)
     correo = models.EmailField(blank=True)
     pagina = models.URLField(blank=True)
-    calidad = models.DecimalField(max_digits=2, decimal_places=2, null=True)
-    tiempo_de_entegra_estimado = models.DateTimeField(null=True)
+    calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True)
+    tiempo_de_entegra_estimado = models.DateTimeField(blank=True)
 
     def __str__(self):
         return self.nombre

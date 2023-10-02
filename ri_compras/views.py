@@ -104,7 +104,7 @@ class ServicioViewSet(viewsets.ModelViewSet):
 class RequisicionViewSet(viewsets.ModelViewSet):
     queryset = Requisicion.objects.all()
     serializer_class = RequisicionSerializer
-    ordering_fields = ['fecha_creacion', 'aprobado']
+    ordering_fields = ['fecha_creacion', 'aprobado', 'usuario']
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
