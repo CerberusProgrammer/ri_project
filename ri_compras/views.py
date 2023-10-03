@@ -71,7 +71,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     search_fields =['project__nombre']
     ordering_fields = ['nombre']
-    
 
 class UsuariosViewSet(viewsets.ModelViewSet):
     queryset = Usuarios.objects.all()
@@ -86,8 +85,6 @@ class DepartamentoViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -112,16 +109,21 @@ class RequisicionViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        departamento_nombre = self.request.query_params.get('departamento', None)
+        if departamento_nombre is not None:
+            queryset = queryset.filter(usuario__departamento__nombre=departamento_nombre)
+        return queryset
 
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
         requisicion = self.get_object()
         producto_data = request.data.get('producto')
 
-        # Encuentra el producto específico en la requisición
         producto = requisicion.productos.get(id=producto_data.get('id'))
 
-        # Actualiza los campos del producto
         producto.nombre = producto_data.get('nombre', producto.nombre)
         producto.descripcion = producto_data.get('descripcion', producto.descripcion)
         producto.cantidad = producto_data.get('cantidad', producto.cantidad)
@@ -132,7 +134,6 @@ class RequisicionViewSet(viewsets.ModelViewSet):
         producto.save()
 
         return Response({'status': 'Producto actualizado'})
-
 
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
