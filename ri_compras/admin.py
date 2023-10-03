@@ -10,6 +10,7 @@ from .models import Recibo
 from .models import Project
 
 admin.site.register(Usuarios)
+admin.site.register(Project)
 admin.site.register(Departamento)
 admin.site.register(Producto)
 admin.site.register(Servicio)

@@ -117,17 +117,6 @@ class Project(models.Model):
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
 
-class Requisicion(models.Model):
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    productos = models.ManyToManyField(Producto, blank=True)
-    servicios = models.ManyToManyField(Servicio, blank=True)
-    motivo = models.TextField(blank=True)
-    aprobado = models.BooleanField(default=False)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
-
-    def __str__(self):
-        return self.motivo
-
 class Proveedor(models.Model):
     nombre = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100, blank=True)
@@ -135,10 +124,24 @@ class Proveedor(models.Model):
     correo = models.EmailField(blank=True)
     pagina = models.URLField(blank=True)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True)
-    tiempo_de_entegra_estimado = models.DateTimeField(blank=True)
+    tiempo_de_entegra_estimado = models.CharField(max_length=120, blank=True)
 
     def __str__(self):
         return self.nombre
+
+class Requisicion(models.Model):
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    productos = models.ManyToManyField(Producto, blank=True)
+    servicios = models.ManyToManyField(Servicio, blank=True)
+    motivo = models.TextField(blank=True)
+    total = models.IntegerField(default=0)
+    aprobado = models.BooleanField(default=False)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+    proyecto = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+
+    def __str__(self):
+        return self.motivo
 
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
