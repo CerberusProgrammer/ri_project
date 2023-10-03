@@ -3,6 +3,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import filters
 from .models import Departamento
@@ -111,6 +112,27 @@ class RequisicionViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def update_producto(self, request, pk=None):
+        requisicion = self.get_object()
+        producto_data = request.data.get('producto')
+
+        # Encuentra el producto específico en la requisición
+        producto = requisicion.productos.get(id=producto_data.get('id'))
+
+        # Actualiza los campos del producto
+        producto.nombre = producto_data.get('nombre', producto.nombre)
+        producto.descripcion = producto_data.get('descripcion', producto.descripcion)
+        producto.cantidad = producto_data.get('cantidad', producto.cantidad)
+        producto.costo = producto_data.get('costo', producto.costo)
+        producto.identificador = producto_data.get('identificador', producto.identificador)
+        producto.divisa = producto_data.get('divisa', producto.divisa)
+
+        producto.save()
+
+        return Response({'status': 'Producto actualizado'})
+
 
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
