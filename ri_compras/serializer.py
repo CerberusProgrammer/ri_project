@@ -34,7 +34,7 @@ class SimpleProjectSerializer(serializers.ModelSerializer):
 class SimpleProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina', 'calidad', 'tiempo_de_entegra_estimado']
+        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina', 'calidad', 'tiempo_de_entegra_estimado', 'iva', 'isr']
 
 class SimpleServicioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -97,7 +97,7 @@ class ServicioSerializer(serializers.ModelSerializer):
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina','calidad', 'tiempo_de_entegra_estimado']
+        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina','calidad', 'tiempo_de_entegra_estimado', 'iva','isr']
 
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
@@ -142,13 +142,19 @@ class RequisicionSerializer(serializers.ModelSerializer):
         return representation
 
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
-    usuario = serializers.PrimaryKeyRelatedField(read_only=True)
-    proveedor = ProveedorSerializer(read_only=True)
-    requisiciones = RequisicionSerializer(many=True, read_only=True)
+    # Campos para la lectura (GET)
+    usuario_detail = SimpleUsuariosSerializer(source='usuario', read_only=True)
+    proveedor_detail = ProveedorSerializer(source='proveedor', read_only=True)
+    requisicion_detail = RequisicionSerializer(source='requisicion', read_only=True)
+
+    # Campos para la escritura (POST)
+    usuario = serializers.PrimaryKeyRelatedField(queryset=Usuarios.objects.all())
+    proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
+    requisicion = serializers.PrimaryKeyRelatedField(queryset=Requisicion.objects.all())
 
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'proveedor', 'total', 'requisiciones', 'usuario']
+        fields = ['id', 'fecha_emision', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','recibido']
 
 class ReciboSerializer(serializers.ModelSerializer):
     orden = OrdenDeCompraSerializer(many=True)

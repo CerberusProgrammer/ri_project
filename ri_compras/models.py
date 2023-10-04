@@ -149,6 +149,8 @@ class Proveedor(models.Model):
     pagina = models.URLField(blank=True)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True)
     tiempo_de_entegra_estimado = models.CharField(max_length=120, blank=True)
+    iva = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    isr = models.DecimalField(max_digits=2, decimal_places=2, null=True)
 
     def __str__(self):
         return self.nombre
@@ -158,6 +160,7 @@ class Requisicion(models.Model):
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)
     aprobado = models.BooleanField(default=False)
+    ordenado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proyecto = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='requisiciones', null=True)
@@ -170,9 +173,10 @@ class Requisicion(models.Model):
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0) # type: ignore
-    requisiciones = models.ManyToManyField(Requisicion)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
+    recibido = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Orden de compra #{self.id}' # type: ignore

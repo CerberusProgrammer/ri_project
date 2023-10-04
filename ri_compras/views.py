@@ -113,8 +113,24 @@ class RequisicionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         departamento_nombre = self.request.query_params.get('departamento', None)
+        aprobado = self.request.query_params.get('aprobado', None)
+        ordenado = self.request.query_params.get('ordenado', None)
+
         if departamento_nombre is not None:
             queryset = queryset.filter(usuario__departamento__nombre=departamento_nombre)
+        
+        if aprobado is not None:
+            if aprobado.lower() == 'true':
+                queryset = queryset.filter(aprobado=True)
+            elif aprobado.lower() == 'false':
+                queryset = queryset.filter(aprobado=False)
+        
+        if ordenado is not None:
+            if ordenado.lower() == 'true':
+                queryset = queryset.filter(ordenado=True)
+            elif ordenado.lower() == 'false':
+                queryset = queryset.filter(ordenado=False)
+
         return queryset
 
     @action(detail=True, methods=['post'])
