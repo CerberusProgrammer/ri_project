@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orden de Compra</title>
+    <style>
+        .contenedor {
+            display: flex;
+            justify-content: space-between; /* Espacio entre columnas */
+        }
+
+        .columna {
+            flex: 0.5; /* Distribuir espacio disponible en partes iguales */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .info-arriba {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .total {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .firmas {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h4 style="text-align: right;">Orden de Compra</h4>
+    <div class="container">
+        <img src="R&I.png" alt="Mi Imagen" style="margin: px 7px;">
+        <div class="info-arriba">
+            <p><strong>Serie:</strong> A123</p>
+            <p><strong>Folio:</strong> 001</p>
+            <p><strong>Fecha:</strong> 04 de octubre de 2023</p>
+        </div>
+        <div class="contenedor">
+            <div class="columna">
+                <h2>Datos del Cliente</h2>
+                <p><strong>Nombre:</strong> Nombre del Cliente</p>
+                <p><strong>RFC:</strong> RFC123456789</p>
+                <p><strong>Domicilio:</strong> Dirección del Cliente</p>
+                <p><strong>Teléfono:</strong> (123) 456-7890</p>
+                <p><strong>Correo:</strong> correo@example.com</p>
+            </div>
+            <div class="columna">
+                <h2 style="color: #f2f2f2;"></h2>
+                <p><strong>Localidad:</strong> Ciudad</p>
+                <p><strong>Colonia:</strong> Colonia</p>
+                <p><strong>Estado:</strong> Estado</p>
+                <p><strong>Código Postal:</strong> 12345</p>
+                <p><strong>País:</strong> País</p>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>Descripción</th>
+                    <th>Valor Unitario</th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>5</td>
+                    <td>Piezas</td>
+                    <td>Producto 1</td>
+                    <td>$10.00</td>
+                    <td>$50.00</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Piezas</td>
+                    <td>Producto 2</td>
+                    <td>$15.00</td>
+                    <td>$45.00</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="total">
+            <p><strong>Importe con Letra:</strong> Noventa y cinco pesos</p>
+            <p><strong>Subtotal:</strong> $95.00</p>
+            <p><strong>ISR:</strong> $5.00</p>
+            <p><strong>I.V.A:</strong> $9.50</p>
+            <p style="font-size: 18px;"><strong>Total:</strong> $99.50</p>
+        </div>
+        <div class="firmas">
+            <p>Firma de Conformidad:</p>
+            <p><strong>Nombre del Cliente</strong></p>
+        </div>
+    </div>
+</body>
+</html>
