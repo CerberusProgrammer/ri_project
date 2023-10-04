@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Departamento
+from .models import Departamento, ProductoRequisicion, ServicioRequisicion
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -42,6 +42,7 @@ class SimpleServicioSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion', 'costo', 'divisa']
 
 class SimpleRequisicionSerializer(serializers.ModelSerializer):
+    usuario = SimpleUserProjectSerializer()
     proyecto = SimpleProjectSerializer(read_only=True)
     proveedor = SimpleProveedorSerializer(read_only=True)
     productos = ProductoSerializer(many=True, read_only=True)
@@ -49,7 +50,7 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requisicion
-        fields = ['id', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado']
+        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado']
 
 class UsuariosSerializer(serializers.ModelSerializer):
     requisiciones = SimpleRequisicionSerializer(many=True, read_only=True)
@@ -106,38 +107,39 @@ class SimpleUsuariosSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento']
 
 class RequisicionSerializer(serializers.ModelSerializer):
-    usuario = SimpleUsuariosSerializer(read_only=True)
+    usuario = SimpleUserProjectSerializer(read_only=True)
+    usuario_id = serializers.IntegerField(write_only=True)
     proyecto = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     productos = ProductoSerializer(many=True)
+    servicios = ServicioSerializer(many=True)
 
     class Meta:
         model = Requisicion
         fields = '__all__'
 
     def create(self, validated_data):
+        usuario_id = validated_data.pop('usuario_id')
+        validated_data['usuario'] = Usuarios.objects.get(id=usuario_id)
         productos_data = validated_data.pop('productos', [])
         servicios_data = validated_data.pop('servicios', [])
         requisicion = Requisicion.objects.create(**validated_data)
 
         for producto_data in productos_data:
-            producto, created = Producto.objects.get_or_create(**producto_data)
+            producto, created = ProductoRequisicion.objects.get_or_create(**producto_data)
             requisicion.productos.add(producto)
 
         for servicio_data in servicios_data:
-            servicio, created = Servicio.objects.get_or_create(**servicio_data)
+            servicio, created = ServicioRequisicion.objects.get_or_create(**servicio_data)
             requisicion.servicios.add(servicio)
-
         return requisicion
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['usuario'] = UsuariosSerializer(instance.usuario).data
-        representation['proyecto'] = ProjectSerializer(instance.proyecto).data
-        representation['proveedor'] = ProveedorSerializer(instance.proveedor).data
+        representation['usuario'] = SimpleUserProjectSerializer(instance.usuario).data
+        representation['proyecto'] = SimpleProjectSerializer(instance.proyecto).data
+        representation['proveedor'] = SimpleProveedorSerializer(instance.proveedor).data
         return representation
-
-
 
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
     usuario = serializers.PrimaryKeyRelatedField(read_only=True)

@@ -24,7 +24,6 @@ router.register(r'ordenes', OrdenDeCompraViewSet)
 router.register(r'recibos', ReciboViewSet)
 router.register(r'proyectos', ProjectViewSet)
 
-
 urlpatterns = [
     path('', include(router.urls)),
     path('login/', CustomObtainAuthToken.as_view(), name='login'),

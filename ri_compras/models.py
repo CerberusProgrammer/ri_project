@@ -20,7 +20,27 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+class ProductoRequisicion(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(default="Sin descripcion")
+    cantidad = models.IntegerField(default=1)
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    identificador = models.CharField(max_length=100, null=True)
+    divisa = models.CharField(max_length=5, default="MXN")
+
+    def __str__(self):
+        return self.nombre
+
 class Servicio(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    divisa = models.CharField(max_length=5, default="MXN")
+
+    def __str__(self):
+        return self.nombre
+
+class ServicioRequisicion(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     costo = models.DecimalField(max_digits=10, decimal_places=2)
@@ -69,6 +89,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         ('ADMINISTRADOR', 'Administrador'),
         ('SUPERVISOR', 'Supervisor'),
         ('COMPRADOR', 'Comprador'),
+        ('LIDER', 'Lider'),
         ('CALIDAD', 'Calidad'),
         ('DISEÑADOR', 'Diseñador'),
         ('OPERADOR', 'Operador'),
@@ -117,6 +138,9 @@ class Project(models.Model):
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
 
+    def __str__(self):
+        return self.nombre
+
 class Proveedor(models.Model):
     nombre = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100, blank=True)
@@ -131,14 +155,14 @@ class Proveedor(models.Model):
 
 class Requisicion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    productos = models.ManyToManyField(Producto, blank=True)
-    servicios = models.ManyToManyField(Servicio, blank=True)
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)
     aprobado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proyecto = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+    productos = models.ManyToManyField(ProductoRequisicion, blank=True)
+    servicios = models.ManyToManyField(ServicioRequisicion, blank=True)
 
     def __str__(self):
         return self.motivo
