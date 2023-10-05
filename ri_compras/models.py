@@ -149,8 +149,8 @@ class Proveedor(models.Model):
     pagina = models.URLField(blank=True)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True)
     tiempo_de_entegra_estimado = models.CharField(max_length=120, blank=True)
-    iva = models.DecimalField(max_digits=2, decimal_places=2, null=True)
-    isr = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    iva = models.DecimalField(max_digits=2, decimal_places=2)
+    isr = models.DecimalField(max_digits=2, decimal_places=2)
 
     def __str__(self):
         return self.nombre
