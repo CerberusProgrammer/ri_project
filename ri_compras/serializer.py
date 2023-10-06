@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Departamento, ProductoRequisicion, ServicioRequisicion
+from .models import Contacto, Departamento, ProductoRequisicion, ServicioRequisicion
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -12,7 +12,7 @@ from .models import Project
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departamento
-        fields = ['id', 'nombre', 'presupuesto']
+        fields = ['id', 'nombre', 'descripcion', 'presupuesto','divisa']
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -94,10 +94,17 @@ class ServicioSerializer(serializers.ModelSerializer):
         model = Servicio
         fields = ['id', 'nombre', 'descripcion', 'costo', 'divisa']
 
+class ContactoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contacto
+        fields = '__all__'
+
 class ProveedorSerializer(serializers.ModelSerializer):
+    contactos = ContactoSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Proveedor
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina','calidad', 'tiempo_de_entegra_estimado', 'iva','isr']
+        fields = '__all__'
 
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
