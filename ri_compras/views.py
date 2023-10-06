@@ -172,3 +172,24 @@ class ReciboViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+@api_view(['POST'])
+def crear_orden_de_compra(request):
+    if request.method == 'POST':
+        serializer = OrdenDeCompraSerializer(data=request.data)
+        if serializer.is_valid():
+            orden_de_compra = serializer.save()
+
+            # Renderizar el HTML con los datos de la orden de compra
+            contexto = {'orden_de_compra': orden_de_compra}
+            html = render(request, 'detalle_orden_de_compra.html', contexto)
+
+            # Crear un archivo PDF vacío donde se escribirá la salida
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="orden_de_compra_{orden_de_compra.id}.pdf"'
+
+            # Utilizar pisa para convertir el HTML a PDF y escribirlo en la respuesta
+            pisa.CreatePDF(html.content, dest=response)
+
+            return response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
