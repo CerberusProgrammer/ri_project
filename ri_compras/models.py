@@ -208,6 +208,7 @@ class Proveedor(models.Model):
     REGIMEN_FISCAL = (
         ('MASTER', 'Master'),
     )
+
     nombre = models.CharField(max_length=100)
     razon_social = models.CharField(max_length=200)
     rfc = models.CharField(max_length=100)
