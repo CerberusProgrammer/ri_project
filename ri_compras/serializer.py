@@ -145,7 +145,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['usuario'] = SimpleUserProjectSerializer(instance.usuario).data
         representation['proyecto'] = SimpleProjectSerializer(instance.proyecto).data
-        representation['proveedor'] = SimpleProveedorSerializer(instance.proveedor).data
+        representation['proveedor'] = ProveedorSerializer(instance.proveedor).data
         return representation
 
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
