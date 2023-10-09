@@ -69,8 +69,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    search_fields =['project__nombre']
     ordering_fields = ['nombre']
+    
+    def list(self, request, *args, **kwargs):
+        username = request.query_params.get('search', None)
+        if username is not None:
+            self.queryset = self.queryset.filter(usuario__username=username)
+        return super().list(request, *args, **kwargs)
 
 class UsuariosViewSet(viewsets.ModelViewSet):
     queryset = Usuarios.objects.all()

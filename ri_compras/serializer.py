@@ -20,9 +20,11 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion', 'cantidad', 'costo', 'identificador', 'divisa']
 
 class SimpleUserProjectSerializer(serializers.ModelSerializer):
+    departamento = DepartamentoSerializer()
+    
     class Meta:
         model = Usuarios
-        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol']
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento']
 
 class SimpleProjectSerializer(serializers.ModelSerializer):
     usuario = SimpleUserProjectSerializer(read_only=True)
