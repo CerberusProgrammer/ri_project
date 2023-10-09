@@ -118,7 +118,7 @@ class SimpleUsuariosSerializer(serializers.ModelSerializer):
 class RequisicionSerializer(serializers.ModelSerializer):
     usuario = SimpleUserProjectSerializer(read_only=True)
     usuario_id = serializers.IntegerField(write_only=True)
-    proyecto = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    proyecto = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=True)
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     productos = ProductoSerializer(many=True)
     servicios = ServicioSerializer(many=True)
