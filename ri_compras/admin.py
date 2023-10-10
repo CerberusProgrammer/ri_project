@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuarios
+from .models import Message, Usuarios
 from .models import Departamento
 from .models import Producto
 from .models import Servicio
@@ -103,3 +103,12 @@ class ReciboAdmin(SimpleHistoryAdmin):
 
 admin.site.register(Recibo, ReciboAdmin)
 admin.site.register(Contacto)
+
+class MessageAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(Message, MessageAdmin)

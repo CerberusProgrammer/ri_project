@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contacto, Departamento, ProductoRequisicion, ServicioRequisicion
+from .models import Contacto, Departamento, Message, ProductoRequisicion, ServicioRequisicion
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -54,14 +54,27 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
         model = Requisicion
         fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado','ordenado']
 
+class UserMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuarios
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo']
+
+class MessageSerializer(serializers.ModelSerializer):
+    usuario = UserMessageSerializer(read_only=True)
+
+    class Meta:
+        model = Message
+        fields = '__all__'
+
 class UsuariosSerializer(serializers.ModelSerializer):
     requisiciones = SimpleRequisicionSerializer(many=True, read_only=True)
+    messages = MessageSerializer(many=True, read_only=True)
     departamento = DepartamentoSerializer(read_only=True)
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = Usuarios
-        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento', 'requisiciones', 'password']
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento', 'requisiciones', 'password', 'messages']
         read_only_fields = ['requisiciones'] 
 
     def validate_departamento(self, value):

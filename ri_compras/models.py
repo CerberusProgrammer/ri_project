@@ -235,10 +235,16 @@ class Proveedor(models.Model):
         return self.razon_social
 
 class Requisicion(models.Model):
+    ESTADO_APROBACION = (
+        ('RECHAZADO', 'Rechazado'),
+        ('PENDIENTE', 'Pendiente'),
+        ('APROBADO', 'Aprobado'),
+    )
+    
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)
-    aprobado = models.BooleanField(default=False)
+    aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
     ordenado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proyecto = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requisiciones', null=True)
@@ -270,3 +276,14 @@ class Recibo(models.Model):
 
     def __str__(self):
         return f'Recibo #{self.id}' # type: ignore
+
+class Message(models.Model):
+    user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='messages', null=True)
+    from_user = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, related_query_name=None, null=True)
+    title = models.CharField(max_length=100)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f'{self.from_user} to {self.user}'

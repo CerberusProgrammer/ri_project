@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import filters
-from .models import Departamento
+from .models import Departamento, Message
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -15,7 +15,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import DepartamentoSerializer
+from .serializer import DepartamentoSerializer, MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
 from .serializer import ServicioSerializer
@@ -162,7 +162,7 @@ class ProveedorViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
 class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     queryset = OrdenDeCompra.objects.all()
     serializer_class = OrdenDeCompraSerializer
@@ -170,13 +170,21 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
 class ReciboViewSet(viewsets.ModelViewSet):
     queryset = Recibo.objects.all()
     serializer_class = ReciboSerializer
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
 
 #@api_view(['POST'])
 #def crear_orden_de_compra(request):
