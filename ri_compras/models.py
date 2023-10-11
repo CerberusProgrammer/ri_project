@@ -206,15 +206,20 @@ class Contacto(models.Model):
 
 class Proveedor(models.Model):
     REGIMEN_FISCAL = (
-        ('MASTER', 'Master'),
+        ('General de Ley Personas Morales', 'General de Ley Personas Morales'),
+        ('Arrendamiento', 'Arrendamiento'),
+        ('Personas Físicas con Actividades Empresariales y Profesionales', 'Personas Físicas con Actividades Empresariales y Profesionales'),
+        ('Sin obligaciones fiscales', 'Sin obligaciones fiscales'),
+        ('Incorporación Fiscal', 'Incorporación Fiscal'),
+        ('Régimen Simplificado de Confianza', 'Régimen Simplificado de Confianza'),
     )
 
     nombre = models.CharField(max_length=100)
     razon_social = models.CharField(max_length=200)
     rfc = models.CharField(max_length=100)
-    regimen_fiscal = models.CharField(max_length=50, choices=REGIMEN_FISCAL)
+    regimen_fiscal = models.CharField(max_length=150, choices=REGIMEN_FISCAL)
     codigo_postal = models.CharField(max_length=10)
-    direccion = models.CharField(max_length=100, help_text="Ej. Avenida Soles #8193")
+    direccion = models.CharField(max_length=250, help_text="Ej. Avenida Soles #8193")
     direccion_geografica = models.CharField(max_length=100, help_text="Ej. Mexicali, B.C, Mexico")
     telefono = models.CharField(max_length=15, null=True)
     correo = models.EmailField(null=True)
@@ -222,13 +227,15 @@ class Proveedor(models.Model):
     tiempo_de_entegra_estimado = models.CharField(max_length=120, null=True)
     iva = models.DecimalField(max_digits=2, decimal_places=2)
     isr = models.DecimalField(max_digits=2, decimal_places=2)
+    iva_retenido = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    isr_retenido = models.DecimalField(max_digits=2, decimal_places=2, null=True)
     dias_de_credito = models.CharField(max_length=100, null=True)
     credito = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     divisa = models.CharField(max_length=5, default='MXN')
     contactos = models.ManyToManyField(Contacto)
     grupo = models.CharField(max_length=100, blank=True, help_text="Ej. Metales")
     categoria = models.CharField(max_length=100, blank=True, help_text="Tornillo de Acero")
-    calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True, help_text="1 al 10")
+    calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True, help_text="0.0 al 0.9")
     history = HistoricalRecords()
 
     def __str__(self):
@@ -278,12 +285,12 @@ class Recibo(models.Model):
         return f'Recibo #{self.id}' # type: ignore
 
 class Message(models.Model):
-    user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='messages', null=True)
-    from_user = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, related_query_name=None, null=True)
+    user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='messages')
+    from_user = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, related_query_name=None)
     title = models.CharField(max_length=100)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'{self.from_user} to {self.user}'
+        return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}'

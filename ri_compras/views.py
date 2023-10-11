@@ -15,7 +15,8 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import DepartamentoSerializer, MessageSerializer
+from .serializer import DepartamentoSerializer
+from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
 from .serializer import ServicioSerializer
@@ -181,10 +182,12 @@ class ReciboViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
+    
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['user__username']
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
 
 #@api_view(['POST'])
 #def crear_orden_de_compra(request):

@@ -60,11 +60,29 @@ class UserMessageSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'nombre', 'telefono', 'correo']
 
 class MessageSerializer(serializers.ModelSerializer):
-    usuario = UserMessageSerializer(read_only=True)
+    user = UserMessageSerializer(read_only=True)
+    from_user = UserMessageSerializer(read_only=True)
 
     class Meta:
         model = Message
         fields = '__all__'
+
+    def create(self, validated_data):
+        user_id = self.context['request'].data.get('user')
+        from_user_id = self.context['request'].data.get('from_user')
+
+        user = Usuarios.objects.get(id=user_id)
+        from_user = Usuarios.objects.get(id=from_user_id)
+
+        message = Message.objects.create(
+            user=user,
+            from_user=from_user,
+            title=validated_data.get('title'),
+            message=validated_data.get('message')
+        )
+
+        return message
+
 
 class UsuariosSerializer(serializers.ModelSerializer):
     requisiciones = SimpleRequisicionSerializer(many=True, read_only=True)
