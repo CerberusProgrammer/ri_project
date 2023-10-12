@@ -36,7 +36,7 @@ class SimpleProjectSerializer(serializers.ModelSerializer):
 class SimpleProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'correo', 'pagina', 'calidad', 'tiempo_de_entegra_estimado', 'iva', 'isr']
+        fields = '__all__'
 
 class SimpleServicioSerializer(serializers.ModelSerializer):
     class Meta:

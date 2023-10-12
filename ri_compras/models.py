@@ -225,16 +225,13 @@ class Proveedor(models.Model):
     correo = models.EmailField(null=True)
     pagina = models.URLField(null=True)
     tiempo_de_entegra_estimado = models.CharField(max_length=120, null=True)
-    iva = models.DecimalField(max_digits=2, decimal_places=2)
-    isr = models.DecimalField(max_digits=2, decimal_places=2)
-    iva_retenido = models.DecimalField(max_digits=2, decimal_places=2, null=True)
-    isr_retenido = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    iva = models.DecimalField(max_digits=10, decimal_places=10)
+    iva_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
+    isr_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
     dias_de_credito = models.CharField(max_length=100, null=True)
-    credito = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    credito = models.DecimalField(max_digits=10, decimal_places=4, null=True)
     divisa = models.CharField(max_length=5, default='MXN')
     contactos = models.ManyToManyField(Contacto)
-    grupo = models.CharField(max_length=100, blank=True, help_text="Ej. Metales")
-    categoria = models.CharField(max_length=100, blank=True, help_text="Tornillo de Acero")
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True, help_text="0.0 al 0.9")
     history = HistoricalRecords()
 
@@ -261,7 +258,7 @@ class Requisicion(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.motivo
+        return f'Requisicion de {self.usuario} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
@@ -293,4 +290,4 @@ class Message(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}'
+        return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}' # type: ignore
