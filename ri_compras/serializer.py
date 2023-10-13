@@ -19,6 +19,11 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = ['id', 'nombre', 'descripcion', 'cantidad', 'costo', 'identificador', 'divisa']
 
+class ContactoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contacto
+        fields = '__all__'
+
 class SimpleUserProjectSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer()
     
@@ -34,6 +39,8 @@ class SimpleProjectSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion', 'usuario']
 
 class SimpleProveedorSerializer(serializers.ModelSerializer):
+    contactos = ContactoSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Proveedor
         fields = '__all__'
@@ -127,10 +134,6 @@ class ServicioSerializer(serializers.ModelSerializer):
         model = Servicio
         fields = ['id', 'nombre', 'descripcion', 'costo', 'divisa']
 
-class ContactoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Contacto
-        fields = '__all__'
 
 class ProveedorSerializer(serializers.ModelSerializer):
     contactos = ContactoSerializer(many=True, read_only=True)

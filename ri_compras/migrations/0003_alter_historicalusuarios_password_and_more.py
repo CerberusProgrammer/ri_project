@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ri_compras', '0001_initial'),
+        ('ri_compras', '0002_alter_historicalusuarios_password_and_more'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='historicalusuarios',
             name='password',
-            field=models.CharField(default='pbkdf2_sha256$600000$eqaCO4rnYmLryqsNr1ebg0$mtUyZgq7w0c+OeqbOTKIP1/TW5ziIviH4wdAuzXSDO0=', max_length=128),
+            field=models.CharField(default='pbkdf2_sha256$600000$DBj5987sB4iHIfAzH4QQji$FZFTim3iVuv/CAeFeTozHLY0X0nNcVDqupD2B8gCE0Q=', max_length=128),
         ),
         migrations.AlterField(
             model_name='usuarios',
             name='password',
-            field=models.CharField(default='pbkdf2_sha256$600000$eqaCO4rnYmLryqsNr1ebg0$mtUyZgq7w0c+OeqbOTKIP1/TW5ziIviH4wdAuzXSDO0=', max_length=128),
+            field=models.CharField(default='pbkdf2_sha256$600000$DBj5987sB4iHIfAzH4QQji$FZFTim3iVuv/CAeFeTozHLY0X0nNcVDqupD2B8gCE0Q=', max_length=128),
         ),
     ]

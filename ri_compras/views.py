@@ -30,6 +30,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
+from django.db.models import Q
 from rest_framework.views import APIView
 
 class CustomObtainAuthToken(APIView):
@@ -137,8 +138,12 @@ class RequisicionViewSet(viewsets.ModelViewSet):
             elif ordenado.lower() == 'false':
                 queryset = queryset.filter(ordenado=False)
 
+        # Agrega estas líneas para filtrar por proyecto nulo o vacío
+        queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
+
         return queryset
 
+                                                                    
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
         requisicion = self.get_object()
