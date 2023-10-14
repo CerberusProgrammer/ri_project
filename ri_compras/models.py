@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
@@ -255,10 +257,17 @@ class Requisicion(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     productos = models.ManyToManyField(ProductoRequisicion, blank=True)
     servicios = models.ManyToManyField(ServicioRequisicion, blank=True)
+    archivo_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
     history = HistoricalRecords()
 
     def __str__(self):
         return f'Requisicion de {self.usuario} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+
+@receiver(pre_delete, sender=Requisicion)
+def requisicion_delete(sender, instance, **kwargs):
+    # Borra el archivo PDF cuando se borra el objeto
+    instance.archivo_pdf.delete(False)
+
 
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)

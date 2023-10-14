@@ -31,6 +31,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from django.db.models import Q
+from django.http import FileResponse
 from rest_framework.views import APIView
 
 class CustomObtainAuthToken(APIView):
@@ -143,7 +144,6 @@ class RequisicionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-                                                                    
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
         requisicion = self.get_object()
@@ -161,6 +161,25 @@ class RequisicionViewSet(viewsets.ModelViewSet):
         producto.save()
 
         return Response({'status': 'Producto actualizado'})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save(archivo_pdf=self.request.data.get('archivo_pdf')) # type: ignore
+
+    @action(detail=True, methods=['get'])
+    def descargar_pdf(self, request, pk=None):
+        requisicion = self.get_object()
+        if requisicion.archivo_pdf:
+            return FileResponse(requisicion.archivo_pdf, as_attachment=True, filename='archivo.pdf')
+        else:
+            return Response({'error': 'No hay archivo PDF para esta requisición'}, status=404)
 
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()

@@ -156,6 +156,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     productos = ProductoSerializer(many=True)
     servicios = ServicioSerializer(many=True)
+    archivo_pdf = serializers.FileField(max_length=None, use_url=True)
 
     class Meta:
         model = Requisicion
