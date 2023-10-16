@@ -5,23 +5,27 @@ from xhtml2pdf.util import ErrorMsg
 
 # Variables que deseas inyectar en el HTML
 variables = {
+    
     'Nombre': 'John Doe',
     'RFC': 'ABCD123456',
     'Domicilio': '123 Main St',
     'Telefono': '555-123-456',
     'Correo': 'john.doe@example.com',
-    'Localidad': 'Mexicali',
-    'Colonia': 'Roble',
-    'Estado': 'Baja California',
-    'Codigo': '12345',
-    'Pais': 'Mexico',
+    'Producto_1': 'Tornillo',
+    'Producto_2': 'Tuerca',
+    'Producto_3': 'Polin',
+    'Cantidad': '1',
+    'Precio': '100',
+    'Subtotal_1': '1,000.00',
+
+
 }
 
 # Directorio donde se encuentra el archivo HTML
-template_dir = 'C:/Users/a1749/ri_project/scripts/'
+template_dir = 'C:/Users/a1749/ri_project/scripts/Compras'
 
 # Nombre del archivo HTML
-template_file = 'OrdenDeCompra2.html'
+template_file = 'OrdenDeCompra.html'
 
 # Carga el entorno de Jinja2
 env = Environment(loader=FileSystemLoader(template_dir))
@@ -40,7 +44,8 @@ if pisa_status.err:  # type: ignore
     print("Error al generar el PDF")
 else:
     # Guarda el PDF en un archivo
-    with open('C:/Users/a1749/ri_project/scripts/OrdenDeCompra.pdf', 'wb') as pdf_file:
+    with open('C:/Users/a1749/ri_project/scripts/Compras/OrdenDeCompra.pdf', 'wb') as pdf_file:
         pdf_file.write(pdf_buffer.getvalue())
     print("PDF generado exitosamente")
 
+    

@@ -7,7 +7,7 @@ variables = {
 }
 
 # Ruta donde se guardará el archivo PDF resultante
-archivo_pdf = 'C:\Users\a1749\ri_project\scripts\Test.pdf'
+archivo_pdf = 'C:/Users/a1749/ri_project/scripts/Test.pdf'
 
 # Crea una cadena HTML con los marcadores de posición
 html_template = """

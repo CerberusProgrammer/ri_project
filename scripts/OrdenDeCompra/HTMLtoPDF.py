@@ -18,10 +18,10 @@ variables = {
 }
 
 # Directorio donde se encuentra el archivo HTML
-template_dir = 'C:/Users/a1749/ri_project/scripts/'
+template_dir = 'C:/Users/a1749/ri_project/scripts/OrdenDeCompra/'
 
 # Nombre del archivo HTML
-template_file = 'OrdenDeCompra2.html'
+template_file = 'OrdenDeCompra.html'
 
 # Carga el entorno de Jinja2
 env = Environment(loader=FileSystemLoader(template_dir))
