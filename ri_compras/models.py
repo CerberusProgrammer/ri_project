@@ -238,7 +238,7 @@ class Proveedor(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.razon_social
+        return f'{self.razon_social} | {self.nombre}'
 
 class Requisicion(models.Model):
     ESTADO_APROBACION = (
@@ -246,7 +246,7 @@ class Requisicion(models.Model):
         ('PENDIENTE', 'Pendiente'),
         ('APROBADO', 'Aprobado'),
     )
-    
+
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)

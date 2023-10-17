@@ -148,7 +148,8 @@ class ProveedorSerializer(serializers.ModelSerializer):
         contactos_data = validated_data.pop('contactos')
         proveedor = Proveedor.objects.create(**validated_data)
         for contacto_data in contactos_data:
-            Contacto.objects.create(proveedor=proveedor, **contacto_data)
+            contacto = Contacto.objects.create(**contacto_data)
+            proveedor.contactos.add(contacto)
         return proveedor
 
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
