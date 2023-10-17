@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import filters
+
+from ri_project import settings
 from .models import Contacto, Departamento, Message
 from .models import Usuarios
 from .models import Producto
@@ -33,6 +35,16 @@ from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.http import FileResponse
 from rest_framework.views import APIView
+
+import os
+from django.http import FileResponse
+from datetime import datetime
+from xhtml2pdf import pisa
+from io import BytesIO
+from jinja2 import Environment, FileSystemLoader
+from xhtml2pdf.util import ErrorMsg
+from pathlib import Path
+import getpass
 
 class CustomObtainAuthToken(APIView):
     def post(self, request, *args, **kwargs):
@@ -210,6 +222,68 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def exportar(self, request):
+        try:
+            # Lee los datos JSON de la petición
+            data = request.data
+
+            # Variables que deseas inyectar en el HTML
+            variables = data  # Usamos los datos JSON directamente
+
+            # Directorio donde se encuentra la carpeta 'pdfs' en la raíz
+            base_pdf_dir = os.path.join(settings.BASE_DIR, 'pdfs')
+
+            # Obtén el nombre de usuario actual
+            nombre_usuario = getpass.getuser()
+
+            # Directorio para el usuario
+            user_pdf_dir = os.path.join(base_pdf_dir, nombre_usuario)
+
+            # Crea el directorio si no existe
+            os.makedirs(user_pdf_dir, exist_ok=True)
+
+            # Crea el nombre del archivo PDF
+            pdf_file_name = f'{datetime.now().day}_{datetime.now().month}_{datetime.now().year}.pdf'
+
+            # Ruta completa del archivo PDF
+            pdf_file_path = os.path.join(user_pdf_dir, pdf_file_name)
+
+            # Directorio relativo para el archivo PDF (usado para el enlace)
+            pdf_relative_path = os.path.join(nombre_usuario, pdf_file_name)
+
+            # Directorio completo para el archivo PDF
+            pdf_full_path = os.path.join(settings.MEDIA_ROOT, pdf_relative_path)
+
+            # Directorio de medios para el enlace del servidor
+            pdf_media_url = os.path.join(settings.MEDIA_URL, pdf_relative_path)
+
+            # Carga el entorno de Jinja2
+            env = Environment(loader=FileSystemLoader('./'))
+            template = env.get_template('miTabla.html')
+
+            # Renderiza el HTML con las variables
+            html_content = template.render(variables=variables)
+
+            # Crea un objeto BytesIO para almacenar el PDF generado
+            pdf_buffer = BytesIO()
+
+            # Convierte el HTML en un archivo PDF
+            pisa_status = pisa.CreatePDF(html_content, dest=pdf_buffer)
+
+            if pisa_status.err: # type: ignore
+                print("Error al generar el PDF")
+            else:
+                # Guarda el PDF en la carpeta de medios
+                with open(pdf_full_path, 'wb') as pdf_file:
+                    pdf_file.write(pdf_buffer.getvalue())
+
+                # Devuelve el enlace del servidor para visualizar el PDF
+                return Response({'pdf_link': pdf_media_url})
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class ReciboViewSet(viewsets.ModelViewSet):
     queryset = Recibo.objects.all()
