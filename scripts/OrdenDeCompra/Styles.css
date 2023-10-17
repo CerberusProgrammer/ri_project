@@ -1,0 +1,65 @@
+.contenedor {
+    display: flex;
+    justify-content: space-between; /* Espacio entre columnas */
+}
+
+.columna {
+    flex: 0.5; /* Distribuir espacio disponible en partes iguales */
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+h2 {
+
+    color: #f2f2f2;
+
+}
+
+h4 {
+    
+    text-align: right 
+}
+
+.info-arriba {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.total {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.firmas {
+    margin-top: 20px;
+    text-align: center;
+}
