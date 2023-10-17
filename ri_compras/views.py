@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import filters
-from .models import Departamento, Message
+from .models import Contacto, Departamento, Message
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -15,7 +15,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import DepartamentoSerializer
+from .serializer import ContactoSerializer, DepartamentoSerializer
 from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -110,6 +110,14 @@ class ServicioViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+class ContactoViewSet(viewsets.ModelViewSet):
+    queryset = Contacto.objects.all()
+    serializer_class = ContactoSerializer
+    ordering_fields = ['nombre']
+    
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
 class RequisicionViewSet(viewsets.ModelViewSet):
     queryset = Requisicion.objects.all()
     serializer_class = RequisicionSerializer
@@ -123,26 +131,29 @@ class RequisicionViewSet(viewsets.ModelViewSet):
         departamento_nombre = self.request.query_params.get('departamento', None) # type: ignore
         aprobado = self.request.query_params.get('aprobado', None) # type: ignore
         ordenado = self.request.query_params.get('ordenado', None) # type: ignore
+        proyecto_nombre = self.request.query_params.get('proyecto', None) # type: ignore
 
         if departamento_nombre is not None:
             queryset = queryset.filter(usuario__departamento__nombre=departamento_nombre)
-        
+            queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
+            
         if aprobado is not None:
             if aprobado.lower() == 'true':
                 queryset = queryset.filter(aprobado=True)
             elif aprobado.lower() == 'false':
                 queryset = queryset.filter(aprobado=False)
-        
+            
         if ordenado is not None:
             if ordenado.lower() == 'true':
                 queryset = queryset.filter(ordenado=True)
             elif ordenado.lower() == 'false':
                 queryset = queryset.filter(ordenado=False)
 
-        # Agrega estas líneas para filtrar por proyecto nulo o vacío
-        queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
+        if proyecto_nombre is not None:
+            queryset = queryset.filter(proyecto__nombre=proyecto_nombre)
 
         return queryset
+
 
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
@@ -171,7 +182,11 @@ class RequisicionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        serializer.save(archivo_pdf=self.request.data.get('archivo_pdf')) # type: ignore
+        archivo_pdf = self.request.data.get('archivo_pdf', None) # type: ignore
+        if archivo_pdf is not None:
+            serializer.save(archivo_pdf=archivo_pdf)
+        else:
+            serializer.save()
 
     @action(detail=True, methods=['get'])
     def descargar_pdf(self, request, pk=None):
@@ -212,24 +227,3 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-#@api_view(['POST'])
-#def crear_orden_de_compra(request):
-#    if request.method == 'POST':
-#        serializer = OrdenDeCompraSerializer(data=request.data)
-#        if serializer.is_valid():
-#            orden_de_compra = serializer.save()
-#
-#            # Renderizar el HTML con los datos de la orden de compra
-#            contexto = {'orden_de_compra': orden_de_compra}
-#            html = render(request, 'detalle_orden_de_compra.html', contexto)
-#
-#            # Crear un archivo PDF vacío donde se escribirá la salida
-#            response = HttpResponse(content_type='application/pdf')
-#            response['Content-Disposition'] = f'attachment; filename="orden_de_compra_{orden_de_compra.id}.pdf"'
-#
-#            # Utilizar pisa para convertir el HTML a PDF y escribirlo en la respuesta
-#            pisa.CreatePDF(html.content, dest=response)
-#
-#            return response
-#        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

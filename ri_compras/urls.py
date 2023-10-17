@@ -13,6 +13,7 @@ from .views import CustomObtainAuthToken
 from .views import GetUserFromToken
 from .views import ProjectViewSet
 from .views import MessageViewSet
+from .views import ContactoViewSet
 
 router = DefaultRouter()
 router.register(r'departamentos', DepartamentoViewSet)
@@ -25,6 +26,7 @@ router.register(r'ordenes', OrdenDeCompraViewSet)
 router.register(r'recibos', ReciboViewSet)
 router.register(r'proyectos', ProjectViewSet)
 router.register(r'messages', MessageViewSet)
+router.register(r'contactos', ContactoViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
