@@ -11,6 +11,9 @@ ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
 AUTH_USER_MODEL = 'ri_compras.Usuarios'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, '')
+
 INSTALLED_APPS = [
     'ri_compras',
     'whitenoise.runserver_nostatic',

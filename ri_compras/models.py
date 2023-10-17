@@ -263,12 +263,6 @@ class Requisicion(models.Model):
     def __str__(self):
         return f'Requisicion de {self.usuario} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
-@receiver(pre_delete, sender=Requisicion)
-def requisicion_delete(sender, instance, **kwargs):
-    # Borra el archivo PDF cuando se borra el objeto
-    instance.archivo_pdf.delete(False)
-
-
 class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)

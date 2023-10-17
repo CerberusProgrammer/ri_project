@@ -1,5 +1,9 @@
 from rest_framework import serializers
-from .models import Contacto, Departamento, Message, ProductoRequisicion, ServicioRequisicion
+from .models import Contacto
+from .models import ServicioRequisicion
+from .models import Departamento
+from .models import Message
+from .models import ProductoRequisicion
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -90,7 +94,6 @@ class MessageSerializer(serializers.ModelSerializer):
 
         return message
 
-
 class UsuariosSerializer(serializers.ModelSerializer):
     requisiciones = SimpleRequisicionSerializer(many=True, read_only=True)
     messages = MessageSerializer(many=True, read_only=True)
@@ -134,13 +137,19 @@ class ServicioSerializer(serializers.ModelSerializer):
         model = Servicio
         fields = ['id', 'nombre', 'descripcion', 'costo', 'divisa']
 
-
 class ProveedorSerializer(serializers.ModelSerializer):
-    contactos = ContactoSerializer(many=True, read_only=True)
-    
+    contactos = ContactoSerializer(many=True)
+
     class Meta:
         model = Proveedor
         fields = '__all__'
+
+    def create(self, validated_data):
+        contactos_data = validated_data.pop('contactos')
+        proveedor = Proveedor.objects.create(**validated_data)
+        for contacto_data in contactos_data:
+            Contacto.objects.create(proveedor=proveedor, **contacto_data)
+        return proveedor
 
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
@@ -156,13 +165,13 @@ class RequisicionSerializer(serializers.ModelSerializer):
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     productos = ProductoSerializer(many=True)
     servicios = ServicioSerializer(many=True)
-    archivo_pdf = serializers.FileField(max_length=None, use_url=True)
 
     class Meta:
         model = Requisicion
         fields = '__all__'
 
     def create(self, validated_data):
+        archivo_pdf = validated_data.pop('archivo_pdf', None)
         usuario_id = validated_data.pop('usuario_id')
         validated_data['usuario'] = Usuarios.objects.get(id=usuario_id)
         productos_data = validated_data.pop('productos', [])
@@ -176,6 +185,11 @@ class RequisicionSerializer(serializers.ModelSerializer):
         for servicio_data in servicios_data:
             servicio, created = ServicioRequisicion.objects.get_or_create(**servicio_data)
             requisicion.servicios.add(servicio)
+
+        if archivo_pdf is not None:
+            requisicion.archivo_pdf = archivo_pdf
+            requisicion.save()
+
         return requisicion
 
     def to_representation(self, instance):
