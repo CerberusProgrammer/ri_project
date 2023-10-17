@@ -99,10 +99,11 @@ class UsuariosSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
     departamento = DepartamentoSerializer(read_only=True)
     password = serializers.CharField(write_only=True)
+    proyectos = SimpleProjectSerializer(many=True, read_only=True)
 
     class Meta:
         model = Usuarios
-        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento', 'requisiciones', 'password', 'messages']
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento', 'requisiciones', 'password', 'messages', 'proyectos']
         read_only_fields = ['requisiciones'] 
 
     def validate_departamento(self, value):
@@ -151,6 +152,23 @@ class ProveedorSerializer(serializers.ModelSerializer):
             contacto = Contacto.objects.create(**contacto_data)
             proveedor.contactos.add(contacto)
         return proveedor
+
+    def update(self, instance, validated_data):
+        contactos_data = validated_data.pop('contactos')
+        instance = super().update(instance, validated_data)
+
+        for contacto_data in contactos_data:
+            contacto_id = contacto_data.get('id', None)
+            if contacto_id:
+                # update existing contact
+                Contacto.objects.filter(id=contacto_id).update(**contacto_data)
+            else:
+                # create new contact
+                contacto = Contacto.objects.create(**contacto_data)
+                instance.contactos.add(contacto)
+
+        return instance
+
 
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
