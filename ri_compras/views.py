@@ -110,9 +110,16 @@ class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     ordering_fields = ['nombre']
-    
+
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Producto.objects.all()
+        search = self.request.query_params.get('search', None) # type: ignore
+        if search is not None:
+            queryset = queryset.filter(Q(nombre__icontains=search))
+        return queryset
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
@@ -121,6 +128,13 @@ class ServicioViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Servicio.objects.all()
+        search = self.request.query_params.get('search', None) # type: ignore
+        if search is not None:
+            queryset = queryset.filter(Q(nombre__icontains=search))
+        return queryset
 
 class ContactoViewSet(viewsets.ModelViewSet):
     queryset = Contacto.objects.all()
@@ -150,10 +164,9 @@ class RequisicionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
             
         if aprobado is not None:
-            if aprobado.lower() == 'true':
-                queryset = queryset.filter(aprobado=True)
-            elif aprobado.lower() == 'false':
-                queryset = queryset.filter(aprobado=False)
+            aprobado = aprobado.upper()  # Convertir a mayúsculas para coincidir con tus opciones
+            if aprobado in dict(Requisicion.ESTADO_APROBACION).keys():
+                queryset = queryset.filter(aprobado=aprobado)
             
         if ordenado is not None:
             if ordenado.lower() == 'true':
@@ -165,7 +178,6 @@ class RequisicionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(proyecto__nombre=proyecto_nombre)
 
         return queryset
-
 
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
@@ -214,6 +226,13 @@ class ProveedorViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Proveedor.objects.all()
+        search = self.request.query_params.get('search', None) # type: ignore
+        if search is not None:
+            queryset = queryset.filter(Q(nombre__icontains=search))
+        return queryset
 
 class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     queryset = OrdenDeCompra.objects.all()
