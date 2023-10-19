@@ -45,6 +45,8 @@ from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf.util import ErrorMsg
 from pathlib import Path
 import getpass
+from django.conf import settings  # Importa la configuración de Django
+
 
 class CustomObtainAuthToken(APIView):
     def post(self, request, *args, **kwargs):
@@ -226,32 +228,19 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def exportar(self, request):
         try:
-            # Lee los datos JSON de la petición
+            # Obtén los datos que necesitas para inyectar en el HTML
             data = request.data
+            # usuario_detail
+            variables = data
+            
+            username = data.get("usuario_detail", {}).get("username")
 
-            # Variables que deseas inyectar en el HTML
-            variables = data  # Usamos los datos JSON directamente
-
-            # Directorio donde se encuentra la carpeta 'pdfs' en la raíz
-            base_pdf_dir = os.path.join(settings.BASE_DIR, 'pdfs')
-
-            # Obtén el nombre de usuario actual
-            nombre_usuario = getpass.getuser()
-
-            # Directorio para el usuario
-            user_pdf_dir = os.path.join(base_pdf_dir, nombre_usuario)
-
-            # Crea el directorio si no existe
-            os.makedirs(user_pdf_dir, exist_ok=True)
-
-            # Crea el nombre del archivo PDF
-            pdf_file_name = f'{datetime.now().day}_{datetime.now().month}_{datetime.now().year}.pdf'
-
-            # Ruta completa del archivo PDF
-            pdf_file_path = os.path.join(user_pdf_dir, pdf_file_name)
+            # Crea el nombre del archivo PDF usando un nombre único
+            pdf_file_name = f'OC_{datetime.now().strftime("%d_%m_%Y")}_{username}.pdf'
+            #OC_dia_mes_año_username_segundo.pdf
 
             # Directorio relativo para el archivo PDF (usado para el enlace)
-            pdf_relative_path = os.path.join(nombre_usuario, pdf_file_name)
+            pdf_relative_path = os.path.join('pdfs/exported', pdf_file_name)
 
             # Directorio completo para el archivo PDF
             pdf_full_path = os.path.join(settings.MEDIA_ROOT, pdf_relative_path)
@@ -259,9 +248,16 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             # Directorio de medios para el enlace del servidor
             pdf_media_url = os.path.join(settings.MEDIA_URL, pdf_relative_path)
 
-            # Carga el entorno de Jinja2
-            env = Environment(loader=FileSystemLoader('./'))
+            # Define la ubicación de tus plantillas de Jinja2
+            template_dir = os.path.join(settings.BASE_DIR, 'ri_compras', 'templates')
+
+            # Crea el entorno de Jinja2
+            env = Environment(loader=FileSystemLoader(template_dir))
+
+            # Obtiene la ubicación del entorno
+            print(f"Ubicación del entorno Jinja2: {template_dir}")
             template = env.get_template('miTabla.html')
+            print(template)
 
             # Renderiza el HTML con las variables
             html_content = template.render(variables=variables)
@@ -272,7 +268,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             # Convierte el HTML en un archivo PDF
             pisa_status = pisa.CreatePDF(html_content, dest=pdf_buffer)
 
-            if pisa_status.err: # type: ignore
+            if pisa_status.err:  # type: ignore
                 print("Error al generar el PDF")
             else:
                 # Guarda el PDF en la carpeta de medios
@@ -283,7 +279,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
                 return Response({'pdf_link': pdf_media_url})
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST) 
 
 class ReciboViewSet(viewsets.ModelViewSet):
     queryset = Recibo.objects.all()
