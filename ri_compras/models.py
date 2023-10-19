@@ -124,13 +124,9 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
     PUESTOS = (
         ('MASTER', 'Master'),
         ('ADMINISTRADOR', 'Administrador'),
-        ('SUPERVISOR', 'Supervisor'),
         ('COMPRADOR', 'Comprador'),
         ('LIDER', 'Lider'),
-        ('CALIDAD', 'Calidad'),
-        ('DISEÑADOR', 'Diseñador'),
         ('OPERADOR', 'Operador'),
-        ('PENDIENTE', 'Pendiente'),
     )
 
     is_staff = models.BooleanField(default=False)
