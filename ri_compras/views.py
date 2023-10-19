@@ -247,54 +247,31 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def exportar(self, request):
         try:
-            # Obtén los datos que necesitas para inyectar en el HTML
             data = request.data
-            # usuario_detail
             variables = data
-            
             username = data.get("usuario_detail", {}).get("username")
 
-            # Crea el nombre del archivo PDF usando un nombre único
-            pdf_file_name = f'OC_{datetime.now().strftime("%d_%m_%Y")}_{username}.pdf'
-            #OC_dia_mes_año_username_segundo.pdf
+            pdf_file_name = f'OC_{username}_{datetime.now().strftime("%d_%m_%Y_%H%M%S")}.pdf'
 
-            # Directorio relativo para el archivo PDF (usado para el enlace)
             pdf_relative_path = os.path.join('pdfs/exported', pdf_file_name)
-
-            # Directorio completo para el archivo PDF
             pdf_full_path = os.path.join(settings.MEDIA_ROOT, pdf_relative_path)
-
-            # Directorio de medios para el enlace del servidor
             pdf_media_url = os.path.join(settings.MEDIA_URL, pdf_relative_path)
 
-            # Define la ubicación de tus plantillas de Jinja2
             template_dir = os.path.join(settings.BASE_DIR, 'ri_compras', 'templates')
-
-            # Crea el entorno de Jinja2
             env = Environment(loader=FileSystemLoader(template_dir))
-
-            # Obtiene la ubicación del entorno
-            print(f"Ubicación del entorno Jinja2: {template_dir}")
             template = env.get_template('miTabla.html')
-            print(template)
 
-            # Renderiza el HTML con las variables
             html_content = template.render(variables=variables)
 
-            # Crea un objeto BytesIO para almacenar el PDF generado
             pdf_buffer = BytesIO()
-
-            # Convierte el HTML en un archivo PDF
             pisa_status = pisa.CreatePDF(html_content, dest=pdf_buffer)
 
             if pisa_status.err:  # type: ignore
                 print("Error al generar el PDF")
             else:
-                # Guarda el PDF en la carpeta de medios
                 with open(pdf_full_path, 'wb') as pdf_file:
                     pdf_file.write(pdf_buffer.getvalue())
 
-                # Devuelve el enlace del servidor para visualizar el PDF
                 return Response({'pdf_link': pdf_media_url})
 
         except Exception as e:

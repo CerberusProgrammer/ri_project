@@ -266,6 +266,7 @@ class OrdenDeCompra(models.Model):
     requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
     recibido = models.BooleanField(default=False)
+    url_pdf = models.URLField(null=True)
     history = HistoricalRecords()
 
     def __str__(self):
