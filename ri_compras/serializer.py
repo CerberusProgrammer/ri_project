@@ -63,7 +63,7 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requisicion
-        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado','ordenado']
+        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf']
 
 class UserMessageSerializer(serializers.ModelSerializer):
     class Meta:
