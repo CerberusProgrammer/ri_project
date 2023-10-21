@@ -1,54 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="description" content="Orden de compra para RI Compras" />
-    <meta name="keywords" content="orden, compra, RI, compras" />
-    <meta name="author" content="{{ variables['usuario_detail']['username'] }}" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .header {
-        text-align: center;
-        padding: 20px;
-        border-bottom: 1px solid #ddd;
-      }
-      .header img {
-        height: 100px;
-      }
-      .header h1 {
-        margin: 0;
-      }
-      .details,
-      .products,
-      .totals {
-        width: 100%;
-        margin: 20px 0;
-      }
-      .details td,
-      .products td,
-      .totals td {
-        padding: 10px;
-      }
-      .products th {
-        text-align: left;
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-      }
-      .products td {
-        border-bottom: 1px solid #ddd;
-      }
-      .totals {
-        border-top: 1px solid #ddd;
-      }
-    </style>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="description" content="Orden de compra para RI Compras" />
+  <meta name="keywords" content="orden, compra, RI, compras" />
+  <meta name="author" content="{{variables['usuario_detail']['username']}}" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 10px; /* Reducido a la mitad */
+      background-color: #fff;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      padding: 10px 0; /* Reducido a la mitad */
+    }
+    .header img {
+      max-width: 200px;
+    }
+    .header h1 {
+      margin: 0;
+    }
+    .details {
+      margin: 10px 0; /* Reducido a la mitad */
+    }
+    .details td {
+      padding: 5px; /* Reducido a la mitad */
+    }
+    .products {
+      width: 100%;
+      margin: 10px 0; /* Reducido a la mitad */
+      border-collapse: collapse;
+    }
+    .products th {
+      background-color: #f2f2f2;
+      padding: 5px; /* Reducido a la mitad */
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    .products td {
+      padding: 5px; /* Reducido a la mitad */
+      border: 1px solid #ddd;
+    }
+    .products th:nth-child(2), .products td:nth-child(2) {
+      width: 40%; /* 40% del ancho disponible */
+    }
+    .products th:nth-child(3), .products td:nth-child(3), .products th:nth-child(4), .products td:nth-child(4) {
+      width: 20%; /* 20% del ancho disponible */
+    }
+    .totals {
+      width: 100%;
+      margin: 10px 0; /* Reducido a la mitad */
+      border-collapse: collapse;
+    }
+    .totals td {
+      padding: 5px; /* Reducido a la mitad */
+      border: 1px solid #ddd;
+      font-weight: bold;
+    }
+    .totals tfoot {
+      border-top: 1px solid #ddd; /* Reducido a la mitad */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
     <div class="header">
-      <figure>
-        <img src="C:\Users\cerbe\Documents\django\ri_project\ri_compras\templates\RI.png" alt="Logo" />
-      </figure>
+      <img src="C:\Users\cerbe\Documents\django\ri_project\ri_compras\templates\RI.png" alt="Logo" />
     </div>
 
     <table class="details">
@@ -73,9 +100,6 @@
         <td>
           <strong>RFC:</strong> {{ variables['proveedor_detail']['rfc'] }}
         </td>
-        <td>
-          <strong>Regimen fiscal:</strong> {{ variables['proveedor_detail']['regimen_fiscal'] }}
-        </td>
       </tr>
     </table>
 
@@ -83,7 +107,7 @@
       <thead>
         <tr>
           <th>Identificador</th>
-          <th>Nombre</th>
+          <th colspan="3">Nombre</th>
           <th>Cantidad</th>
           <th>Costo</th>
         </tr>
@@ -92,12 +116,15 @@
         {% for product in variables['requisicion_detail']['productos'] %}
           <tr>
             <td>{{ product.identificador }}</td>
-            <td>{{ product.nombre }}</td>
+            <td colspan="3">{{ product.nombre }}</td>
             <td>{{ product.cantidad }}</td>
             <td>${{ product.costo }}</td>
           </tr>
         {% endfor %}
       </tbody>
+    </table>
+
+    <table class="totals">
       <tfoot>
         <tr>
           <td>
@@ -132,9 +159,10 @@
       </tfoot>
     </table>
 
-    <div style="text-align: center; margin-top: 50px;">
+    <div style="text-align: center; margin-top: 25px;"> <!-- Reducido a la mitad -->
       Firma del comprador:<br />
       ___________________________
     </div>
-  </body>
+  </div>
+</body>
 </html>
