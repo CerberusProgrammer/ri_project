@@ -1,0 +1,32 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.header {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+.header img {
+    height: 100px;
+}
+.header h1 {
+    margin: 0;
+}
+.details, .products, .totals {
+    width: 100%;
+    margin: 20px 0;
+}
+.details td, .products td, .totals td {
+    padding: 10px;
+}
+.products th {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+.products td {
+    border-bottom: 1px solid #ddd;
+}
+.totals {
+    border-top: 1px solid #ddd;
+}

@@ -1,170 +1,140 @@
-<html>
+<!DOCTYPE html>
+<html lang="es">
   <head>
-    <title>Orden de compra</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Orden de compra para RI Compras" />
+    <meta name="keywords" content="orden, compra, RI, compras" />
+    <meta name="author" content="{{ variables['usuario_detail']['username'] }}" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .header {
+        text-align: center;
+        padding: 20px;
+        border-bottom: 1px solid #ddd;
+      }
+      .header img {
+        height: 100px;
+      }
+      .header h1 {
+        margin: 0;
+      }
+      .details,
+      .products,
+      .totals {
+        width: 100%;
+        margin: 20px 0;
+      }
+      .details td,
+      .products td,
+      .totals td {
+        padding: 10px;
+      }
+      .products th {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+      .products td {
+        border-bottom: 1px solid #ddd;
+      }
+      .totals {
+        border-top: 1px solid #ddd;
+      }
+    </style>
   </head>
-
   <body>
-    <div id="header_content">
-      <div style="text-align: left" id="encabezado">
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <img
-                  src="C:/Users/a1749/ri_project/ri_compras/templates/RI.png"
-                  alt=""
-                  srcset=""
-                />
-              </th>
-              <th>
-                <h1>Orden de compra</h1>
-              </th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-      <div style="text-align: right">
-        <p>Folio:</p>
-        <p>{{variables['usuario_detail']['username']}}</p>
-        <p>Fecha de Emisión:</p>
-        <p>{{variables['fecha_emision']}}</p>
-        
-      </div>
+    <div class="header">
+      <figure>
+        <img src="C:\Users\cerbe\Documents\django\ri_project\ri_compras\templates\RI.png" alt="Logo" />
+      </figure>
     </div>
 
-    <div id="main_content">
-      <div id="datos">
-        <table>
-          <tr>
-          </tr>
-          <tr>
-            <td>Cliente:</td>
-            <td>{{variables['proveedor_detail']['nombre']
-              }}</td>
-          </tr>
-          <tr>
-            <td>Razon social:</td>
-            <td>{{variables['proveedor_detail']['razon_social']
-              }}</td>
-          </tr>
-          <tr>
-            <td>RFC:</td>
-            <td>{{variables['proveedor_detail']['rfc']}}</td>
-          </tr>
-          <tr>
-            <td>Regimen fiscal:</td>
-            <td>{{variables['proveedor_detail']['regimen_fiscal']}}</td>
-          </tr>
-          <tr>
-            <td>Codigo postal:</td>
-            <td>{{variables['proveedor_detail']['codigo_postal']}}</td>
-          </tr>
-          <tr>
-            <td>Direccion:</td>
-            <td>{{variables['proveedor_detail']['direccion']}}</td>
-          </tr>
-          <tr>
-            <td>Direccion geografica:</td>
-            <td>{{variables['proveedor_detail']['direccion_geografica']}}</td>
-          </tr>
-          <tr>
-            <td>Teléfono:</td>
-            <td>{{variables['proveedor_detail']['telefono']}}</td>
-          </tr>
-          <tr>
-            <td>Correo:</td>
-            <td>{{variables['proveedor_detail']['correo']}}</td>
-          </tr>
-          <tr>
-            <td>Pagina:</td>
-            <td>{{variables['proveedor_detail']['pagina']}}</td>
-          </tr>
-          <tr>
-            <td>Tiempo de entrega estimado:</td>
-            <td>{{variables['proveedor_detail']['tiempo_de_entegra_estimado']}}</td>
-          </tr>
-          <tr>
-            <td>Calidad:</td>
-            <td>{{variables['proveedor_detail']['calidad']}}</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>{{variables['proveedor_detail']['iva']}}</td>
-          </tr>
-        </table>
-      </div>
-      <div id="productos">
-        <table border="1">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Descripcion</th>
-              <th>Cantidad</th>
-              <th>Costo</th>
-              <th>Identificador</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for product in variables['requisicion_detail']['productos'] %}
-            <tr>
-              <td>{{product.nombre }}</td>
-              <td>{{product.descripcion}}</td>
-              <td>{{product.cantidad}}</td>
-              <td>${{product.costo}}</td>
-              <td>{{product.identificador}}</td>
+    <table class="details">
+      <tr>
+        <td>
+          <strong>Folio:</strong> OC_{{ variables['id'] }}_{{ variables['usuario_detail']['username'] }}
+        </td>
+        <td>
+          <strong>Fecha de Emisión:</strong> {{ variables['fecha_emision'] }}
+        </td>
+      </tr>
+    </table>
 
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      <!--</div>
-      
-      <div id="totales" style="text-align: left">
-        <p>Iva retenido:</p>
-        <p>{{variables['proveedor_detail']['iva_retenido']}}</p>
-        <p>ISR retenido:</p>
-        <p>{{variables['proveedor_detail']['isr_retenido']}}</p>
-        <p>Días de crédito:</p>
-        <p>{{variables['proveedor_detail']['dias_de_credito']}}</p>
-        <p>Crédito:</p>
-        <p>{{variables['proveedor_detail']['credito']}}</p>
-        <p>Total:</p>
-        <p>1000</p>
-    </div> -->
+    <table class="details">
+      <tr>
+        <td>
+          <strong>Cliente:</strong> {{ variables['proveedor_detail']['nombre'] }}
+        </td>
+        <td>
+          <strong>Razon social:</strong> {{ variables['proveedor_detail']['razon_social'] }}
+        </td>
+        <td>
+          <strong>RFC:</strong> {{ variables['proveedor_detail']['rfc'] }}
+        </td>
+        <td>
+          <strong>Regimen fiscal:</strong> {{ variables['proveedor_detail']['regimen_fiscal'] }}
+        </td>
+      </tr>
+    </table>
 
-    <div id="main_content">
-        <div id="detalles_productos">
-          <table>
-            <tr>
-            </tr>
-            <tr>
-              <td>Iva retenido:</td>
-              <td>{{variables['proveedor_detail']['iva_retenido']
-                }}</td>
-            </tr>
-            <tr>
-              <td>ISR retenido::</td>
-              <td>{{variables['proveedor_detail']['isr_retenido']
-                }}</td>
-            </tr>
-            <tr>
-              <td>Días de crédito:</td>
-              <td>{{variables['proveedor_detail']['dias_de_credito']}}</td>
-            </tr>
-            <tr>
-              <td>Credito:</td>
-              <td>{{variables['proveedor_detail']['credito']}}</td>
-            </tr>
-            <tr>
-              <td>Total:</td>
-              <td>1000.00</td>
-            </tr>
-          </table>
-  
-      <div style="text-align: center" id="footer_content">
-        <p>Firma del comprador:</p>
-        <p>___________________________</p>
-      </div>
+    <table class="products">
+      <thead>
+        <tr>
+          <th>Identificador</th>
+          <th>Nombre</th>
+          <th>Cantidad</th>
+          <th>Costo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in variables['requisicion_detail']['productos'] %}
+          <tr>
+            <td>{{ product.identificador }}</td>
+            <td>{{ product.nombre }}</td>
+            <td>{{ product.cantidad }}</td>
+            <td>${{ product.costo }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>
+            <strong>Subtotal:</strong>
+          </td>
+          <td>${{ variables['subtotal'] }}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>IVA:</strong>
+          </td>
+          <td>${{ variables['iva'] }}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>IVA retenido:</strong>
+          </td>
+          <td>${{ variables['iva_retenido'] }}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>ISR retenido:</strong>
+          </td>
+          <td>${{ variables['isr_retenido'] }}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>Total:</strong>
+          </td>
+          <td>${{ variables['total'] }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="text-align: center; margin-top: 50px;">
+      Firma del comprador:<br />
+      ___________________________
     </div>
   </body>
 </html>
