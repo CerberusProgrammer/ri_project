@@ -234,7 +234,7 @@ class Proveedor(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'{self.razon_social} | {self.nombre}'
+        return f'PV_{self.id} | {self.razon_social}' # type: ignore
 
 class Requisicion(models.Model):
     ESTADO_APROBACION = (
@@ -244,6 +244,8 @@ class Requisicion(models.Model):
     )
 
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_aprobado = models.DateTimeField(null=True)
+    fecha_entrega_estimada = models.DateTimeField(null=True)
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
@@ -257,20 +259,28 @@ class Requisicion(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'Requisicion de {self.usuario} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+        return f'RC_{self.id}_{self.usuario.nombre} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
 class OrdenDeCompra(models.Model):
+    ESTADO_ENVIO = (
+        ('RECHAZADO', 'RECHAZADO'),
+        ('EN SOLICITUD','EN SOLICITUD'),
+        ('EN CAMINO', 'EN CAMINO'),
+        ('EN ALMACEN', 'EN ALMACEN'),
+    )
+    
     fecha_emision = models.DateTimeField(auto_now_add=True)
+    fecha_entrega = models.DateTimeField(null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
-    recibido = models.BooleanField(default=False)
-    url_pdf = models.URLField(null=True)
+    estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")
+    url_pdf = models.CharField(max_length=255, null=True)
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'Orden de compra #{self.id}' # type: ignore
+        return f'OC_{self.id}_{self.requisicion.usuario.nombre} | {self.estado}' # type: ignore
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)

@@ -63,7 +63,7 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requisicion
-        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf']
+        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'fecha_aprobado', 'fecha_entrega_estimada', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf']
 
 class UserMessageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -126,8 +126,14 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class UsuariosVerySimpleSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Usuarios
+        fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol']
+
 class ProjectSerializer(serializers.ModelSerializer):
-    usuario = UsuariosSerializer(read_only=True)
+    usuario = UsuariosVerySimpleSerializer(read_only=True)
     
     class Meta:
         model = Project
@@ -231,7 +237,7 @@ class OrdenDeCompraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','recibido']
+        fields = ['id', 'fecha_emision', 'fecha_entrega', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','recibido', 'url_pdf']
 
 class ReciboSerializer(serializers.ModelSerializer):
     orden = OrdenDeCompraSerializer(many=True)
