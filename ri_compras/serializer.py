@@ -21,7 +21,7 @@ class DepartamentoSerializer(serializers.ModelSerializer):
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = ['id', 'nombre', 'descripcion', 'cantidad', 'costo', 'identificador', 'divisa']
+        fields = '__all__'
 
 class ContactoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -25,6 +25,7 @@ class Producto(models.Model):
     costo = models.DecimalField(max_digits=10, decimal_places=2)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField(default=1)
+    unidad_de_medida = models.CharField(max_length=40, null=True)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -42,6 +43,7 @@ class ProductoRequisicion(models.Model):
     descripcion = models.TextField(default="Sin descripcion")
     cantidad = models.IntegerField(default=1)
     costo = models.DecimalField(max_digits=10, decimal_places=2)
+    unidad_de_medida = models.CharField(max_length=40, null=True)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
 
     def __str__(self):
