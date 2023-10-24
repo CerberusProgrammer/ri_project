@@ -183,6 +183,12 @@ class SimpleUsuariosSerializer(serializers.ModelSerializer):
         model = Usuarios
         fields = ['id', 'username', 'nombre', 'telefono', 'correo', 'rol', 'departamento']
 
+class SimpleOrdenDeCompraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrdenDeCompra
+        fields = ['id', 'fecha_emision', 'estado']  # Solo los campos que necesitas
+
+
 class RequisicionSerializer(serializers.ModelSerializer):
     usuario = SimpleUserProjectSerializer(read_only=True)
     usuario_id = serializers.IntegerField(write_only=True)
@@ -190,10 +196,15 @@ class RequisicionSerializer(serializers.ModelSerializer):
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     productos = ProductoSerializer(many=True)
     servicios = ServicioSerializer(many=True)
+    ordenes = serializers.SerializerMethodField()
 
     class Meta:
         model = Requisicion
         fields = '__all__'
+    
+    def get_ordenes(self, obj):
+        ordenes = OrdenDeCompra.objects.filter(requisicion=obj)
+        return SimpleOrdenDeCompraSerializer(ordenes, many=True).data
 
     def create(self, validated_data):
         archivo_pdf = validated_data.pop('archivo_pdf', None)
