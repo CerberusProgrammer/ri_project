@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Contacto
 from .models import ServicioRequisicion
 from .models import Departamento
@@ -60,10 +61,22 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
     proveedor = SimpleProveedorSerializer(read_only=True)
     productos = ProductoSerializer(many=True, read_only=True)
     servicios = SimpleServicioSerializer(many=True, read_only=True)
+    fecha_creacion = serializers.SerializerMethodField()
+    fecha_aprobado = serializers.SerializerMethodField()
+    fecha_entrega_estimada = serializers.SerializerMethodField()
 
     class Meta:
         model = Requisicion
         fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'fecha_aprobado', 'fecha_entrega_estimada', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf']
+
+    def get_fecha_creacion(self, obj):
+        return timezone.localtime(obj.fecha_creacion)
+
+    def get_fecha_aprobado(self, obj):
+        return timezone.localtime(obj.fecha_aprobado)
+
+    def get_fecha_entrega_estimada(self, obj):
+        return timezone.localtime(obj.fecha_entrega_estimada)
 
 class UserMessageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -175,7 +188,6 @@ class ProveedorSerializer(serializers.ModelSerializer):
 
         return instance
 
-
 class SimpleUsuariosSerializer(serializers.ModelSerializer):
     departamento = DepartamentoSerializer(read_only=True)
 
@@ -186,8 +198,10 @@ class SimpleUsuariosSerializer(serializers.ModelSerializer):
 class SimpleOrdenDeCompraSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'estado']  # Solo los campos que necesitas
+        fields = ['id', 'fecha_emision', 'estado']
 
+    def get_fecha_emision(self, obj):
+        return timezone.localtime(obj.fecha_emision)
 
 class RequisicionSerializer(serializers.ModelSerializer):
     usuario = SimpleUserProjectSerializer(read_only=True)
@@ -197,11 +211,30 @@ class RequisicionSerializer(serializers.ModelSerializer):
     productos = ProductoSerializer(many=True)
     servicios = ServicioSerializer(many=True)
     ordenes = serializers.SerializerMethodField()
+    fecha_creacion = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z") # type: ignore
+    fecha_aprobado = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z", allow_null=True) # type: ignore
+    fecha_entrega_estimada = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z", allow_null=True) # type: ignore
+    fecha_ordenado = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z", allow_null=True) # type: ignore
 
     class Meta:
         model = Requisicion
         fields = '__all__'
     
+    def get_fecha_creacion(self, obj):
+        return timezone.localtime(obj.fecha_creacion)
+
+    def get_fecha_aprobado(self, obj):
+        if obj.fecha_aprobado:
+            return timezone.localtime(obj.fecha_aprobado)
+
+    def get_fecha_entrega_estimada(self, obj):
+        if obj.fecha_entrega_estimada:
+            return timezone.localtime(obj.fecha_entrega_estimada)
+
+    def get_fecha_ordenado(self, obj):
+        if obj.fecha_ordenado:
+            return timezone.localtime(obj.fecha_ordenado)
+
     def get_ordenes(self, obj):
         ordenes = OrdenDeCompra.objects.filter(requisicion=obj)
         return SimpleOrdenDeCompraSerializer(ordenes, many=True).data
@@ -245,10 +278,20 @@ class OrdenDeCompraSerializer(serializers.ModelSerializer):
     usuario = serializers.PrimaryKeyRelatedField(queryset=Usuarios.objects.all())
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
     requisicion = serializers.PrimaryKeyRelatedField(queryset=Requisicion.objects.all())
+    
+    fecha_emision = serializers.SerializerMethodField()
+    fecha_entrega = serializers.SerializerMethodField()
 
     class Meta:
         model = OrdenDeCompra
         fields = ['id', 'fecha_emision', 'fecha_entrega', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','estado', 'url_pdf']
+
+    def get_fecha_emision(self, obj):
+        return timezone.localtime(obj.fecha_emision)
+
+    def get_fecha_entrega(self, obj):
+        if obj.fecha_entrega:
+            return timezone.localtime(obj.fecha_entrega)
 
 class ReciboSerializer(serializers.ModelSerializer):
     orden = OrdenDeCompraSerializer(many=True)

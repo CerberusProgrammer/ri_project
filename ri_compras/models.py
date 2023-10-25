@@ -248,6 +248,7 @@ class Requisicion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_aprobado = models.DateTimeField(null=True)
     fecha_entrega_estimada = models.DateTimeField(null=True)
+    fecha_ordenado = models.DateTimeField(null=True)
     motivo = models.TextField(blank=True)
     total = models.IntegerField(default=0)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
@@ -261,7 +262,7 @@ class Requisicion(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'RC_{self.id}_{self.usuario.nombre} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+        return f'RC_{self.id}_{self.usuario.nombre} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
 class OrdenDeCompra(models.Model):
     ESTADO_ENVIO = (
