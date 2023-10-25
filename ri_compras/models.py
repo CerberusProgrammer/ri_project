@@ -262,7 +262,10 @@ class Requisicion(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'RC_{self.id}_{self.usuario.nombre} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+        username_formatted = self.usuario.nombre # type: ignore
+        username_formatted = username_formatted.lower().replace(' ', '_')
+        
+        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
 class OrdenDeCompra(models.Model):
     ESTADO_ENVIO = (
@@ -283,7 +286,10 @@ class OrdenDeCompra(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f'OC_{self.id}_{self.requisicion.usuario.nombre} | {self.estado}' # type: ignore
+        username_formatted = self.requisicion.usuario.nombre # type: ignore
+        username_formatted = username_formatted.lower().replace(' ', '_')
+        
+        return f'OC_{self.id}_{username_formatted} | {self.estado}' # type: ignore
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)

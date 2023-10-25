@@ -253,6 +253,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             subtotal = 0
             for i in range(len(data['requisicion_detail']['productos'])):
                 subtotal += float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
+                variables['requisicion_detail']['productos'][i]['costo_total'] = subtotal
 
             print(float(variables['proveedor_detail']['iva_retenido']))
             
@@ -266,10 +267,14 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             variables['isr_retenido'] = format(isr_retenido, ',.2f')
             variables['iva_retenido'] = format(iva_retenido, ',.2f')
             variables['total'] = format(total, ',.2f')
+            
 
             username = data.get("usuario_detail", {}).get("username")
+            username = username.lower().replace(' ', '_')
+            id = variables['id']
+            variables['usuario_detail']['username'] = username
 
-            pdf_file_name = f'OC_{username}_{datetime.now().strftime("%d_%m_%Y_%H%M%S")}.pdf'
+            pdf_file_name = f'OC_{id}_{username}.pdf'
 
             pdf_relative_path = os.path.join('pdfs/exported', pdf_file_name)
             pdf_full_path = os.path.join(settings.MEDIA_ROOT, pdf_relative_path)

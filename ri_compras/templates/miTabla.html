@@ -73,6 +73,7 @@
   </style>
 </head>
 <body>
+  <h1 style="text-align: center; padding: 5px"> Orden de Compra</h1>
   <div class="container">
     <div class="header">
       <img src="C:\Users\cerbe\Documents\django\ri_project\ri_compras\templates\RI.png" alt="Logo" />
@@ -81,7 +82,14 @@
     <table class="details">
       <tr>
         <td>
-          <strong>Folio:</strong> OC_{{ variables['id'] }}_{{ variables['usuario_detail']['username'] }}
+          RI Automatizacion de México S.A. de C.V.<br>
+          Alfonso Garcia Gonzalez 1500A<br>
+          Colonia Ex Ejido Coahuila<br>
+          Mexicali, B.C.N., México 21360<br>
+        </td>
+        <td>
+          <strong>Folio:</strong> OC_{{ variables['id'] }}_{{ variables['usuario_detail']['username'] }}<br>
+          <strong>Requisitor:</strong> {{ variables['usuario_detail']['nombre'] }}
         </td>
         <td>
           <strong>Fecha de Emisión:</strong> {{ variables['fecha_emision'] }}
@@ -92,10 +100,8 @@
     <table class="details">
       <tr>
         <td>
-          <strong>Cliente:</strong> {{ variables['proveedor_detail']['nombre'] }}
-        </td>
-        <td>
-          <strong>Razon social:</strong> {{ variables['proveedor_detail']['razon_social'] }}
+          <strong>Cliente:</strong> {{ variables['proveedor_detail']['nombre'] }}<br>
+          <strong>Direccion:</strong> {{ variables['proveedor_detail']['direccion'] }} C.P. {{ variables['proveedor_detail']['codigo_postal'] }} {{ variables['proveedor_detail']['direccion_geografica']}}
         </td>
         <td>
           <strong>RFC:</strong> {{ variables['proveedor_detail']['rfc'] }}
@@ -106,10 +112,11 @@
     <table class="products">
       <thead>
         <tr>
-          <th>Identificador</th>
-          <th colspan="3">Nombre</th>
+          <th>Numero de pieza</th>
+          <th colspan="3">Descripcion</th>
           <th>Cantidad</th>
-          <th>Costo</th>
+          <th>Costo Unitario</th>
+          <th>Costo Total</th>
         </tr>
       </thead>
       <tbody>
@@ -119,6 +126,7 @@
             <td colspan="3">{{ product.nombre }}</td>
             <td>{{ product.cantidad }}</td>
             <td>${{ product.costo }}</td>
+            <td>${{ product.costo_total }}
           </tr>
         {% endfor %}
       </tbody>
