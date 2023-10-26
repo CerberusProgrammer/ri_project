@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-$tvlen_#z*9xumzglocn8b5az449+-z(=t=)uo1obiq8s-rf26'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
@@ -68,10 +68,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ri_project.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'app_ri_database.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'app_ri_database.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ri_compras_db',
+        'USER': 'postgres',
+        'PASSWORD': '$LEScollines90',
+        'HOST': 'localhost',
+        'PORT': '5433',
     }
 }
 
