@@ -80,9 +80,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ri_compras_db',
         'USER': 'postgres',
-        'PASSWORD': '$LEScollines90',
+        'PASSWORD': '$RIAutorizacion00',
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
 
