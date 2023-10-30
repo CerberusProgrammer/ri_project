@@ -11,6 +11,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.auth.hashers import make_password
 from simple_history.models import HistoricalRecords
+from decimal import Decimal
 
 class Producto(models.Model):
     MONEDAS = (
@@ -26,7 +27,7 @@ class Producto(models.Model):
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField(default=1)
     unidad_de_medida = models.CharField(max_length=40, null=True)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nombre
@@ -38,13 +39,13 @@ class ProductoRequisicion(models.Model):
         ('EUR', 'EUR'),
     )
     
-    identificador = models.CharField(max_length=100, null=True)
-    nombre = models.CharField(max_length=100)
+    identificador = models.CharField(max_length=100, null=True, help_text="Codigo o numero identificador")
+    nombre = models.CharField(max_length=100, help_text="Nombre comercial del producto")
     descripcion = models.TextField(default="Sin descripcion")
-    cantidad = models.IntegerField(default=1)
     costo = models.DecimalField(max_digits=10, decimal_places=2)
-    unidad_de_medida = models.CharField(max_length=40, null=True)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
+    cantidad = models.IntegerField(default=1)
+    unidad_de_medida = models.CharField(max_length=40, null=True)
 
     def __str__(self):
         return self.nombre
@@ -60,7 +61,7 @@ class Servicio(models.Model):
     descripcion = models.TextField()
     costo = models.DecimalField(max_digits=10, decimal_places=2)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nombre
@@ -92,7 +93,7 @@ class Departamento(models.Model):
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2, help_text="Dinero actual en el departamento.")
     ingreso_fijo = models.DecimalField(max_digits=10, decimal_places=2, help_text="El ingreso que se mantendra mes con mes.")
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
     
     def __str__(self):
         return self.nombre
@@ -167,7 +168,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
         related_query_name="user",
     )
     
-    #history = HistoricalRecords(inherit=True)
+    history = HistoricalRecords(inherit=True)
 
     @property
     def history_user(self):
@@ -186,10 +187,11 @@ class Project(models.Model):
     
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(max_length=400, blank=True)
-    presupuesto = models.DecimalField(max_digits=10, decimal_places=2, help_text="Dinero actual del proyecto.")
+    presupuesto_inicial = models.DecimalField(max_digits=10, decimal_places=6, help_text="Dinero inicial del proyecto.")
+    presupuesto = models.DecimalField(max_digits=10, decimal_places=6, help_text="Dinero actual del proyecto.", default=Decimal('0.0'))
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nombre
@@ -199,7 +201,7 @@ class Contacto(models.Model):
     direccion = models.CharField(max_length=100)
     telefono = models.CharField(max_length=15)
     correo = models.EmailField(blank=True)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
     
     def __str__(self):
         return self.nombre
@@ -229,11 +231,11 @@ class Proveedor(models.Model):
     iva_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
     isr_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
     dias_de_credito = models.CharField(max_length=100, null=True)
-    credito = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    credito = models.DecimalField(max_digits=20, decimal_places=8, null=True)
     divisa = models.CharField(max_length=5, default='MXN')
     contactos = models.ManyToManyField(Contacto)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True, help_text="0.0 al 0.9")
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return f'PV_{self.id} | {self.razon_social}' # type: ignore
@@ -250,7 +252,7 @@ class Requisicion(models.Model):
     fecha_entrega_estimada = models.DateTimeField(null=True)
     fecha_ordenado = models.DateTimeField(null=True)
     motivo = models.TextField(blank=True)
-    total = models.IntegerField(default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=6, null=True)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
     ordenado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
@@ -259,7 +261,7 @@ class Requisicion(models.Model):
     productos = models.ManyToManyField(ProductoRequisicion, blank=True)
     servicios = models.ManyToManyField(ServicioRequisicion, blank=True)
     archivo_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         username_formatted = self.usuario.nombre # type: ignore
@@ -283,7 +285,7 @@ class OrdenDeCompra(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")
     url_pdf = models.CharField(max_length=255, null=True)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         username_formatted = self.requisicion.usuario.nombre # type: ignore
@@ -295,7 +297,7 @@ class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)
     estado = models.BooleanField(default=False)
     descripcion = models.CharField(max_length=255, default="Sin descripcion")
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return f'Recibo #{self.id}' # type: ignore
@@ -306,7 +308,7 @@ class Message(models.Model):
     title = models.CharField(max_length=100)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    #history = HistoricalRecords()
+    history = HistoricalRecords()
 
     def __str__(self):
         return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}' # type: ignore

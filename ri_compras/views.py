@@ -244,7 +244,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['post'])
     def exportar(self, request):
         try:
             data = request.data
@@ -254,8 +254,6 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             for i in range(len(data['requisicion_detail']['productos'])):
                 subtotal += float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
                 variables['requisicion_detail']['productos'][i]['costo_total'] = subtotal
-
-            print(float(variables['proveedor_detail']['iva_retenido']))
             
             iva = subtotal * float(variables['proveedor_detail']['iva'])
             iva_retenido = subtotal * float(variables['proveedor_detail']['iva_retenido'])
@@ -267,7 +265,6 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             variables['isr_retenido'] = format(isr_retenido, ',.2f')
             variables['iva_retenido'] = format(iva_retenido, ',.2f')
             variables['total'] = format(total, ',.2f')
-            
 
             username = data.get("usuario_detail", {}).get("username")
             username = username.lower().replace(' ', '_')
@@ -276,7 +273,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
             pdf_file_name = f'OC_{id}_{username}.pdf'
 
-            pdf_relative_path = os.path.join('pdfs/exported', pdf_file_name)
+            pdf_relative_path = os.path.join('pdfs', pdf_file_name)
             pdf_full_path = os.path.join(settings.MEDIA_ROOT, pdf_relative_path)
             pdf_media_url = os.path.join(settings.MEDIA_URL, pdf_relative_path)
 
@@ -298,7 +295,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
                 return Response({'pdf_link': pdf_media_url})
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST) 
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class ReciboViewSet(viewsets.ModelViewSet):
     queryset = Recibo.objects.all()
