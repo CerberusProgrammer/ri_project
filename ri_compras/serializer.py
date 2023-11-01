@@ -14,10 +14,23 @@ from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
 
+class UsuarioDepartamentoSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Usuarios
+        fields = ['id', 'nombre', 'telefono', 'correo']
+
 class DepartamentoSerializer(serializers.ModelSerializer):
+    lider = serializers.SerializerMethodField()
+
     class Meta:
         model = Departamento
-        fields = ['id', 'nombre', 'descripcion', 'presupuesto','divisa']
+        fields = ['id', 'nombre', 'descripcion', 'presupuesto', 'divisa', 'lider']
+
+    def get_lider(self, obj):
+        lider = Usuarios.objects.filter(departamento=obj, rol='LIDER').first()
+        return UsuarioDepartamentoSerializer(lider).data if lider else None
+
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,7 +54,7 @@ class SimpleProjectSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Project
-        fields = ['id', 'nombre', 'descripcion', 'usuario']
+        fields = ['id', 'nombre', 'descripcion', 'usuario', 'presupuesto']
 
 class SimpleProveedorSerializer(serializers.ModelSerializer):
     contactos = ContactoSerializer(many=True, read_only=True)
@@ -67,7 +80,7 @@ class SimpleRequisicionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requisicion
-        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'fecha_aprobado', 'fecha_entrega_estimada', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf']
+        fields = ['id', 'usuario', 'proyecto', 'proveedor', 'productos', 'servicios', 'fecha_creacion', 'fecha_aprobado', 'fecha_entrega_estimada', 'motivo', 'total', 'aprobado','ordenado', 'archivo_pdf', 'tipo_de_cambio']
 
     def get_fecha_creacion(self, obj):
         return timezone.localtime(obj.fecha_creacion)

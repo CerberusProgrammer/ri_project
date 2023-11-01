@@ -125,8 +125,8 @@
             <td>{{ product.identificador }}</td>
             <td colspan="3">{{ product.nombre }}</td>
             <td>{{ product.cantidad }}</td>
-            <td>${{ product.costo }}</td>
-            <td>${{ product.costo_total }}
+            <td>${{ product.costo }} {{ product.divisa }}</td>
+            <td>${{ product.costo_total }} {{ product.divisa }}
           </tr>
         {% endfor %}
       </tbody>
@@ -138,31 +138,31 @@
           <td>
             <strong>Subtotal:</strong>
           </td>
-          <td>${{ variables['subtotal'] }}</td>
+          <td>${{ variables['subtotal'] }} {{ variables['requisicion_detail']['productos'][0]['divisa'] }}</td>
         </tr>
         <tr>
           <td>
             <strong>IVA:</strong>
           </td>
-          <td>${{ variables['iva'] }}</td>
+          <td>${{ variables['iva'] }} {{ variables['requisicion_detail']['productos'][0]['divisa'] }}</td>
         </tr>
         <tr>
           <td>
             <strong>IVA retenido:</strong>
           </td>
-          <td>${{ variables['iva_retenido'] }}</td>
+          <td>${{ variables['iva_retenido'] }} {{ variables['requisicion_detail']['productos'][0]['divisa'] }}</td>
         </tr>
         <tr>
           <td>
             <strong>ISR retenido:</strong>
           </td>
-          <td>${{ variables['isr_retenido'] }}</td>
+          <td>${{ variables['isr_retenido'] }} {{ variables['requisicion_detail']['productos'][0]['divisa'] }}</td>
         </tr>
         <tr>
           <td>
             <strong>Total:</strong>
           </td>
-          <td>${{ variables['total'] }}</td>
+          <td>${{ variables['total'] }} {{ variables['requisicion_detail']['productos'][0]['divisa'] }}</td>
         </tr>
       </tfoot>
     </table>

@@ -20,10 +20,10 @@ class Producto(models.Model):
         ('EUR', 'EUR'),
     )
     
-    identificador = models.CharField(max_length=100, null=True, help_text="Codigo o numero identificador")
+    identificador = models.CharField(max_length=100, null=True,blank=True, help_text="Codigo o numero identificador")
     nombre = models.CharField(max_length=100, help_text="Nombre comercial del producto")
     descripcion = models.TextField(default="Sin descripcion")
-    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    costo = models.DecimalField(max_digits=30, decimal_places=6)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField(default=1)
     unidad_de_medida = models.CharField(max_length=40, null=True)
@@ -39,13 +39,13 @@ class ProductoRequisicion(models.Model):
         ('EUR', 'EUR'),
     )
     
-    identificador = models.CharField(max_length=100, null=True, help_text="Codigo o numero identificador")
+    identificador = models.CharField(max_length=100, null=True, blank=True, help_text="Codigo o numero identificador")
     nombre = models.CharField(max_length=100, help_text="Nombre comercial del producto")
     descripcion = models.TextField(default="Sin descripcion")
-    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    costo = models.DecimalField(max_digits=30, decimal_places=6)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField(default=1)
-    unidad_de_medida = models.CharField(max_length=40, null=True)
+    unidad_de_medida = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return self.nombre
@@ -90,8 +90,8 @@ class Departamento(models.Model):
     
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(max_length=400, blank=True)
-    presupuesto = models.DecimalField(max_digits=10, decimal_places=2, help_text="Dinero actual en el departamento.")
-    ingreso_fijo = models.DecimalField(max_digits=10, decimal_places=2, help_text="El ingreso que se mantendra mes con mes.")
+    presupuesto = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero actual en el departamento.")
+    ingreso_fijo = models.DecimalField(max_digits=30, decimal_places=6, help_text="El ingreso que se mantendra mes con mes.")
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     history = HistoricalRecords()
     
@@ -174,6 +174,9 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
     def history_user(self):
         return self.username
 
+    def __str__(self):
+        return f'{self.username} = {self.nombre} | {self.rol}' # type: ignore
+
     @history_user.setter
     def history_user(self, value):
         self._history_user = value
@@ -187,8 +190,8 @@ class Project(models.Model):
     
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(max_length=400, blank=True)
-    presupuesto_inicial = models.DecimalField(max_digits=10, decimal_places=6, help_text="Dinero inicial del proyecto.")
-    presupuesto = models.DecimalField(max_digits=10, decimal_places=6, help_text="Dinero actual del proyecto.", default=Decimal('0.0'))
+    presupuesto_inicial = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero inicial del proyecto.")
+    presupuesto = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero actual del proyecto.", default=Decimal('0.0'))
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
     history = HistoricalRecords()
@@ -227,11 +230,11 @@ class Proveedor(models.Model):
     correo = models.EmailField(null=True)
     pagina = models.URLField(null=True)
     tiempo_de_entegra_estimado = models.CharField(max_length=120, null=True)
-    iva = models.DecimalField(max_digits=10, decimal_places=10)
-    iva_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
-    isr_retenido = models.DecimalField(max_digits=10, decimal_places=10, null=True)
+    iva = models.DecimalField(max_digits=20, decimal_places=6)
+    iva_retenido = models.DecimalField(max_digits=20, decimal_places=6, null=True)
+    isr_retenido = models.DecimalField(max_digits=20, decimal_places=6, null=True)
     dias_de_credito = models.CharField(max_length=100, null=True)
-    credito = models.DecimalField(max_digits=20, decimal_places=8, null=True)
+    credito = models.DecimalField(max_digits=30, decimal_places=6, null=True)
     divisa = models.CharField(max_length=5, default='MXN')
     contactos = models.ManyToManyField(Contacto)
     calidad = models.DecimalField(max_digits=2, decimal_places=2, blank=True, help_text="0.0 al 0.9")
@@ -252,7 +255,7 @@ class Requisicion(models.Model):
     fecha_entrega_estimada = models.DateTimeField(null=True)
     fecha_ordenado = models.DateTimeField(null=True)
     motivo = models.TextField(blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=6, null=True)
+    total = models.DecimalField(max_digits=30, decimal_places=6, null=True)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
     ordenado = models.BooleanField(default=False)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
@@ -261,6 +264,7 @@ class Requisicion(models.Model):
     productos = models.ManyToManyField(ProductoRequisicion, blank=True)
     servicios = models.ManyToManyField(ServicioRequisicion, blank=True)
     archivo_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
+    tipo_de_cambio = models.DecimalField(max_digits=10, decimal_places=6, blank=True, null=True)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -280,7 +284,7 @@ class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     fecha_entrega = models.DateTimeField(null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=30, decimal_places=6)
     requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")

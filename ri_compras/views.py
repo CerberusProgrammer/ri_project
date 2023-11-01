@@ -47,7 +47,6 @@ from pathlib import Path
 import getpass
 from django.conf import settings  # Importa la configuración de Django
 
-
 class CustomObtainAuthToken(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
@@ -81,7 +80,7 @@ class GetUserFromToken(APIView):
             return Response({'error': 'No se proporcionó ningún token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all()
+    queryset = Project.objects.all().order_by('-id')
     serializer_class = ProjectSerializer
     
     authentication_classes = [TokenAuthentication]
@@ -109,7 +108,7 @@ class DepartamentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
+    queryset = Producto.objects.all().order_by('-id')
     serializer_class = ProductoSerializer
     ordering_fields = ['nombre']
 
@@ -117,7 +116,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        queryset = Producto.objects.all()
+        queryset = self.queryset
         search = self.request.query_params.get('search', None) # type: ignore
         if search is not None:
             queryset = queryset.filter(Q(nombre__icontains=search))
@@ -139,7 +138,7 @@ class ServicioViewSet(viewsets.ModelViewSet):
         return queryset
 
 class ContactoViewSet(viewsets.ModelViewSet):
-    queryset = Contacto.objects.all()
+    queryset = Contacto.objects.all().order_by('-id')
     serializer_class = ContactoSerializer
     ordering_fields = ['nombre']
     
@@ -147,7 +146,7 @@ class ContactoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class RequisicionViewSet(viewsets.ModelViewSet):
-    queryset = Requisicion.objects.all()
+    queryset = Requisicion.objects.all().order_by('-id')
     serializer_class = RequisicionSerializer
     ordering_fields = ['fecha_creacion', 'aprobado', 'usuario']
     
@@ -223,7 +222,7 @@ class RequisicionViewSet(viewsets.ModelViewSet):
             return Response({'error': 'No hay archivo PDF para esta requisición'}, status=404)
 
 class ProveedorViewSet(viewsets.ModelViewSet):
-    queryset = Proveedor.objects.all()
+    queryset = Proveedor.objects.all().order_by('-id')
     serializer_class = ProveedorSerializer
     
     authentication_classes = [TokenAuthentication]
@@ -237,9 +236,9 @@ class ProveedorViewSet(viewsets.ModelViewSet):
         return queryset
 
 class OrdenDeCompraViewSet(viewsets.ModelViewSet):
-    queryset = OrdenDeCompra.objects.all()
+    queryset = OrdenDeCompra.objects.all().order_by('-id')
     serializer_class = OrdenDeCompraSerializer
-    ordering_fields = ['fecha_emision', 'total', 'usuario']
+    ordering_fields = ['fecha_emision', 'total', 'usuario', 'id']
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -305,7 +304,7 @@ class ReciboViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
+    queryset = Message.objects.all().order_by('-id')
     serializer_class = MessageSerializer
     
     filter_backends = [filters.SearchFilter]
