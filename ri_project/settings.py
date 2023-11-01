@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-$tvlen_#z*9xumzglocn8b5az449+-z(=t=)uo1obiq8s-rf26'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
@@ -102,11 +102,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'America/Tijuana'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = '/static/'
