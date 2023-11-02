@@ -252,18 +252,27 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             subtotal = 0
             for i in range(len(data['requisicion_detail']['productos'])):
                 subtotal += float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
-                variables['requisicion_detail']['productos'][i]['costo_total'] = subtotal
+                variables['requisicion_detail']['productos'][i]['costo_total'] = format(subtotal, ',.6f')
+                
+            for i in range(len(data['requisicion_detail']['service'])):
+                subtotal += float(data['requisicion_detail']['service'][i]['costo'])
             
             iva = subtotal * float(variables['proveedor_detail']['iva'])
             iva_retenido = subtotal * float(variables['proveedor_detail']['iva_retenido'])
             isr_retenido = subtotal * float(variables['proveedor_detail']['isr_retenido'])
             total = subtotal + iva + isr_retenido + iva_retenido
 
-            variables['subtotal'] = format(subtotal, ',.2f')
-            variables['iva'] = format(iva, ',.2f')
-            variables['isr_retenido'] = format(isr_retenido, ',.2f')
-            variables['iva_retenido'] = format(iva_retenido, ',.2f')
-            variables['total'] = format(total, ',.2f')
+            variables['subtotal'] = format(subtotal, ',.6f')
+            variables['iva'] = format(iva, ',.6f')
+            variables['isr_retenido'] = format(isr_retenido, ',.6f')
+            variables['iva_retenido'] = format(iva_retenido, ',.6f')
+            variables['total'] = format(total, ',.6f')
+
+            if not variables['requisicion_detail']['productos']:
+                variables['divisa'] = variables['requisicion_detail']['service'][0]['divisa']
+
+            if not variables['requisicion_detail']['service']:
+                variables['divisa'] = variables['requisicion_detail']['productos'][0]['divisa']
 
             username = data.get("usuario_detail", {}).get("username")
             username = username.lower().replace(' ', '_')
