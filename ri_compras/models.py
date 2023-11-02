@@ -17,7 +17,6 @@ class Producto(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     identificador = models.CharField(max_length=100, null=True,blank=True, help_text="Codigo o numero identificador")
@@ -36,7 +35,6 @@ class ProductoRequisicion(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     identificador = models.CharField(max_length=100, null=True, blank=True, help_text="Codigo o numero identificador")
@@ -54,12 +52,11 @@ class Servicio(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    costo = models.DecimalField(max_digits=30, decimal_places=6)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     history = HistoricalRecords()
 
@@ -70,12 +67,11 @@ class ServicioRequisicion(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    costo = models.DecimalField(max_digits=30, decimal_places=6)
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
 
     def __str__(self):
@@ -85,7 +81,6 @@ class Departamento(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     nombre = models.CharField(max_length=100, unique=True)
@@ -185,7 +180,6 @@ class Project(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
         ('USD', 'USD'),
-        ('EUR', 'EUR'),
     )
     
     nombre = models.CharField(max_length=100, unique=True)
@@ -201,7 +195,6 @@ class Project(models.Model):
 
 class Contacto(models.Model):
     nombre = models.CharField(max_length=100)
-    direccion = models.CharField(max_length=100)
     telefono = models.CharField(max_length=15)
     correo = models.EmailField(blank=True)
     history = HistoricalRecords()

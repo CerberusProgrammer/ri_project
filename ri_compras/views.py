@@ -108,7 +108,7 @@ class DepartamentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all().order_by('-id')
+    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     ordering_fields = ['nombre']
 
@@ -116,7 +116,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = Producto.objects.all()
         search = self.request.query_params.get('search', None) # type: ignore
         if search is not None:
             queryset = queryset.filter(Q(nombre__icontains=search))
