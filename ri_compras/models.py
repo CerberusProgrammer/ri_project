@@ -196,7 +196,7 @@ class Project(models.Model):
 class Contacto(models.Model):
     nombre = models.CharField(max_length=100)
     telefono = models.CharField(max_length=15)
-    correo = models.EmailField(blank=True)
+    correo = models.CharField(max_length=100, null=True)
     history = HistoricalRecords()
     
     def __str__(self):
@@ -220,7 +220,7 @@ class Proveedor(models.Model):
     direccion = models.CharField(max_length=250, help_text="Ej. Avenida Soles #8193")
     direccion_geografica = models.CharField(max_length=100, help_text="Ej. Mexicali, B.C, Mexico")
     telefono = models.CharField(max_length=15, null=True)
-    correo = models.EmailField(null=True)
+    correo = models.CharField(max_length=100, null=True)
     pagina = models.URLField(null=True)
     tiempo_de_entegra_estimado = models.CharField(max_length=120, null=True)
     iva = models.DecimalField(max_digits=20, decimal_places=6)
