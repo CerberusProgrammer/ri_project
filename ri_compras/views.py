@@ -63,8 +63,6 @@ class GetUserFromToken(APIView):
         token_header = request.META.get('HTTP_AUTHORIZATION')
         if token_header is not None:
             try:
-                # El encabezado de autorización generalmente tiene el formato 'Token abc123'
-                # Así que necesitamos dividirlo para obtener el token real
                 token_key = token_header.split(' ')[1]
                 token = Token.objects.get(key=token_key)
                 user = token.user
