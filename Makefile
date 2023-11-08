@@ -13,4 +13,4 @@ dockerize:
 	docker run -p 8000:8000 ri_server0.1.0
 
 install:
-	pip install -r requirements.txt
+	pip3 install -r requirements.txt
