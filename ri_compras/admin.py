@@ -19,7 +19,7 @@ class ProjectAdmin(SimpleHistoryAdmin):
         return super().history_view(request, object_id, extra_context=extra_context)
 
     def get_change_reason(self):
-        return None 
+        return None
 
 admin.site.register(Project, ProjectAdmin)
 

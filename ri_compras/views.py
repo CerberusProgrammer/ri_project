@@ -43,10 +43,6 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from jinja2 import Environment, FileSystemLoader
 
-from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import get_template
-
 class CustomObtainAuthToken(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
@@ -99,28 +95,6 @@ class UsuariosViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['departamento__nombre']
     ordering_fields = ['username']
-
-    @action(detail=False, methods=['post'])
-    def sendemail(self, request):
-        user_email = request.data.get('correo')
-        title = request.data.get('title')
-        message_content = request.data.get('message')
-
-        if not all([user_email, title, message_content]):
-            return Response({'error': 'Se requiere el correo electrónico del usuario, el título y el mensaje'}, status=400)
-
-        user = self.queryset.filter(correo=user_email).first()
-        if not user:
-            return Response({'error': 'Usuario no encontrado'}, status=404)
-
-        from_email = settings.EMAIL_HOST_USER
-        if not isinstance(from_email, str):
-            from_email = str(from_email)
-
-        message = EmailMultiAlternatives(title, message_content, from_email, [user.correo])
-        message.send()
-
-        return Response({'status': 'Correo enviado'})
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
     queryset = Departamento.objects.all()
