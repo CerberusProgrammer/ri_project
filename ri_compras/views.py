@@ -113,8 +113,9 @@ class ProductoViewSet(viewsets.ModelViewSet):
         queryset = Producto.objects.all()
         search = self.request.query_params.get('search', None) # type: ignore
         if search is not None:
-            queryset = queryset.filter(Q(nombre__icontains=search))
+            queryset = queryset.filter(Q(nombre__icontains=search) | Q(identificador__icontains=search))
         return queryset
+
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
