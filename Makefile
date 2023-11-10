@@ -1,7 +1,10 @@
 build compras:
 	python3 manage.py makemigrations ri_compras
 	python3 manage.py migrate ri_compras
-	python3 manage.py runserver
+
+build produccion:
+	python3 manage.py makemigrations ri_produccion
+	python3 manage.py migrate ri_produccion
 
 start:
 	python3 manage.py makemigrations
