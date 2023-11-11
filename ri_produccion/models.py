@@ -17,8 +17,15 @@ class Placa(models.Model):
         return str(self.piezas)
 
 class Proceso(models.Model):
+    ESTATUS_CHOICES = [
+        ('rechazado', 'Rechazado'),
+        ('pendiente', 'Pendiente'),
+        ('operando', 'Operando'),
+        ('realizado', 'Realizado'),
+    ]
+
     nombre = models.CharField(max_length=100)
-    estatus = models.CharField(max_length=50)
+    estatus = models.CharField(max_length=50, choices=ESTATUS_CHOICES)
     maquina = models.CharField(max_length=100)
     inicioProceso = models.DateTimeField()
     finProceso = models.DateTimeField()
@@ -26,6 +33,7 @@ class Proceso(models.Model):
 
     def __str__(self):
         return self.nombre
+
 
 class Pieza(models.Model):
     consecutivo = models.CharField(max_length=100, unique=True)
