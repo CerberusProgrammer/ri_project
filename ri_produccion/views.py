@@ -2,10 +2,12 @@ from rest_framework import viewsets, filters
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from django.utils import timezone
-from django.db.models import Count, Min, Max
+from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWrapper
 
 from ri_compras.models import Usuarios
+from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
 
 from .models import Material, Placa, Proceso, Pieza
 from .serializers import MaterialSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
@@ -36,17 +38,18 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
-    
+
+    @action(detail=False, methods=['get'])
     def porcentaje_realizados_hoy(self, request):
         procesos_hoy = [proceso for proceso in Proceso.objects.all() if proceso.inicioProceso.date() == timezone.now().date()]
 
         procesos_realizados_hoy = [proceso for proceso in procesos_hoy if proceso.estatus == 'realizado']
-
         porcentaje_realizados_hoy = len(procesos_realizados_hoy) / len(procesos_hoy) * 100 if procesos_hoy else 0
 
         return Response({"porcentaje_realizados_hoy": porcentaje_realizados_hoy})
-    
-    def mis_procesos(self, request):
+
+    @action(detail=False, methods=['get'])
+    def personal(self, request):
         mis_procesos = Proceso.objects.filter(realizadoPor=request.user)
 
         if not mis_procesos:
@@ -54,23 +57,23 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(mis_procesos, many=True)
         return Response(serializer.data)
-    
-    def usuario_mas_procesos(self, request):
-        usuario_mas_procesos = Usuarios.objects.annotate(num_procesos=Count('proceso')).order_by('-num_procesos').first()
+
+    @action(detail=False, methods=['get'])
+    def usuario_mas_procesos_hoy(self, request):
+        hoy = timezone.now().date()
+
+        usuarios = Usuarios.objects.filter(proceso__inicioProceso__date=hoy)
+        usuarios = usuarios.annotate(num_procesos=Count('proceso'))
+
+        usuario_mas_procesos = usuarios.order_by('-num_procesos').first()
 
         if not usuario_mas_procesos:
-            return Response({"message": "No hay ningún usuario que haya realizado un proceso."})
+            return Response({"message": "No hay ningún usuario que haya realizado un proceso hoy."})
 
-        serializer = self.get_serializer(usuario_mas_procesos)
-        return Response(serializer.data)
+        procesos_hoy_ids = usuario_mas_procesos.proceso_set.filter(inicioProceso__date=hoy).values_list('id', flat=True)
+        usuario_mas_procesos.procesos_hoy_ids = list(procesos_hoy_ids)
 
-    def usuario_mas_rapido(self, request):
-        usuario_mas_rapido = Usuarios.objects.annotate(duracion_proceso=Min('proceso__finProceso') - Max('proceso__inicioProceso')).order_by('duracion_proceso').first()
-
-        if not usuario_mas_rapido:
-            return Response({"message": "No hay ningún usuario que haya realizado un proceso."})
-
-        serializer = self.get_serializer(usuario_mas_rapido)
+        serializer = UsuariosVerySimpleSerializer(usuario_mas_procesos)
         return Response(serializer.data)
 
 class PiezaViewSet(viewsets.ModelViewSet):
@@ -81,18 +84,21 @@ class PiezaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
-    
-    def piezas_pendientes(self, request):
+
+    @action(detail=False, methods=['get'])
+    def pendientes(self, request):
         piezas_pendientes = Pieza.objects.filter(procesos__estatus='pendiente')
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
 
-    def piezas_prioridad(self, request):
+    @action(detail=False, methods=['get'])
+    def prioritarios(self, request):
         piezas_prioridad = Pieza.objects.filter(prioridad=True)
         serializer = self.get_serializer(piezas_prioridad, many=True)
         return Response(serializer.data)
 
-    def piezas_hoy(self, request):
+    @action(detail=False, methods=['get'])
+    def hoy(self, request):
         piezas_hoy = [pieza for pieza in Pieza.objects.all() if any(proceso.inicioProceso.date() == timezone.now().date() for proceso in pieza.procesos.all())]
 
         if not piezas_hoy:
@@ -100,8 +106,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(piezas_hoy, many=True)
         return Response(serializer.data)
-    
-    def proxima_pieza(self, request):
+
+    @action(detail=False, methods=['get'])
+    def proximo(self, request):
         piezas_proximas = [pieza for pieza in Pieza.objects.all() if any(proceso.inicioProceso > timezone.now() for proceso in pieza.procesos.all())]
 
         if not piezas_proximas:
@@ -111,7 +118,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(proxima_pieza)
         return Response(serializer.data)
-    
+
+    @action(detail=False, methods=['get'])
     def porcentaje_realizadas_hoy(self, request):
         piezas_hoy = [pieza for pieza in Pieza.objects.all() if any(proceso.inicioProceso.date() == timezone.now().date() for proceso in pieza.procesos.all())]
 
