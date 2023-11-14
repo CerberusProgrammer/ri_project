@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWrapper
+from rest_framework import status
+
 
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
@@ -75,6 +77,52 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
         serializer = UsuariosVerySimpleSerializer(usuario_mas_procesos)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def procesos_rechazados(self, request):
+        procesos_rechazados = Proceso.objects.filter(estatus='rechazado')
+        serializer = self.get_serializer(procesos_rechazados, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def procesos_operando(self, request):
+        procesos_operando = Proceso.objects.filter(estatus='operando')
+        serializer = self.get_serializer(procesos_operando, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def procesos_completados(self, request):
+        procesos_completados = Proceso.objects.filter(estatus='realizado')
+        serializer = self.get_serializer(procesos_completados, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def procesos_pendientes(self, request):
+        procesos_pendientes = Proceso.objects.filter(estatus='pendiente')
+        serializer = self.get_serializer(procesos_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def procesos_prioritarios(self, request):
+        procesos_prioritarios = Proceso.objects.filter(prioridad=True)
+        serializer = self.get_serializer(procesos_prioritarios, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def contar_procesos_pendientes(self, request):
+        count = Proceso.objects.filter(estatus='pendiente').count()
+        return Response({"count": count})
+
+    @action(detail=False, methods=['get'])
+    def contar_procesos_prioritarios(self, request):
+        count = Proceso.objects.filter(prioridad=True).count()
+        return Response({"count": count})
+
+    @action(detail=False, methods=['get'])
+    def contar_procesos_del_dia(self, request):
+        hoy = timezone.now().date()
+        count = Proceso.objects.filter(inicioProceso__date=hoy).count()
+        return Response({"count": count})
 
 class PiezaViewSet(viewsets.ModelViewSet):
     queryset = Pieza.objects.all()
@@ -102,21 +150,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_hoy = [pieza for pieza in Pieza.objects.all() if any(proceso.inicioProceso.date() == timezone.now().date() for proceso in pieza.procesos.all())]
 
         if not piezas_hoy:
-            return Response({"message": "No hay ninguna pieza con un proceso que comienza hoy."})
+            return Response({"detail": "No hay ninguna pieza con un proceso que comienza hoy."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = self.get_serializer(piezas_hoy, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def proximo(self, request):
-        piezas_proximas = [pieza for pieza in Pieza.objects.all() if any(proceso.inicioProceso > timezone.now() for proceso in pieza.procesos.all())]
-
-        if not piezas_proximas:
-            return Response({"message": "No hay ninguna pieza con un próximo proceso a realizar."})
-
-        proxima_pieza = min(piezas_proximas, key=lambda pieza: min(proceso.inicioProceso for proceso in pieza.procesos.all() if proceso.inicioProceso > timezone.now()))
-
-        serializer = self.get_serializer(proxima_pieza)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])

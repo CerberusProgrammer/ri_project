@@ -12,7 +12,7 @@ class PlacaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProcesoSerializer(serializers.ModelSerializer):
-    placa = PlacaSerializer()
+    placa = PlacaSerializer(read_only=True)
     class Meta:
         model = Proceso
         fields = '__all__'
@@ -20,9 +20,9 @@ class ProcesoSerializer(serializers.ModelSerializer):
 class PiezaSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
     placas = serializers.PrimaryKeyRelatedField(queryset=Placa.objects.all(), many=True, required=False)
-    procesos = serializers.PrimaryKeyRelatedField(queryset=Proceso.objects.all(), many=True, required=False)
+    procesos = ProcesoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Pieza
-        fields = ['consecutivo', 'ordenCompra', 'piezas', 'piezasTotales', 'material', 'placas', 'procesos', 'creadoPor', 'archivo_pdf']
+        fields = '__all__'
 
