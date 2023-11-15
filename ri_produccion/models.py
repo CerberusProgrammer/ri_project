@@ -55,7 +55,7 @@ class Pieza(models.Model):
     material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
     placas = models.ManyToManyField(Placa, blank=True)
     procesos = models.ManyToManyField(Proceso, blank=True)
-    creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE, null=True, blank=True)
+    creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     fechaCreado = models.DateTimeField(auto_now_add=True)
     archivo_pdf = models.FileField(upload_to='pdfs-produccion', blank=True, null=True)
     prioridad = models.BooleanField(default=False)
