@@ -222,55 +222,55 @@ class RequisicionViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=['get'])
-    def ultimas_requisiciones(self, request, id_usuario=None):
-        if id_usuario is not None:
-            ultimas_requisiciones = Requisicion.objects.filter(usuario__id=id_usuario).order_by('-id')[:10]
+    @action(detail=True, methods=['post'])
+    def ultimas_requisiciones(self, request, pk=None):
+        if pk is not None:
+            ultimas_requisiciones = Requisicion.objects.filter(usuario__id=pk).order_by('-id')[:10]
             serializer = self.get_serializer(ultimas_requisiciones, many=True)
             return Response(serializer.data)
         else:
             return Response({"error": "No se proporcionó un ID de usuario."})
-    
-    @action(detail=False, methods=['get'])
-    def requisiciones_pendientes(self, request, id_usuario=None):
-        if id_usuario is not None:
-            requisiciones = Requisicion.objects.filter(usuario__id=id_usuario, aprobado='PENDIENTE').order_by('-id')[:10]
+
+    @action(detail=True, methods=['get'])
+    def requisiciones_rechazadas(self, request, pk=None):
+        if pk is not None:
+            requisiciones = Requisicion.objects.filter(usuario__id=pk, aprobado='RECHAZADO').order_by('-id')[:10]
             serializer = self.get_serializer(requisiciones, many=True)
             return Response(serializer.data)
         else:
             return Response({"error": "No se proporcionó un ID de usuario."})
 
-    @action(detail=False, methods=['get'])
-    def requisiciones_rechazadas(self, request, id_usuario=None):
-        if id_usuario is not None:
-            requisiciones = Requisicion.objects.filter(usuario__id=id_usuario, aprobado='RECHAZADO').order_by('-id')[:10]
+    @action(detail=True, methods=['get'])
+    def requisiciones_aprobadas(self, request, pk=None):
+        if pk is not None:
+            requisiciones = Requisicion.objects.filter(usuario__id=pk, aprobado='APROBADO').order_by('-id')[:10]
             serializer = self.get_serializer(requisiciones, many=True)
             return Response(serializer.data)
         else:
             return Response({"error": "No se proporcionó un ID de usuario."})
 
-    @action(detail=False, methods=['get'])
-    def requisiciones_aprobadas(self, request, id_usuario=None):
-        if id_usuario is not None:
-            requisiciones = Requisicion.objects.filter(usuario__id=id_usuario, aprobado='APROBADO').order_by('-id')[:10]
-            serializer = self.get_serializer(requisiciones, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({"error": "No se proporcionó un ID de usuario."})
-    
-    @action(detail=False, methods=['get'])
-    def requisiciones_departamento(self, request, id_usuario=None):
-        if id_usuario is not None:
-            requisiciones = Requisicion.objects.filter(usuario__id=id_usuario, proyecto__isnull=True).order_by('-id')[:10]
+    @action(detail=True, methods=['post'])
+    def requisiciones_departamento(self, request, pk=None):
+        if pk is not None:
+            requisiciones = Requisicion.objects.filter(usuario__id=pk, proyecto__isnull=True).order_by('-id')[:10]
             serializer = self.get_serializer(requisiciones, many=True)
             return Response(serializer.data)
         else:
             return Response({"error": "No se proporcionó un ID de usuario."})
 
-    @action(detail=False, methods=['get'])
-    def requisiciones_proyecto(self, request, id_usuario=None):
-        if id_usuario is not None:
-            requisiciones = Requisicion.objects.filter(usuario__id=id_usuario, proyecto__isnull=False).order_by('-id')[:10]
+    @action(detail=True, methods=['post'])
+    def requisiciones_proyecto(self, request, pk=None):
+        if pk is not None:
+            requisiciones = Requisicion.objects.filter(usuario__id=pk, proyecto__isnull=False).order_by('-id')[:10]
+            serializer = self.get_serializer(requisiciones, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"error": "No se proporcionó un ID de usuario."})
+        
+    @action(detail=True, methods=['get'])
+    def requisiciones_pendientes(self, request, pk=None):
+        if pk is not None:
+            requisiciones = Requisicion.objects.filter(usuario__id=pk, aprobado='PENDIENTE').order_by('-id')[:10]
             serializer = self.get_serializer(requisiciones, many=True)
             return Response(serializer.data)
         else:

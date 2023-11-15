@@ -132,6 +132,39 @@ class PiezaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
+    
+    @action(detail=False, methods=['get'])
+    def piezas_pendientes(self, request):
+        piezas_pendientes = Pieza.objects.filter(estatus='pendiente')
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def piezas_rechazadas(self, request):
+        piezas_rechazadas = Pieza.objects.filter(estatus='rechazado')
+        serializer = self.get_serializer(piezas_rechazadas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def piezas_aprobadas(self, request):
+        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado')
+        serializer = self.get_serializer(piezas_aprobadas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def contador_piezas_pendientes(self, request):
+        count = Pieza.objects.filter(estatus='pendiente').count()
+        return Response({"contador_piezas_pendientes": count})
+
+    @action(detail=False, methods=['get'])
+    def contador_piezas_rechazadas(self, request):
+        count = Pieza.objects.filter(estatus='rechazado').count()
+        return Response({"contador_piezas_rechazadas": count})
+
+    @action(detail=False, methods=['get'])
+    def contador_piezas_aprobadas(self, request):
+        count = Pieza.objects.filter(estatus='aprobado').count()
+        return Response({"contador_piezas_aprobadas": count})
 
     @action(detail=False, methods=['get'])
     def pendientes(self, request):
