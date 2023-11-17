@@ -7,12 +7,11 @@ from django.utils import timezone
 from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWrapper
 from rest_framework import status
 
-
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
 
-from .models import Material, Placa, Proceso, Pieza
-from .serializers import MaterialSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
+from .models import Material, Notificacion, Placa, Proceso, Pieza
+from .serializers import MaterialSerializer, NotificacionSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
 
 class MaterialViewSet(viewsets.ModelViewSet):
     queryset = Material.objects.all()
@@ -24,7 +23,7 @@ class MaterialViewSet(viewsets.ModelViewSet):
     ordering_fields = ['nombre', 'espesor']
 
 class PlacaViewSet(viewsets.ModelViewSet):
-    queryset = Placa.objects.all()
+    queryset = Placa.objects.all().order_by('-id')
     serializer_class = PlacaSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -33,7 +32,7 @@ class PlacaViewSet(viewsets.ModelViewSet):
     ordering_fields = ['piezas']
 
 class ProcesoViewSet(viewsets.ModelViewSet):
-    queryset = Proceso.objects.all()
+    queryset = Proceso.objects.all().order_by('-id')
     serializer_class = ProcesoSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -125,13 +124,19 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         return Response({"count": count})
 
 class PiezaViewSet(viewsets.ModelViewSet):
-    queryset = Pieza.objects.all()
+    queryset = Pieza.objects.all().order_by('-id')
     serializer_class = PiezaSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
+    
+    @action(detail=False, methods=['get'])
+    def ultima_pieza_creada(self, request):
+        ultima_pieza = Pieza.objects.latest('fechaCreado')
+        serializer = self.get_serializer(ultima_pieza)
+        return Response(serializer.data)
     
     def pieza_create(request):
         if request.method == 'POST':
@@ -157,6 +162,24 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def piezas_aprobadas(self, request):
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado')
         serializer = self.get_serializer(piezas_aprobadas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def ultimas_piezas_pendientes(self, request):
+        ultimas_piezas_pendientes = Pieza.objects.filter(estatus='pendiente').order_by('-fechaCreado')[:5]
+        serializer = self.get_serializer(ultimas_piezas_pendientes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def ultimas_piezas_rechazadas(self, request):
+        ultimas_piezas_rechazadas = Pieza.objects.filter(estatus='rechazado').order_by('-fechaCreado')[:5]
+        serializer = self.get_serializer(ultimas_piezas_rechazadas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def ultimas_piezas_aprobadas(self, request):
+        ultimas_piezas_aprobadas = Pieza.objects.filter(estatus='aprobado').order_by('-fechaCreado')[:5]
+        serializer = self.get_serializer(ultimas_piezas_aprobadas, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
@@ -205,3 +228,26 @@ class PiezaViewSet(viewsets.ModelViewSet):
         porcentaje_realizadas_hoy = len(piezas_realizadas_hoy) / len(piezas_hoy) * 100 if piezas_hoy else 0
 
         return Response({"porcentaje_realizadas_hoy": porcentaje_realizadas_hoy})
+
+class NotificacionViewSet(viewsets.ModelViewSet):
+    queryset = Notificacion.objects.all().order_by('-id')
+    serializer_class = NotificacionSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    
+    @action(detail=False, url_path='usuario/(?P<usuario_id>\d+)')
+    def notificaciones_por_usuario(self, request, usuario_id=None):
+        notificaciones = self.get_queryset().filter(usuario__id=usuario_id)
+        serializer = self.get_serializer(notificaciones, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, url_path='usuario/(?P<usuario_id>\d+)/count')
+    def count_notificaciones_por_usuario(self, request, usuario_id=None):
+        count = self.get_queryset().filter(usuario__id=usuario_id, leido=False).count()
+        return Response({'count': count})
+
+    @action(detail=False, url_path='usuario/(?P<usuario_id>\d+)/has_notifications')
+    def has_notifications(self, request, usuario_id=None):
+        has_notifications = self.get_queryset().filter(usuario__id=usuario_id, leido=False).exists()
+        return Response({'has_notifications': has_notifications})

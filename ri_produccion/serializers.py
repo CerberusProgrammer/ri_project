@@ -2,7 +2,12 @@ from rest_framework import serializers
 from ri_compras.models import Usuarios
 
 from ri_compras.serializer import SimpleUsuariosSerializer
-from .models import Material, Placa, Proceso, Pieza
+from .models import Material, Notificacion, Placa, Proceso, Pieza
+
+class NotificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notificacion
+        fields = '__all__'
 
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:

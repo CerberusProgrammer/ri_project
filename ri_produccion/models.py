@@ -49,6 +49,8 @@ class Pieza(models.Model):
     
     consecutivo = models.CharField(max_length=100, unique=True)
     estatus = models.CharField(max_length=40, choices=STATUS_CHOICES, default="pendiente")
+    motivoRechazo = models.CharField(max_length=300, blank=True, null=True)
+    fechaRechazado = models.DateTimeField(null=True)
     ordenCompra = models.CharField(max_length=150)
     piezas = models.IntegerField()
     piezasTotales = models.IntegerField()
@@ -81,3 +83,12 @@ class HistorialPieza(models.Model):
 
     def __str__(self):
         return self.consecutivo
+
+class Notificacion(models.Model):
+    titulo = models.CharField(max_length=100)
+    contenido = models.TextField()
+    leido = models.BooleanField(default=False)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.titulo
