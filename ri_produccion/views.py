@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWrapper
 from rest_framework import status
+from django.db.models import Q
 
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
@@ -230,7 +231,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response({"porcentaje_realizadas_hoy": porcentaje_realizadas_hoy})
 
     @action(detail=False, methods=['get'])
-    def obtener_Piezas_Sin_Asignaciones(self, request):
+    def obtener_piezas_sin_asignaciones(self, request):
         piezas_sin_asignaciones = Pieza.objects.filter(
             material__isnull=True,
             placas__isnull=True,
@@ -242,7 +243,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
-    def obtenerPiezasSinProcesos(self, request):
+    def obtener_piezas_sin_procesos(self, request):
         piezas_sin_procesos = Pieza.objects.filter(
             procesos__isnull=True,
             estatus='aprobado',
@@ -252,7 +253,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
-    def obtenerPiezasSinPlacaAsignado(self, request):
+    def obtener_piezas_sin_placa_asignado(self, request):
         piezas_sin_placa_asignado = Pieza.objects.filter(
             placas__isnull=True,
             estatus='aprobado',
@@ -262,7 +263,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
-    def obtenerPiezasSinMaterialAsignado(self, request):
+    def obtener_piezas_sin_material_asignado(self, request):
         piezas_sin_material_asignado = Pieza.objects.filter(
             material__isnull=True,
             estatus='aprobado',
@@ -272,7 +273,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
-    def obtenerPiezasTerminadasSinAsignacionConfirmada(self, request):
+    def obtener_piezas_terminadas_sin_asignacion_confirmada(self, request):
         piezas_terminadas_sin_asignacion_confirmada = Pieza.objects.filter(
             material__isnull=False,
             placas__isnull=False,
@@ -282,6 +283,21 @@ class PiezaViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def contar_piezas_sin_asignacion(self, request):
+        count = Pieza.objects.filter(
+            estatus='aprobado',
+            placas__isnull=True,
+            procesos__isnull=True,
+            material__isnull=True
+        ).count()
+        return Response({"count": count})
+    
+    @action(detail=False, methods=['get'])
+    def contar_piezas_pendientes_de_aprobar(self, request):
+        count = Pieza.objects.filter(estatus='pendiente').count()
+        return Response({"count": count})
 
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')
