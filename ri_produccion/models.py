@@ -49,6 +49,7 @@ class Pieza(models.Model):
     
     consecutivo = models.CharField(max_length=100, unique=True)
     estatus = models.CharField(max_length=40, choices=STATUS_CHOICES, default="pendiente")
+    estatusAsignacion = models.BooleanField(default=False)
     motivoRechazo = models.CharField(max_length=300, blank=True, null=True)
     fechaRechazado = models.DateTimeField(null=True)
     ordenCompra = models.CharField(max_length=150)
@@ -64,22 +65,6 @@ class Pieza(models.Model):
 
     def esta_retrasada(self):
         return any(proceso.finProceso < timezone.now() and proceso.estatus != 'realizado' for proceso in self.procesos.all())
-
-    def __str__(self):
-        return self.consecutivo
-
-class HistorialPieza(models.Model):
-    consecutivo = models.CharField(max_length=100, unique=True)
-    ordenCompra = models.CharField(max_length=150)
-    piezas = models.IntegerField()
-    piezasTotales = models.IntegerField()
-    material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
-    placas = models.ManyToManyField(Placa, blank=True)
-    procesos = models.ManyToManyField(Proceso, blank=True)
-    creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE, null=True, blank=True)
-    archivo_pdf = models.FileField(upload_to='pdfs-produccion', blank=True, null=True)
-    prioridad = models.BooleanField(default=False)
-    fecha_finalizacion = models.DateTimeField()
 
     def __str__(self):
         return self.consecutivo

@@ -229,6 +229,60 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response({"porcentaje_realizadas_hoy": porcentaje_realizadas_hoy})
 
+    @action(detail=False, methods=['get'])
+    def obtener_Piezas_Sin_Asignaciones(self, request):
+        piezas_sin_asignaciones = Pieza.objects.filter(
+            material__isnull=True,
+            placas__isnull=True,
+            procesos__isnull=True,
+            estatus='aprobado',
+            estatusAsignacion=False
+        )
+        serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtenerPiezasSinProcesos(self, request):
+        piezas_sin_procesos = Pieza.objects.filter(
+            procesos__isnull=True,
+            estatus='aprobado',
+            estatusAsignacion=False
+        )
+        serializer = self.get_serializer(piezas_sin_procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtenerPiezasSinPlacaAsignado(self, request):
+        piezas_sin_placa_asignado = Pieza.objects.filter(
+            placas__isnull=True,
+            estatus='aprobado',
+            estatusAsignacion=False
+        )
+        serializer = self.get_serializer(piezas_sin_placa_asignado, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtenerPiezasSinMaterialAsignado(self, request):
+        piezas_sin_material_asignado = Pieza.objects.filter(
+            material__isnull=True,
+            estatus='aprobado',
+            estatusAsignacion=False
+        )
+        serializer = self.get_serializer(piezas_sin_material_asignado, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtenerPiezasTerminadasSinAsignacionConfirmada(self, request):
+        piezas_terminadas_sin_asignacion_confirmada = Pieza.objects.filter(
+            material__isnull=False,
+            placas__isnull=False,
+            procesos__isnull=False,
+            estatus='aprobado',
+            estatusAsignacion=False
+        )
+        serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
+        return Response(serializer.data)
+
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')
     serializer_class = NotificacionSerializer
