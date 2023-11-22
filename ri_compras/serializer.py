@@ -253,6 +253,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
         return SimpleOrdenDeCompraSerializer(ordenes, many=True).data
 
     def create(self, validated_data):
+        print(validated_data)
         archivo_pdf = validated_data.pop('archivo_pdf', None)
         usuario_id = validated_data.pop('usuario_id')
         validated_data['usuario'] = Usuarios.objects.get(id=usuario_id)

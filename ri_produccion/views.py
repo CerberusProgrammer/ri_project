@@ -133,6 +133,155 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=True, methods=['post'])
+    def agregar_placa_a_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        serializer = PlacaSerializer(data=request.data)
+        if serializer.is_valid():
+            placa = serializer.save()
+            pieza.placas.add(placa)
+            pieza.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['put'], url_path='cambiar_placa_a_pieza/(?P<placa_id>\d+)')
+    def cambiar_placa_a_pieza(self, request, pk=None, placa_id=None):
+        pieza = self.get_object()
+        try:
+            placa = Placa.objects.get(id=placa_id)
+        except Placa.DoesNotExist:
+            return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if placa not in pieza.placas.all():
+            return Response({"error": "Placa is not associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PlacaSerializer(placa, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['delete'], url_path='quitar_placa_a_pieza/(?P<placa_id>\d+)')
+    def quitar_placa_a_pieza(self, request, pk=None, placa_id=None):
+        pieza = self.get_object()
+        try:
+            placa = Placa.objects.get(id=placa_id)
+        except Placa.DoesNotExist:
+            return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if placa not in pieza.placas.all():
+            return Response({"error": "Placa is not associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        pieza.placas.remove(placa)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'])
+    def progreso_de_piezas_con_asignacion(self, request):
+        total_piezas = Pieza.objects.filter(estatus='pendiente').count()
+        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', estatusAsignacion=True).count()
+        if total_piezas == 0:
+            return Response({"error": "No pending Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+        progreso = (piezas_aprobadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['put'])
+    def rechazar_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        pieza.estatus = 'rechazado'
+        pieza.save()
+        return Response({"message": "Pieza rejected successfully"}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['put'])
+    def aprobar_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        pieza.estatus = 'aprobado'
+        pieza.save()
+        return Response({"message": "Pieza approved successfully"}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['put'])
+    def terminar_asignacion_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        pieza.estatusAsignacion = True
+        pieza.save()
+        return Response({"message": "Pieza assignment status updated successfully"}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'])
+    def agregar_material_a_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        serializer = MaterialSerializer(data=request.data)
+        if serializer.is_valid():
+            material = serializer.save()
+            pieza.material = material
+            pieza.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['put'], url_path='cambiar_material_a_pieza/(?P<material_id>\d+)')
+    def cambiar_material_a_pieza(self, request, pk=None, material_id=None):
+        pieza = self.get_object()
+        try:
+            material = Material.objects.get(id=material_id)
+        except Material.DoesNotExist:
+            return Response({"error": "Material does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        pieza.material = material
+        pieza.save()
+        serializer = MaterialSerializer(material)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['delete'], url_path='quitar_material_a_pieza/(?P<material_id>\d+)')
+    def quitar_material_a_pieza(self, request, pk=None, material_id=None):
+        pieza = self.get_object()
+        try:
+            material = Material.objects.get(id=material_id)
+        except Material.DoesNotExist:
+            return Response({"error": "Material does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if pieza.material != material:
+            return Response({"error": "Material is not associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        pieza.material = None
+        pieza.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=True, methods=['post'])
+    def agregar_proceso_a_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        placa_id = request.data.get('placa')  # Get placa_id from request data
+        if not placa_id:
+            return Response({"error": "placa field is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            placa = Placa.objects.get(id=placa_id)  # Get Placa object
+        except Placa.DoesNotExist:
+            return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProcesoSerializer(data=request.data)
+        if serializer.is_valid():
+            proceso = serializer.save(placa=placa)  # Provide placa when saving Proceso
+            pieza.procesos.add(proceso)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['put'], url_path='cambiar_proceso_a_pieza/(?P<proceso_id>\d+)')
+    def cambiar_proceso_a_pieza(self, request, pk=None, proceso_id=None):
+        pieza = self.get_object()
+        try:
+            proceso = Proceso.objects.get(id=proceso_id)
+        except Proceso.DoesNotExist:
+            return Response({"error": "Proceso does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if proceso not in pieza.procesos.all():
+            return Response({"error": "Proceso is not associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProcesoSerializer(proceso, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['delete'], url_path='quitar_proceso_a_pieza/(?P<proceso_id>\d+)')
+    def quitar_proceso_a_pieza(self, request, pk=None, proceso_id=None):
+        pieza = self.get_object()
+        try:
+            proceso = Proceso.objects.get(id=proceso_id)
+        except Proceso.DoesNotExist:
+            return Response({"error": "Proceso does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if proceso not in pieza.procesos.all():
+            return Response({"error": "Proceso is not associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        pieza.procesos.remove(proceso)  # Remove the Proceso from the Pieza
+        proceso.delete()  # Delete the Proceso
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
     @action(detail=False, methods=['get'])
     def ultima_pieza_creada(self, request):
         ultima_pieza = Pieza.objects.latest('fechaCreado')
@@ -298,6 +447,21 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def contar_piezas_pendientes_de_aprobar(self, request):
         count = Pieza.objects.filter(estatus='pendiente').count()
         return Response({"count": count})
+    
+    @action(detail=False, methods=['get'])
+    def ultimas_piezas_pendientes_de_asignar(self, request):
+        piezas_pendientes_de_asignar = Pieza.objects.filter(
+            Q(estatus='aprobado'),
+            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
+        ).order_by('-fechaCreado')[:5]
+        serializer = PiezaSerializer(piezas_pendientes_de_asignar, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def ultimas_piezas_pendientes_de_aprobar(self, request):
+        piezas_pendientes_de_aprobar = Pieza.objects.filter(estatus='pendiente').order_by('-fechaCreado')[:5]
+        serializer = PiezaSerializer(piezas_pendientes_de_aprobar, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')
