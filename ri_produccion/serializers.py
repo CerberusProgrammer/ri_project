@@ -27,10 +27,10 @@ class ProcesoSerializer(serializers.ModelSerializer):
 
 class PiezaSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
-    placas = serializers.PrimaryKeyRelatedField(queryset=Placa.objects.all(), many=True, required=False)
+    placas = PlacaSerializer(many=True, read_only=True) 
     procesos = ProcesoSerializer(many=True, read_only=True)
     creadoPor = SimpleUsuariosSerializer(read_only=True)
-    creadoPorId = serializers.PrimaryKeyRelatedField(source='creadoPor', queryset=Usuarios.objects.all(), write_only=True)  # For POST requests
+    creadoPorId = serializers.PrimaryKeyRelatedField(source='creadoPor', queryset=Usuarios.objects.all(), write_only=True)
 
     class Meta:
         model = Pieza

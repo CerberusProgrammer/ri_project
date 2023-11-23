@@ -436,11 +436,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def contar_piezas_sin_asignacion(self, request):
         count = Pieza.objects.filter(
-            estatus='aprobado',
-            placas__isnull=True,
-            procesos__isnull=True,
-            material__isnull=True
-        ).count()
+            Q(estatus='aprobado'),
+            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
+        ).order_by('-fechaCreado').distinct().count()
         return Response({"count": count})
     
     @action(detail=False, methods=['get'])
@@ -453,15 +451,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_pendientes_de_asignar = Pieza.objects.filter(
             Q(estatus='aprobado'),
             Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
-        ).order_by('-fechaCreado')[:5]
+        ).order_by('-fechaCreado').distinct()[:5]
         serializer = PiezaSerializer(piezas_pendientes_de_asignar, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['get'])
     def ultimas_piezas_pendientes_de_aprobar(self, request):
-        piezas_pendientes_de_aprobar = Pieza.objects.filter(estatus='pendiente').order_by('-fechaCreado')[:5]
+        piezas_pendientes_de_aprobar = Pieza.objects.filter(estatus='pendiente').order_by('-fechaCreado').distinct()[:5]
         serializer = PiezaSerializer(piezas_pendientes_de_aprobar, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')
