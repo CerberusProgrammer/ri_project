@@ -374,8 +374,9 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             
             subtotal = 0
             for i in range(len(data['requisicion_detail']['productos'])):
-                subtotal += float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
-                variables['requisicion_detail']['productos'][i]['costo_total'] = format(subtotal, ',.6f')
+                costo = float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
+                subtotal += costo
+                variables['requisicion_detail']['productos'][i]['costo_total'] = format(costo, ',.6f')
                 
             for i in range(len(data['requisicion_detail']['service'])):
                 subtotal += float(data['requisicion_detail']['service'][i]['costo'])
@@ -390,6 +391,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             variables['isr_retenido'] = format(isr_retenido, ',.6f')
             variables['iva_retenido'] = format(iva_retenido, ',.6f')
             variables['total'] = format(total, ',.6f')
+            variables['hay_credito'] = "Credito disponible" if float(variables['proveedor_detail']['credito']) > 0 else "Sin credito disponible"
 
             if not variables['requisicion_detail']['productos']:
                 variables['divisa'] = variables['requisicion_detail']['service'][0]['divisa']

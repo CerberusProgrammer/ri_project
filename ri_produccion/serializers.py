@@ -26,7 +26,7 @@ class ProcesoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PiezaSerializer(serializers.ModelSerializer):
-    material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
+    material = MaterialSerializer(many=False, read_only=True)
     placas = PlacaSerializer(many=True, read_only=True) 
     procesos = ProcesoSerializer(many=True, read_only=True)
     creadoPor = SimpleUsuariosSerializer(read_only=True)

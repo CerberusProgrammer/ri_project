@@ -133,17 +133,40 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
-    @action(detail=True, methods=['post'])
-    def agregar_placa_a_pieza(self, request, pk=None):
+    @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
+    def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
         pieza = self.get_object()
-        serializer = PlacaSerializer(data=request.data)
-        if serializer.is_valid():
-            placa = serializer.save()
+        try:
+            placa = Placa.objects.get(id=placa_id)
+        except Placa.DoesNotExist:
+            return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if placa in pieza.placas.all():
+            return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the number of pieces to assign from the request data
+        piezas_asignar = request.data.get('piezas_asignar')
+        if not piezas_asignar:
+            return Response({"error": "The 'piezas_asignar' parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Calculate the total pieces from all the plates associated with the piece
+        total_piezas = sum(p.piezas for p in pieza.placas.all())
+        # Add the pieces to assign from the new plate
+        total_piezas += piezas_asignar
+
+        if total_piezas > pieza.piezasTotales:
+            return Response({
+                "error": "Adding this Placa exceeds the total number of pieces allowed",
+                "allowed_pieces": pieza.piezasTotales - total_piezas + piezas_asignar
+            }, status=status.HTTP_400_BAD_REQUEST)
+        elif total_piezas <= pieza.piezasTotales:
+            # Update the number of pieces in the plate
+            placa.piezas = piezas_asignar
+            placa.save()
+
             pieza.placas.add(placa)
-            pieza.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+            serializer = PlacaSerializer(placa)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['put'], url_path='cambiar_placa_a_pieza/(?P<placa_id>\d+)')
     def cambiar_placa_a_pieza(self, request, pk=None, placa_id=None):
         pieza = self.get_object()
@@ -382,12 +405,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_asignaciones(self, request):
         piezas_sin_asignaciones = Pieza.objects.filter(
-            material__isnull=True,
-            placas__isnull=True,
-            procesos__isnull=True,
-            estatus='aprobado',
-            estatusAsignacion=False
-        )
+            Q(estatus='aprobado'),
+            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
+        ).order_by('-fechaCreado').distinct()
         serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
         return Response(serializer.data)
     

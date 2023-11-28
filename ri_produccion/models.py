@@ -57,6 +57,7 @@ class Pieza(models.Model):
     piezasTotales = models.IntegerField()
     material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
     placas = models.ManyToManyField(Placa, blank=True)
+    nombreProceso = models.CharField(max_length=100)
     procesos = models.ManyToManyField(Proceso, blank=True)
     creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     fechaCreado = models.DateTimeField(auto_now_add=True)
