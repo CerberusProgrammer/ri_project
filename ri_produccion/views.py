@@ -133,6 +133,48 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
+    def agregar_procesos_a_pieza(self, request, pk=None):
+        pieza = self.get_object()
+        procesos_data = request.data.get('procesos')
+        if not procesos_data:
+            return Response({"error": "The 'procesos' parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Eliminar los Proceso existentes
+        pieza.procesos.all().delete()
+
+        for proceso_data in procesos_data:
+            placa_id = proceso_data.get('placa_id')
+            if not placa_id:
+                return Response({"error": "The 'placa_id' parameter is required for each proceso"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                placa = Placa.objects.get(id=placa_id)
+            except Placa.DoesNotExist:
+                return Response({"error": f"Placa with id {placa_id} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            proceso_data['placa'] = placa.id
+
+            # Comprobar si hay conflictos de horario
+            inicioProceso = proceso_data.get('inicioProceso')
+            finProceso = proceso_data.get('finProceso')
+            maquina = proceso_data.get('maquina')
+            conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)
+            if conflictos.exists():
+                conflicto = conflictos.first()
+                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            proceso_serializer = ProcesoSerializer(data=proceso_data)
+            if proceso_serializer.is_valid():
+                proceso = proceso_serializer.save()
+                pieza.procesos.add(proceso)
+            else:
+                return Response(proceso_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        pieza.save()
+
+        # Serializar y devolver el objeto Pieza
+        pieza_serializer = PiezaSerializer(pieza)
+        return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
         pieza = self.get_object()

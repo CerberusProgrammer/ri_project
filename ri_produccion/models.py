@@ -21,7 +21,7 @@ class Placa(models.Model):
 class Proceso(models.Model):
     ESTATUS_CHOICES = [
         ('error', 'Error'),
-        ('rechazado', 'Rechazado'),
+        ('rechazado', 'Rechañado'),
         ('pendiente', 'Pendiente'),
         ('operando', 'Operando'),
         ('realizado', 'Realizado'),
