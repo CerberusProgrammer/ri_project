@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -133,6 +134,38 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza/(?P<placa_id>\d+)')
+    def asignar_placa_a_pieza(self, request, pk=None, placa_id=None):
+        pieza = self.get_object()
+        try:
+            placa = Placa.objects.get(id=placa_id)
+        except Placa.DoesNotExist:
+            return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if placa in pieza.placas.all():
+            return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+
+        pieza.placas.add(placa)
+        pieza.save()
+
+        return Response({"success": f"Placa {placa_id} has been successfully assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], url_path='buscar_piezas_por_material_espesor')
+    def buscar_piezas_por_material_espesor(self, request):
+        material_nombre = request.data.get('material')
+        espesor = request.data.get('espesor')
+
+        if not all([material_nombre, espesor]):
+            return Response({"error": "Los parámetros 'material' y 'espesor' son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        material = Material.objects.filter(nombre=material_nombre, espesor=espesor).first()
+        if material is None:
+            return Response([], status=status.HTTP_200_OK)
+
+        piezas = Pieza.objects.filter(material=material, estatusAsignacion=False)
+
+        serializer = PiezaSerializer(piezas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
         pieza = self.get_object()
@@ -456,6 +489,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         piezas_sin_procesos = Pieza.objects.filter(
+            material__isnull=False,
+            placas__isnull=False,
             procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
@@ -466,7 +501,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
         piezas_sin_placa_asignado = Pieza.objects.filter(
+            material__isnull=False,
             placas__isnull=True,
+            procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
         )
@@ -477,6 +514,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_sin_material_asignado(self, request):
         piezas_sin_material_asignado = Pieza.objects.filter(
             material__isnull=True,
+            placas__isnull=True,
+            procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
         )
