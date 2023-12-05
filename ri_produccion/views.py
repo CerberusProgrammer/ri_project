@@ -32,6 +32,23 @@ class PlacaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['piezas']
     ordering_fields = ['piezas']
+    
+    @action(detail=False, methods=['get'])
+    def placas_con_piezas(self, request):
+        placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza')).filter(num_piezas__gt=0)
+
+        serializer = self.get_serializer(placas_con_piezas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def obtener_piezas_asignadas_a_placa(self, request, pk=None):
+        placa = self.get_object()
+
+        piezas = Pieza.objects.filter(placas=placa)
+
+        serializer = PiezaSerializer(piezas, many=True)
+
+        return Response(serializer.data)
 
 class ProcesoViewSet(viewsets.ModelViewSet):
     queryset = Proceso.objects.all().order_by('-id')
@@ -144,10 +161,19 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if placa in pieza.placas.all():
             return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
 
+        piezas = request.data.get('piezas')
+        if piezas is not None:
+            placa.piezas = piezas
+            placa.save()
+
+            pieza.piezas = piezas
+            pieza.save()
+
         pieza.placas.add(placa)
         pieza.save()
 
         return Response({"success": f"Placa {placa_id} has been successfully assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
+
     
     @action(detail=False, methods=['post'], url_path='buscar_piezas_por_material_espesor')
     def buscar_piezas_por_material_espesor(self, request):
