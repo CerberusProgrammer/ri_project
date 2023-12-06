@@ -37,3 +37,9 @@ class PiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pieza
         fields = '__all__'
+        
+        # Piezas pendientes 
+        # En torno todo lo que sea de torno
+        # Maquina en los subprocesos 
+        
+        

@@ -41,6 +41,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
+    
+    # PETICION PUT
+    # /api/produccion/procesos/{id_proceso}/asignar_proceso_a_usuario/{id_usuario}/
 
     @action(detail=False, methods=['get'])
     def porcentaje_realizados_hoy(self, request):
@@ -603,7 +606,29 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = PiezaSerializer(piezas_pendientes_de_aprobar, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'])
+    def obtener_estadisticas_piezas_sin_asignar(self, request):
+        piezas_sin_asignar = Pieza.objects.filter(
+            Q(procesos__realizadoPor__isnull=True),
+            Q(estatus='aprobado'),
+            Q(estatusAsignacion=True),
+            Q(material__isnull=False),
+            Q(placas__isnull=False),
+            Q(procesos__isnull=False)
+        ).distinct()
+        
+        # Serializa las piezas antes de incluirlas en las estadísticas
+        piezas_sin_asignar_serializadas = PiezaSerializer(piezas_sin_asignar, many=True).data
 
+        
+        estadisticas = {
+            'total_piezas_sin_asignar': piezas_sin_asignar_serializadas,
+            
+        }
+        
+        return Response(estadisticas)
+        
+    
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')
     serializer_class = NotificacionSerializer
