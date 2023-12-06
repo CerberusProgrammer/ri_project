@@ -58,6 +58,33 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
+    
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_con_procesos_pendientes(self, request):
+        now = timezone.now()
+        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, placa__estatusAsignacion=True, estatus='pendiente')
+        serializer = ProcesoSerializer(procesos_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_todos_los_usuarios_operadores(self, request):
+        operadores = Usuarios.objects.filter(rol='OPERADOR', departamento__nombre='produccion')
+        serializer = UsuariosSerializer(operadores, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_trabajando_en_procesos(self, request):
+        now = timezone.now()
+        procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, placa__estatusAsignacion=True, estatus='operando')
+        serializer = ProcesoSerializer(procesos_activos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_con_procesos_pendientes(self, request):
+        now = timezone.now()
+        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, placa__estatusAsignacion=True)
+        serializer = ProcesoSerializer(procesos_pendientes, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def porcentaje_realizados_hoy(self, request):
@@ -151,6 +178,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza_sin_nesteo')
+    def asignar_placa_a_pieza_sin_nesteo(self, request, pk=None):
+        pieza = self.get_object()
+        pieza.requiere_nesteo = False
+        pieza.save()
+
+        return Response({"success": f"Pieza {pieza.consecutivo} has been updated successfully"}, status=status.HTTP_200_OK)
+    
     @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza/(?P<placa_id>\d+)')
     def asignar_placa_a_pieza(self, request, pk=None, placa_id=None):
         pieza = self.get_object()
@@ -173,7 +208,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         pieza.save()
 
         return Response({"success": f"Placa {placa_id} has been successfully assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
-
     
     @action(detail=False, methods=['post'], url_path='buscar_piezas_por_material_espesor')
     def buscar_piezas_por_material_espesor(self, request):

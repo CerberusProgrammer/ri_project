@@ -47,6 +47,7 @@ class Pieza(models.Model):
         ('aprobado', 'Aprobado'),
     ]
     
+    requiere_nesteo = models.BooleanField(default=True)
     consecutivo = models.CharField(max_length=100, unique=True)
     estatus = models.CharField(max_length=40, choices=STATUS_CHOICES, default="pendiente")
     estatusAsignacion = models.BooleanField(default=False)
