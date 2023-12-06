@@ -32,6 +32,23 @@ class PlacaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['piezas']
     ordering_fields = ['piezas']
+    
+    @action(detail=False, methods=['get'])
+    def placas_con_piezas(self, request):
+        placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza')).filter(num_piezas__gt=0)
+
+        serializer = self.get_serializer(placas_con_piezas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def obtener_piezas_asignadas_a_placa(self, request, pk=None):
+        placa = self.get_object()
+
+        piezas = Pieza.objects.filter(placas=placa)
+
+        serializer = PiezaSerializer(piezas, many=True)
+
+        return Response(serializer.data)
 
 class ProcesoViewSet(viewsets.ModelViewSet):
     queryset = Proceso.objects.all().order_by('-id')
@@ -42,8 +59,37 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
     
+<<<<<<< HEAD
     # PETICION PUT
     # /api/produccion/procesos/{id_proceso}/asignar_proceso_a_usuario/{id_usuario}/
+=======
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_con_procesos_pendientes(self, request):
+        now = timezone.now()
+        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, placa__estatusAsignacion=True, estatus='pendiente')
+        serializer = ProcesoSerializer(procesos_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_todos_los_usuarios_operadores(self, request):
+        operadores = Usuarios.objects.filter(rol='OPERADOR', departamento__nombre='produccion')
+        serializer = UsuariosSerializer(operadores, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_trabajando_en_procesos(self, request):
+        now = timezone.now()
+        procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, placa__estatusAsignacion=True, estatus='operando')
+        serializer = ProcesoSerializer(procesos_activos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_usuarios_con_procesos_pendientes(self, request):
+        now = timezone.now()
+        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, placa__estatusAsignacion=True)
+        serializer = ProcesoSerializer(procesos_pendientes, many=True)
+        return Response(serializer.data)
+>>>>>>> e718c160de9c19c2a925eb0032f23043aa271342
 
     @action(detail=False, methods=['get'])
     def porcentaje_realizados_hoy(self, request):
@@ -137,6 +183,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza_sin_nesteo')
+    def asignar_placa_a_pieza_sin_nesteo(self, request, pk=None):
+        pieza = self.get_object()
+        pieza.requiere_nesteo = False
+        pieza.save()
+
+        return Response({"success": f"Pieza {pieza.consecutivo} has been updated successfully"}, status=status.HTTP_200_OK)
+    
     @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza/(?P<placa_id>\d+)')
     def asignar_placa_a_pieza(self, request, pk=None, placa_id=None):
         pieza = self.get_object()
@@ -146,6 +200,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         if placa in pieza.placas.all():
             return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+
+        piezas = request.data.get('piezas')
+        if piezas is not None:
+            placa.piezas = piezas
+            placa.save()
+
+            pieza.piezas = piezas
+            pieza.save()
 
         pieza.placas.add(placa)
         pieza.save()
