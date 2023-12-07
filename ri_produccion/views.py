@@ -23,6 +23,23 @@ class MaterialViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'espesor', 'proveedor']
     ordering_fields = ['nombre', 'espesor']
+    
+    @action(detail=False, methods=['get'])
+    def materiales_para_nesteo_filtrado(self, request):
+        materiales = Material.objects.filter(pieza__estatusAsignacion=False, pieza__estatus='aprobado').distinct()
+        nombres_materiales = list(materiales.values_list('nombre', flat=True).distinct())
+        return Response(nombres_materiales)
+    
+    @action(detail=False, methods=['post'])
+    def espesores_para_nesteo_filtrado(self, request):
+        material_name = request.data.get('material')
+        if not material_name:
+            return Response({"error": "No material name provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        materiales = Material.objects.filter(nombre=material_name, pieza__estatusAsignacion=False, pieza__estatus='aprobado')
+        espesores = list(materiales.values_list('espesor', flat=True).distinct())
+        return Response(espesores)
+
 
 class PlacaViewSet(viewsets.ModelViewSet):
     queryset = Placa.objects.all().order_by('-id')
