@@ -36,9 +36,19 @@ class PlacaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
         placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza')).filter(num_piezas__gt=0)
+        data = []
+        for placa in placas_con_piezas:
+            piezas_activas = list(placa.pieza_set.values())
+            placa_data = {
+                "id": placa.id,
+                "nombre": placa.nombre,
+                "descripcion": placa.descripcion,
+                "piezas": placa.piezas,
+                "piezas_activas": piezas_activas
+            }
+            data.append(placa_data)
+        return Response(data)
 
-        serializer = self.get_serializer(placas_con_piezas, many=True)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
@@ -177,6 +187,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
+    
+    # TODO: Filtrar los materiales en base al consecutivo activo.
     
     @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza_sin_nesteo')
     def asignar_placa_a_pieza_sin_nesteo(self, request, pk=None):
@@ -578,12 +590,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         piezas_sin_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=False, requiere_nesteo=False) |
+            Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
-            placas__isnull=False,
             procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
-        )
+        ).distinct()
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
     
