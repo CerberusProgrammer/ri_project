@@ -363,7 +363,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         total_piezas = Pieza.objects.filter(estatus='pendiente').count()
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', estatusAsignacion=True).count()
         if total_piezas == 0:
-            return Response({"error": "No pending Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"progreso": 100}, status=status.HTTP_200_OK)
         progreso = (piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
