@@ -20,7 +20,7 @@ class PlacaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProcesoSerializer(serializers.ModelSerializer):
-    placa = serializers.PrimaryKeyRelatedField(queryset=Placa.objects.all(), write_only=True)
+    placa = serializers.PrimaryKeyRelatedField(queryset=Placa.objects.all(), write_only=True, required=False)
     placa_detail = PlacaSerializer(source='placa', read_only=True)
 
     class Meta:

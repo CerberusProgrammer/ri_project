@@ -205,8 +205,33 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
-    # TODO: Filtrar los materiales en base al consecutivo activo.
+    @action(detail=True, methods=['get'], url_path='obtener_piezas_pendientes')
+    def obtener_piezas_pendientes(self, request, pk=None):
+        pieza = self.get_object()
+        total_piezas_placas = pieza.placas.aggregate(Sum('piezas'))['piezas__sum'] or 0
+        piezas_pendientes = pieza.piezasTotales - total_piezas_placas
+        return Response({"piezas_pendientes": float(piezas_pendientes)})
     
+    @action(detail=True, methods=['put'], url_path='asignar_procesos_sin_nesteo')
+    def asignar_procesos_sin_nesteo(self, request, pk=None):
+        pieza = self.get_object()
+        procesos_data = request.data.get('procesos')
+
+        if not procesos_data:
+            return Response({"error": "No 'procesos' provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        for proceso_data in procesos_data:
+            proceso_serializer = ProcesoSerializer(data=proceso_data)
+            if proceso_serializer.is_valid():
+                proceso = proceso_serializer.save()
+                pieza.procesos.add(proceso)
+            else:
+                return Response(proceso_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        pieza.save()
+
+        return Response({"success": f"Procesos have been successfully created and assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza_sin_nesteo')
     def asignar_placa_a_pieza_sin_nesteo(self, request, pk=None):
         pieza = self.get_object()
@@ -645,8 +670,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_terminadas_sin_asignacion_confirmada(self, request):
         piezas_terminadas_sin_asignacion_confirmada = Pieza.objects.filter(
+            Q(placas__isnull=True) | Q(requiere_nesteo=False),
             material__isnull=False,
-            placas__isnull=False,
             procesos__isnull=False,
             estatus='aprobado',
             estatusAsignacion=False

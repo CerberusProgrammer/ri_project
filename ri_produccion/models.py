@@ -13,7 +13,7 @@ class Material(models.Model):
 class Placa(models.Model):
     nombre = models.CharField(max_length=100, null=True, blank=True)
     descripcion = models.CharField(max_length=350, null=True, blank=True)
-    piezas = models.IntegerField()
+    piezas = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return str(self.nombre)
@@ -32,7 +32,7 @@ class Proceso(models.Model):
     maquina = models.CharField(max_length=100)
     inicioProceso = models.DateTimeField()
     finProceso = models.DateTimeField()
-    placa = models.ForeignKey(Placa, on_delete=models.CASCADE)
+    placa = models.ForeignKey(Placa, on_delete=models.CASCADE,null=True, blank=True)
     realizadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE, null=True, blank=True)
     comentarios = models.CharField(max_length=300, null=True, blank=True)
     prioridad = models.BooleanField(default=False)
