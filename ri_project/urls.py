@@ -5,14 +5,13 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-# Agrega estas líneas
 from django.conf import settings
 from django.conf.urls.static import static
 
 schema_view = get_schema_view(
     openapi.Info(
         title="API de RI Compras",
-        default_version='v1',
+        default_version='v1.13.20',
         description="Documentación Oficial de la API de RI Compras",
         terms_of_service="no avaible",
         contact=openapi.Contact(email="cerberusprogrammer@gmail.com"),
@@ -23,6 +22,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('', include('ri_home.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('ri_compras.urls')),
     path('api/produccion/', include('ri_produccion.urls')),
