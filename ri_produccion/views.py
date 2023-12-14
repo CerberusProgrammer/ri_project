@@ -231,7 +231,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         pieza.save()
 
         return Response({"success": f"Procesos have been successfully created and assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
-
+    
     @action(detail=True, methods=['put'], url_path='asignar_placa_a_pieza_sin_nesteo')
     def asignar_placa_a_pieza_sin_nesteo(self, request, pk=None):
         pieza = self.get_object()
