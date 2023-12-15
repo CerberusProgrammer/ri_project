@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
 from rest_framework.authentication import TokenAuthentication
@@ -16,6 +17,9 @@ from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializ
 
 from .models import Material, Notificacion, Placa, Proceso, Pieza
 from .serializers import MaterialSerializer, NotificacionSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
+
+from django.db.models import F, ExpressionWrapper, fields
+from django.db.models.functions import Coalesce
 
 class MaterialViewSet(viewsets.ModelViewSet):
     queryset = Material.objects.all()
@@ -87,6 +91,93 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
     
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
+    def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        estadisticas = {}
+
+        for maquina in maquinas:
+            procesos = Proceso.objects.filter(
+                maquina=maquina,
+                estatus='realizado',
+                inicioProceso__date=current_date,
+            )
+
+            tiempo_excedente = ExpressionWrapper(
+                Coalesce(F('terminadoProceso'), timezone.now()) - F('finProceso'),
+                output_field=fields.DurationField()
+            )
+            procesos = procesos.annotate(tiempo_excedente=tiempo_excedente)
+
+            total_excedente = sum(
+                proceso.tiempo_excedente.total_seconds() / 60
+                for proceso in procesos
+                if proceso.tiempo_excedente.total_seconds() > 0
+            )
+
+            estadisticas[maquina] = int(total_excedente)
+
+        return Response(estadisticas)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_soldadura_hoy')
+    def obtener_estadisticas_tiempos_soldadura_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['corte', 'pintura', 'pulido']
+        estadisticas = {}
+
+        for maquina in maquinas:
+            procesos = Proceso.objects.filter(
+                maquina=maquina,
+                estatus='realizado',
+                inicioProceso__date=current_date,
+            )
+
+            tiempo_excedente = ExpressionWrapper(
+                Coalesce(F('terminadoProceso'), timezone.now()) - F('finProceso'),
+                output_field=fields.DurationField()
+            )
+            procesos = procesos.annotate(tiempo_excedente=tiempo_excedente)
+
+            total_excedente = sum(
+                proceso.tiempo_excedente.total_seconds() / 60
+                for proceso in procesos
+                if proceso.tiempo_excedente.total_seconds() > 0
+            )
+
+            estadisticas[maquina] = int(total_excedente)
+
+        return Response(estadisticas)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_sm_hoy')
+    def obtener_estadisticas_tiempos_sm_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
+        estadisticas = {}
+
+        for maquina in maquinas:
+            procesos = Proceso.objects.filter(
+                maquina=maquina,
+                estatus='realizado',
+                inicioProceso__date=current_date,
+            )
+
+            tiempo_excedente = ExpressionWrapper(
+                Coalesce(F('terminadoProceso'), timezone.now()) - F('finProceso'),
+                output_field=fields.DurationField()
+            )
+            procesos = procesos.annotate(tiempo_excedente=tiempo_excedente)
+
+            total_excedente = sum(
+                proceso.tiempo_excedente.total_seconds() / 60
+                for proceso in procesos
+                if proceso.tiempo_excedente.total_seconds() > 0
+            )
+
+            estadisticas[maquina] = int(total_excedente)
+
+        return Response(estadisticas)
+    
     @action(detail=False, methods=['get'])
     def obtener_usuarios_con_procesos_pendientes(self, request):
         now = timezone.now()
@@ -103,14 +194,14 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_usuarios_trabajando_en_procesos(self, request):
         now = timezone.now()
-        procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, placa__estatusAsignacion=True, estatus='operando')
+        procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, estatus='operando')
         serializer = ProcesoSerializer(procesos_activos, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def obtener_usuarios_con_procesos_pendientes(self, request):
         now = timezone.now()
-        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, placa__estatusAsignacion=True)
+        procesos_pendientes = Proceso.objects.filter(finProceso__gt=now, estatus__in=['pendiente', 'operando'])
         serializer = ProcesoSerializer(procesos_pendientes, many=True)
         return Response(serializer.data)
 
@@ -143,7 +234,8 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         usuario_mas_procesos = usuarios.order_by('-num_procesos').first()
 
         if not usuario_mas_procesos:
-            return Response({"message": "No hay ningún usuario que haya realizado un proceso hoy."})
+            content = {"message": "No hay ningún usuario que haya realizado un proceso hoy."}
+            return JsonResponse(content, status=404)
 
         procesos_hoy_ids = usuario_mas_procesos.proceso_set.filter(inicioProceso__date=hoy).values_list('id', flat=True)
         usuario_mas_procesos.procesos_hoy_ids = list(procesos_hoy_ids)
@@ -447,6 +539,27 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).distinct().count()
 
         return Response({"piezas_count": piezas_count})
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
+    def obtener_piezas_terminadas(self, request):
+        piezas_con_procesos = Pieza.objects.annotate(num_procesos=Count('procesos')).filter(num_procesos__gt=0)
+
+        piezas_terminadas = piezas_con_procesos.annotate(
+            num_procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(num_procesos=F('num_procesos_realizados'))
+
+        serializer = self.get_serializer(piezas_terminadas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_futuras')
+    def obtener_piezas_futuras(self, request):
+        current_time = timezone.now()
+        piezas_futuras = Pieza.objects.filter(
+            Q(procesos__inicioProceso__gt=current_time) | Q(procesos__finProceso__gt=current_time)
+        ).distinct()
+
+        serializer = self.get_serializer(piezas_futuras, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas')
     def piezas_actuales_retrasadas(self, request):

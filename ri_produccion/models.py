@@ -32,6 +32,7 @@ class Proceso(models.Model):
     maquina = models.CharField(max_length=100)
     inicioProceso = models.DateTimeField()
     finProceso = models.DateTimeField()
+    terminadoProceso = models.DateTimeField(null=True, blank=True)
     placa = models.ForeignKey(Placa, on_delete=models.CASCADE,null=True, blank=True)
     realizadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE, null=True, blank=True)
     comentarios = models.CharField(max_length=300, null=True, blank=True)
