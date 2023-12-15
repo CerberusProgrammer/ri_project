@@ -9,6 +9,8 @@ from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWr
 from rest_framework import status
 from django.db.models import Q
 
+from django.utils.dateparse import parse_datetime
+
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
 
@@ -39,7 +41,6 @@ class MaterialViewSet(viewsets.ModelViewSet):
         materiales = Material.objects.filter(nombre=material_name, pieza__estatusAsignacion=False, pieza__estatus='aprobado')
         espesores = list(materiales.values_list('espesor', flat=True).distinct())
         return Response(espesores)
-
 
 class PlacaViewSet(viewsets.ModelViewSet):
     queryset = Placa.objects.all().order_by('-id')
@@ -204,6 +205,308 @@ class PiezaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
+    
+    @action(detail=True, methods=['put'], url_path='asignar_procesos_a_usuario')
+    def asignar_procesos_a_usuario(self, request, pk=None):
+        pieza = self.get_object()
+        subprocesos = request.data.get('subprocesos')
+        asignado_a_id = request.data.get('asignado_a')
+
+        try:
+            usuario = Usuarios.objects.get(id=asignado_a_id)
+        except Usuarios.DoesNotExist:
+            return Response({"error": "Usuario does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        for subproceso in subprocesos:
+            procesos = pieza.procesos.filter(nombre=subproceso)
+            if not procesos.exists():
+                return Response({"error": f"Subproceso {subproceso} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            procesos.update(realizadoPor=usuario)
+
+        pieza.refresh_from_db()
+        serializer = self.get_serializer(pieza)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='obtener_piezas_subproceso_tiempo')
+    def obtener_piezas_subproceso_tiempo(self, request):
+        subproceso = request.data.get('subprocesos')
+        hora_inicio = request.data.get('hora_inicio')
+
+        if not hora_inicio or not isinstance(hora_inicio, str):
+            return Response({"error": "Invalid or missing 'hora_inicio' parameter"}, status=status.HTTP_400_BAD_REQUEST)
+
+        hora_inicio = parse_datetime(hora_inicio)
+
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__nombre__in=subproceso,
+            procesos__inicioProceso__date=timezone.now().date(),
+            procesos__inicioProceso__time__gte=hora_inicio.time(),
+        ).distinct()
+
+        serializer = self.get_serializer(piezas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc1')
+    def obtener_piezas_maquina_cnc1(self, request):
+        return self.obtener_piezas_maquina(request, 'cnc 1')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc2')
+    def obtener_piezas_maquina_cnc2(self, request):
+        return self.obtener_piezas_maquina(request, 'cnc 2')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_fresadora1')
+    def obtener_piezas_maquina_fresadora1(self, request):
+        return self.obtener_piezas_maquina(request, 'fresadora 1')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_fresadora2')
+    def obtener_piezas_maquina_fresadora2(self, request):
+        return self.obtener_piezas_maquina(request, 'fresadora 2')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_torno')
+    def obtener_piezas_maquina_torno(self, request):
+        return self.obtener_piezas_maquina(request, 'torno')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_machueleado')
+    def obtener_piezas_maquina_machueleado(self, request):
+        return self.obtener_piezas_maquina(request, 'machueleado')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_limpieza')
+    def obtener_piezas_maquina_limpieza(self, request):
+        return self.obtener_piezas_maquina(request, 'limpieza')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_corte')
+    def obtener_piezas_maquina_corte(self, request):
+        return self.obtener_piezas_maquina(request, 'corte')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_pintura')
+    def obtener_piezas_maquina_pintura(self, request):
+        return self.obtener_piezas_maquina(request, 'pintura')
+
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_pulido')
+    def obtener_piezas_maquina_pulido(self, request):
+        return self.obtener_piezas_maquina(request, 'pulido')
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cortadoralaser')
+    def obtener_piezas_maquina_cortadoralaser(self, request):
+        return self.obtener_piezas_maquina(request, 'cortadoralaser')
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_dobladora')
+    def obtener_piezas_maquina_dobladora(self, request):
+        return self.obtener_piezas_maquina(request, 'dobladora')
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_machueleadosm')
+    def obtener_piezas_maquina_machueleadosm(self, request):
+        return self.obtener_piezas_maquina(request, 'machueleadosm')
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_limpiezasm')
+    def obtener_piezas_maquina_limpiezasm(self, request):
+        return self.obtener_piezas_maquina(request, 'limpiezasm')
+    
+    def obtener_piezas_maquina(self, request, maquina):
+        current_time = timezone.now()
+        piezas_realizadas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__maquina=maquina,
+            procesos__estatus='realizado',
+            procesos__inicioProceso__date=current_time.date(),
+        ).distinct()
+
+        piezas_retrasadas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__maquina=maquina,
+            procesos__estatus__in=['pendiente', 'operando'],
+            procesos__finProceso__lt=current_time,
+        ).distinct()
+
+        total_piezas = piezas_realizadas.count() + piezas_retrasadas.count()
+        progreso = piezas_realizadas.count() / total_piezas if total_piezas > 0 else 0
+
+        return Response({
+            "progreso": progreso,
+            "realizadas": PiezaSerializer(piezas_realizadas, many=True).data,
+            "retrasadas": PiezaSerializer(piezas_retrasadas, many=True).data,
+        })
+    
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
+    def obtener_estadisticas_maquinado_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        estadisticas = {}
+
+        for maquina in maquinas:
+            piezas_realizadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus='realizado',
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            piezas_planeadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus__in=['pendiente', 'operando'],
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            estadisticas[maquina] = {
+                'realizadas': piezas_realizadas,
+                'planeado': piezas_planeadas
+            }
+
+        return Response(estadisticas)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_soldadura_hoy')
+    def obtener_estadisticas_soldadura_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['corte', 'pintura', 'pulido']
+        estadisticas = {}
+
+        for maquina in maquinas:
+            piezas_realizadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus='realizado',
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            piezas_planeadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus__in=['pendiente', 'operando'],
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            estadisticas[maquina] = {
+                'realizadas': piezas_realizadas,
+                'planeado': piezas_planeadas
+            }
+
+        return Response(estadisticas)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_sheetmetal_hoy')
+    def obtener_estadisticas_sheetmetal_hoy(self, request):
+        current_date = timezone.now().date()
+        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza'] 
+        estadisticas = {}
+
+        for maquina in maquinas:
+            piezas_realizadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus='realizado',
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            piezas_planeadas = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus__in=['pendiente', 'operando'],
+                procesos__inicioProceso__date=current_date,
+            ).distinct().count()
+
+            estadisticas[maquina] = {
+                'realizadas': piezas_realizadas,
+                'planeado': piezas_planeadas
+            }
+
+        return Response(estadisticas)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
+    def obtener_piezas_actuales(self, request):
+        current_time = timezone.now()
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__gte=current_time,
+        ).distinct()
+
+        serializer = self.get_serializer(piezas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
+    def obtener_piezas_actuales_conteo(self, request):
+        current_time = timezone.now()
+        piezas_count = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__gte=current_time,
+        ).distinct().count()
+
+        return Response({"piezas_count": piezas_count})
+    
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas')
+    def piezas_actuales_retrasadas(self, request):
+        current_time = timezone.now()
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__lt=current_time,
+            procesos__estatus__in=['pendiente', 'operando'],
+        ).distinct()
+
+        serializer = self.get_serializer(piezas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas_conteo')
+    def piezas_actuales_retrasadas_conteo(self, request):
+        current_time = timezone.now()
+        piezas_count = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__lt=current_time,
+            procesos__estatus__in=['pendiente', 'operando'],
+        ).distinct().count()
+
+        return Response({"piezas_count": piezas_count})
+    
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias')
+    def piezas_actuales_prioritarias(self, request):
+        current_time = timezone.now()
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            prioridad=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__gte=current_time,
+        ).distinct()
+
+        serializer = self.get_serializer(piezas, many=True)
+        return Response(serializer.data)
+    
+    from django.utils import timezone
+
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
+    def piezas_actuales_prioritarias_conteo(self, request):
+        current_time = timezone.now()
+        piezas_count = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            prioridad=True,
+            procesos__inicioProceso__date=current_time.date(),
+            procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__gte=current_time,
+        ).distinct().count()
+
+        return Response({"piezas_count": piezas_count})
     
     @action(detail=True, methods=['get'], url_path='obtener_piezas_pendientes')
     def obtener_piezas_pendientes(self, request, pk=None):
@@ -718,7 +1021,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_pendientes_de_aprobar = Pieza.objects.filter(estatus='pendiente').order_by('-fechaCreado').distinct()[:5]
         serializer = PiezaSerializer(piezas_pendientes_de_aprobar, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 class NotificacionViewSet(viewsets.ModelViewSet):
     queryset = Notificacion.objects.all().order_by('-id')

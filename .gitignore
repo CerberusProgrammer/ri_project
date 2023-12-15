@@ -1,0 +1,9 @@
+app.yaml
+ri_compras/__pycache__/*
+ri_produccion/__pycache__/*
+ri_home/__pycache__/*
+ri_project/__pycache__/*
+ri_compras/migrations/*
+ri_produccion/migrations/*
+ri_home/migrations/*
+ri_project/migrations/*
