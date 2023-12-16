@@ -91,6 +91,18 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
     
+    @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
+    def procesos_maquinado_por_asignar(self, request):
+        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=True),
+            Q(estatus='pendiente'),
+            Q(maquina__iexact=maquinas)
+        )
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
     def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
         current_date = timezone.now().date()
@@ -222,6 +234,14 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             return Response({"message": "No has realizado ningún proceso."})
 
         serializer = self.get_serializer(mis_procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='obtener_procesos_usuario/(?P<id>\d+)')
+    def obtener_procesos_usuario(self, request, id=None):
+        usuario = get_object_or_404(Usuarios, id=id)
+        procesos = Proceso.objects.filter(realizadoPor=usuario)
+
+        serializer = ProcesoSerializer(procesos, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
