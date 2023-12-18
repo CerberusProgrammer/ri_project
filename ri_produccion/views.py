@@ -90,6 +90,228 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
+
+    from django.db.models import Q
+
+    @action(detail=False, methods=['get'], url_path='mi_progreso_procesos/(?P<id>\d+)')
+    def mi_progreso_procesos(self, request, id=None):
+        usuario = get_object_or_404(Usuarios, id=id)
+        total_procesos = Proceso.objects.filter(realizadoPor=usuario).count()
+        procesos_realizados = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus='realizado')
+        ).count()
+
+        if total_procesos == 0:
+            progreso = 0
+        else:
+            progreso = procesos_realizados / total_procesos
+
+        return Response({"progreso": progreso})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_actuales_cantidad/(?P<id>\d+)')
+    def mis_procesos_actuales_cantidad(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(inicioProceso__gte=current_time)
+        ).count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados_cantidad/(?P<id>\d+)')
+    def mis_procesos_retrasados_cantidad(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(finProceso__lt=current_time)
+        ).count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios_cantidad/(?P<id>\d+)')
+    def mis_procesos_prioritarios_cantidad(self, request, id=None):
+        usuario = get_object_or_404(Usuarios, id=id)
+        piezas_prioritarias = Pieza.objects.filter(prioridad=True)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(pieza__in=piezas_prioritarias)
+        ).distinct().count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_actuales/(?P<id>\d+)')
+    def mis_procesos_actuales(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(inicioProceso__gte=current_time)
+        ).order_by('inicioProceso')
+
+        response = []
+        for proceso in procesos:
+            piezas = proceso.pieza_set.all()
+            for pieza in piezas:
+                response.append({
+                    'id': proceso.id,
+                    'nombre': proceso.nombre,
+                    'estatus': proceso.estatus,
+                    'maquina': proceso.maquina,
+                    'inicioProceso': proceso.inicioProceso,
+                    'finProceso': proceso.finProceso,
+                    'terminadoProceso': proceso.terminadoProceso,
+                    'comentarios': proceso.comentarios,
+                    'prioridad': proceso.prioridad,
+                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
+                    'pieza_id': pieza.id,
+                    'consecutivo': pieza.consecutivo
+                })
+
+        return Response(response)
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados/(?P<id>\d+)')
+    def mis_procesos_retrasados(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(finProceso__lt=current_time)
+        ).order_by('inicioProceso')
+
+        response = []
+        for proceso in procesos:
+            piezas = proceso.pieza_set.all()
+            for pieza in piezas:
+                response.append({
+                    'id': proceso.id,
+                    'nombre': proceso.nombre,
+                    'estatus': proceso.estatus,
+                    'maquina': proceso.maquina,
+                    'inicioProceso': proceso.inicioProceso,
+                    'finProceso': proceso.finProceso,
+                    'terminadoProceso': proceso.terminadoProceso,
+                    'comentarios': proceso.comentarios,
+                    'prioridad': proceso.prioridad,
+                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
+                    'pieza_id': pieza.id,
+                    'consecutivo': pieza.consecutivo
+                })
+
+        return Response(response)
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios/(?P<id>\d+)')
+    def mis_procesos_prioritarios(self, request, id=None):
+        usuario = get_object_or_404(Usuarios, id=id)
+        piezas_prioritarias = Pieza.objects.filter(prioridad=True)
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(pieza__in=piezas_prioritarias)
+        ).distinct().order_by('inicioProceso')
+
+        response = []
+        for proceso in procesos:
+            piezas = proceso.pieza_set.all()
+            for pieza in piezas:
+                response.append({
+                    'id': proceso.id,
+                    'nombre': proceso.nombre,
+                    'estatus': proceso.estatus,
+                    'maquina': proceso.maquina,
+                    'inicioProceso': proceso.inicioProceso,
+                    'finProceso': proceso.finProceso,
+                    'terminadoProceso': proceso.terminadoProceso,
+                    'comentarios': proceso.comentarios,
+                    'prioridad': proceso.prioridad,
+                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
+                    'pieza_id': pieza.id,
+                    'consecutivo': pieza.consecutivo
+                })
+
+        return Response(response)
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_actuales_cantidad/(?P<id>\d+)')
+    def mis_procesos_actuales_cantidad(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(inicioProceso__gte=current_time)
+        ).count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados_cantidad/(?P<id>\d+)')
+    def mis_procesos_retrasados_cantidad(self, request, id=None):
+        current_time = timezone.now()
+        usuario = get_object_or_404(Usuarios, id=id)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(finProceso__lt=current_time)
+        ).count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios_cantidad/(?P<id>\d+)')
+    def mis_procesos_prioritarios_cantidad(self, request, id=None):
+        usuario = get_object_or_404(Usuarios, id=id)
+        piezas_prioritarias = Pieza.objects.filter(prioridad=True)
+        cantidad = Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(pieza__in=piezas_prioritarias)
+        ).distinct().count()
+
+        return Response({"cantidad": cantidad})
+
+    @action(detail=False, methods=['get'], url_path='procesos_maquinado_retrasados_piezas')
+    def procesos_maquinado_retrasados_piezas(self, request):
+        current_time = timezone.now()
+        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas),
+            Q(finProceso__lt=current_time)
+        ).order_by('inicioProceso')
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='procesos_soldadura_retrasados_piezas')
+    def procesos_soldadura_retrasados_piezas(self, request):
+        current_time = timezone.now()
+        maquinas = ['corte', 'pintura', 'pulido']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas),
+            Q(finProceso__lt=current_time)
+        ).order_by('inicioProceso')
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='procesos_sm_retrasados_piezas')
+    def procesos_sm_retrasados_piezas(self, request):
+        current_time = timezone.now()
+        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas),
+            Q(finProceso__lt=current_time)
+        ).order_by('inicioProceso')
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
     def procesos_maquinado_por_asignar(self, request):
@@ -99,6 +321,66 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(estatus='pendiente'),
             Q(maquina__iexact=maquinas)
         )
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='procesos_soldadura_por_asignar')
+    def procesos_soldadura_por_asignar(self, request):
+        maquinas = ['corte', 'pintura', 'pulido']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=True),
+            Q(estatus='pendiente'),
+            Q(maquina__iexact=maquinas)
+        )
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='procesos_sm_por_asignar')
+    def procesos_sm_por_asignar(self, request):
+        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=True),
+            Q(estatus='pendiente'),
+            Q(maquina__iexact=maquinas)
+        )
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='procesos_maquinado_actuales_piezas')
+    def procesos_maquinado_actuales_piezas(self, request):
+        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas)
+        ).order_by('inicioProceso')
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='procesos_soldadura_actuales_piezas')
+    def procesos_soldadura_actuales_piezas(self, request):
+        maquinas = ['corte', 'pintura', 'pulido']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas)
+        ).order_by('inicioProceso')
+
+        serializer = ProcesoSerializer(procesos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='procesos_sm_actuales_piezas')
+    def procesos_sm_actuales_piezas(self, request):
+        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=False),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(maquina__iexact=maquinas)
+        ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
         return Response(serializer.data)
