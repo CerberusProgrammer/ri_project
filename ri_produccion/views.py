@@ -319,7 +319,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
-            Q(maquina__iexact=maquinas)
+            Q(maquina__in=maquinas)
         )
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -331,7 +331,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
-            Q(maquina__iexact=maquinas)
+            Q(maquina__in=maquinas)
         )
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -343,7 +343,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
-            Q(maquina__iexact=maquinas)
+            Q(maquina__in=maquinas)
         )
 
         serializer = ProcesoSerializer(procesos, many=True)
