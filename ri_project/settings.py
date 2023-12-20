@@ -16,8 +16,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, '')
 
 INSTALLED_APPS = [
     'ri_compras',
-    'ri_produccion',
-    'ri_home',
     'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,6 +28,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'simple_history',
     'corsheaders',
+    'ri_produccion',
 ]
 
 REST_FRAMEWORK = {
