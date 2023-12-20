@@ -172,6 +172,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
                     'terminadoProceso': proceso.terminadoProceso,
                     'comentarios': proceso.comentarios,
                     'prioridad': proceso.prioridad,
+                    'piezasRealizadas': proceso.piezasRealizadas,
                     'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
                     'pieza_id': pieza.id,
                     'consecutivo': pieza.consecutivo
@@ -188,22 +189,25 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(estatus__in=['pendiente', 'operando']),
             Q(finProceso__lt=current_time)
         )
-
         response = []
-        print(procesos)
         for proceso in procesos:
-            response.append({
-                'id': proceso.id,
-                'nombre': proceso.nombre,
-                'estatus': proceso.estatus,
-                'maquina': proceso.maquina,
-                'inicioProceso': proceso.inicioProceso,
-                'finProceso': proceso.finProceso,
-                'terminadoProceso': proceso.terminadoProceso,
-                'comentarios': proceso.comentarios,
-                'prioridad': proceso.prioridad,
-                'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
-            })
+            piezas = proceso.pieza_set.all()
+            for pieza in piezas:
+                response.append({
+                    'id': proceso.id,
+                    'nombre': proceso.nombre,
+                    'estatus': proceso.estatus,
+                    'maquina': proceso.maquina,
+                    'inicioProceso': proceso.inicioProceso,
+                    'finProceso': proceso.finProceso,
+                    'terminadoProceso': proceso.terminadoProceso,
+                    'comentarios': proceso.comentarios,
+                    'prioridad': proceso.prioridad,
+                    'piezasRealizadas': proceso.piezasRealizadas,
+                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
+                    'pieza_id': pieza.id,
+                    'consecutivo': pieza.consecutivo
+                })
 
         return Response(response)
 
@@ -230,35 +234,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
                     'terminadoProceso': proceso.terminadoProceso,
                     'comentarios': proceso.comentarios,
                     'prioridad': proceso.prioridad,
+                    'piezasRealizadas': proceso.piezasRealizadas,
                     'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
                     'pieza_id': pieza.id,
                     'consecutivo': pieza.consecutivo
                 })
 
         return Response(response)
-
-    @action(detail=False, methods=['get'], url_path='mis_procesos_actuales_cantidad/(?P<id>\d+)')
-    def mis_procesos_actuales_cantidad(self, request, id=None):
-        current_time = timezone.now()
-        usuario = get_object_or_404(Usuarios, id=id)
-        cantidad = Proceso.objects.filter(
-            Q(realizadoPor=usuario),
-            Q(estatus__in=['pendiente', 'operando']),
-            Q(inicioProceso__gte=current_time)
-        ).count()
-
-        return Response({"cantidad": cantidad})
-
-    @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios_cantidad/(?P<id>\d+)')
-    def mis_procesos_prioritarios_cantidad(self, request, id=None):
-        usuario = get_object_or_404(Usuarios, id=id)
-        piezas_prioritarias = Pieza.objects.filter(prioridad=True)
-        cantidad = Proceso.objects.filter(
-            Q(realizadoPor=usuario),
-            Q(pieza__in=piezas_prioritarias)
-        ).distinct().count()
-
-        return Response({"cantidad": cantidad})
 
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_retrasados_piezas')
     def procesos_maquinado_retrasados_piezas(self, request):

@@ -28,6 +28,7 @@ class Proceso(models.Model):
     ]
 
     nombre = models.CharField(max_length=100)
+    piezasRealizadas = models.IntegerField(null=True, blank=True)
     estatus = models.CharField(max_length=50, choices=ESTATUS_CHOICES, default="pendiente")
     maquina = models.CharField(max_length=100)
     inicioProceso = models.DateTimeField()
