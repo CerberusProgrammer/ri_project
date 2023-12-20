@@ -91,8 +91,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'estatus', 'maquina']
     ordering_fields = ['nombre', 'estatus', 'maquina']
 
-    from django.db.models import Q
-
     @action(detail=False, methods=['get'], url_path='mi_progreso_procesos/(?P<id>\d+)')
     def mi_progreso_procesos(self, request, id=None):
         usuario = get_object_or_404(Usuarios, id=id)
@@ -125,6 +123,12 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     def mis_procesos_retrasados_cantidad(self, request, id=None):
         current_time = timezone.now()
         usuario = get_object_or_404(Usuarios, id=id)
+        print(Proceso.objects.filter(
+            Q(realizadoPor=usuario),
+            Q(estatus__in=['pendiente', 'operando']),
+            Q(finProceso__lt=current_time)
+        ))
+        print('uwu')
         cantidad = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
@@ -183,26 +187,23 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(finProceso__lt=current_time)
-        ).order_by('inicioProceso')
+        )
 
         response = []
+        print(procesos)
         for proceso in procesos:
-            piezas = proceso.pieza_set.all()
-            for pieza in piezas:
-                response.append({
-                    'id': proceso.id,
-                    'nombre': proceso.nombre,
-                    'estatus': proceso.estatus,
-                    'maquina': proceso.maquina,
-                    'inicioProceso': proceso.inicioProceso,
-                    'finProceso': proceso.finProceso,
-                    'terminadoProceso': proceso.terminadoProceso,
-                    'comentarios': proceso.comentarios,
-                    'prioridad': proceso.prioridad,
-                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
-                    'pieza_id': pieza.id,
-                    'consecutivo': pieza.consecutivo
-                })
+            response.append({
+                'id': proceso.id,
+                'nombre': proceso.nombre,
+                'estatus': proceso.estatus,
+                'maquina': proceso.maquina,
+                'inicioProceso': proceso.inicioProceso,
+                'finProceso': proceso.finProceso,
+                'terminadoProceso': proceso.terminadoProceso,
+                'comentarios': proceso.comentarios,
+                'prioridad': proceso.prioridad,
+                'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
+            })
 
         return Response(response)
 
@@ -244,18 +245,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(inicioProceso__gte=current_time)
-        ).count()
-
-        return Response({"cantidad": cantidad})
-
-    @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados_cantidad/(?P<id>\d+)')
-    def mis_procesos_retrasados_cantidad(self, request, id=None):
-        current_time = timezone.now()
-        usuario = get_object_or_404(Usuarios, id=id)
-        cantidad = Proceso.objects.filter(
-            Q(realizadoPor=usuario),
-            Q(estatus__in=['pendiente', 'operando']),
-            Q(finProceso__lt=current_time)
         ).count()
 
         return Response({"cantidad": cantidad})
@@ -599,6 +588,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
+    
+    @action(detail=False, methods=['post'], url_path='obtener_pieza_por_consecutivo')
+    def obtener_pieza_por_consecutivo(self, request):
+        consecutivo = request.data.get('consecutivo')
+        pieza = get_object_or_404(Pieza, consecutivo=consecutivo)
+        serializer = self.get_serializer(pieza)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['put'], url_path='asignar_procesos_a_usuario')
     def asignar_procesos_a_usuario(self, request, pk=None):
