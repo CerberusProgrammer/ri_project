@@ -63,6 +63,7 @@ class Pieza(models.Model):
     piezaRealizada = models.BooleanField(default=False)
     tipo_calidad = models.CharField(max_length=40, choices=CALIDAD_CHOICES, default="dimensional")
     tipo_tratamientos = models.CharField(max_length=200, blank=True, null=True)
+    proveedor_entrega_estimada = models.DateTimeField(null=True, blank=True)
     
     requiere_nesteo = models.BooleanField(default=True)
     consecutivo = models.CharField(max_length=100, unique=True)

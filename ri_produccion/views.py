@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWrapper
 from rest_framework import status
 from django.db.models import Q
+from rest_framework.exceptions import NotFound
 
 from django.utils.dateparse import parse_datetime
 
@@ -576,13 +577,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_revision = Pieza.objects.filter(estatus='revision')
 
         if not piezas_revision.exists():
-            return Response({"tasa_error": "No hay piezas en revisión."})
+            return Response({"tasa_error": 0})
 
         total_piezas = piezas_revision.aggregate(total=Sum('piezasTotales'))['total']
         total_piezas_rechazadas = piezas_revision.aggregate(total=Sum('piezasRechazadas'))['total']
 
         if total_piezas == 0:
-            return Response({"tasa_error": "No hay piezas totales en las piezas en revisión."})
+            return Response({"tasa_error": 0})
 
         tasa_error = total_piezas_rechazadas / total_piezas
 
@@ -603,7 +604,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         if total_piezas == 0:
-            return Response({"progreso": "No hay piezas en revisión dimensional."})
+            return Response({"progreso": 0})
 
         progreso = piezas_realizadas / total_piezas
 
@@ -624,7 +625,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         if total_piezas == 0:
-            return Response({"progreso": "No hay piezas en revisión pintura."})
+            return Response({"progreso": 0})
 
         progreso = piezas_realizadas / total_piezas
 
@@ -645,24 +646,27 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         if total_piezas == 0:
-            return Response({"progreso": "No hay piezas en revisión proveedor."})
+            return Response({"progreso": 0})
 
         progreso = piezas_realizadas / total_piezas
 
         return Response({"progreso": progreso})
     
-    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_dimensional')
+    @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_dimensional')
     def ultimas_piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
             estatus='revision',
             tipo_calidad='dimensional',
             piezaRealizada=False
         ).order_by('-id')[:5]
+        
+        if not piezas_pendientes:
+            raise NotFound("No hay piezas pendientes de revisión dimensional.")
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_pintura')
+    @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_pintura')
     def ultimas_piezas_pendientes_revision_pintura(self, request):
         piezas_pendientes = Pieza.objects.filter(
             estatus='revision',
@@ -673,13 +677,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_proveedor')
+    @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_proveedor')
     def ultimas_piezas_pendientes_revision_proveedor(self, request):
         piezas_pendientes = Pieza.objects.filter(
             estatus='revision',
             tipo_calidad='proveedor',
             piezaRealizada=False
         ).order_by('-id')[:5]
+        
+        if not piezas_pendientes:
+            raise NotFound("No hay piezas pendientes de revisión proveedor.")
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
