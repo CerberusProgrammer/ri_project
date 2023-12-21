@@ -571,6 +571,182 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas')
+    def progreso_tasa_error_piezas(self, request):
+        piezas_revision = Pieza.objects.filter(estatus='revision')
+
+        if not piezas_revision.exists():
+            return Response({"tasa_error": "No hay piezas en revisión."})
+
+        total_piezas = piezas_revision.aggregate(total=Sum('piezasTotales'))['total']
+        total_piezas_rechazadas = piezas_revision.aggregate(total=Sum('piezasRechazadas'))['total']
+
+        if total_piezas == 0:
+            return Response({"tasa_error": "No hay piezas totales en las piezas en revisión."})
+
+        tasa_error = total_piezas_rechazadas / total_piezas
+
+        return Response({"tasa_error": tasa_error})
+    
+    @action(detail=False, methods=['get'], url_path='progreso_inspeccion_dimensional')
+    def progreso_inspeccion_dimensional(self, request):
+        total_piezas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='dimensional',
+            piezaRealizada=True
+        ).count()
+
+        piezas_realizadas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='dimensional',
+            piezaRealizada=True
+        ).count()
+
+        if total_piezas == 0:
+            return Response({"progreso": "No hay piezas en revisión dimensional."})
+
+        progreso = piezas_realizadas / total_piezas
+
+        return Response({"progreso": progreso})
+    
+    @action(detail=False, methods=['get'], url_path='progreso_inspeccion_pintura')
+    def progreso_inspeccion_pintura(self, request):
+        total_piezas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='pintura',
+            piezaRealizada=True
+        ).count()
+
+        piezas_realizadas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='pintura',
+            piezaRealizada=True
+        ).count()
+
+        if total_piezas == 0:
+            return Response({"progreso": "No hay piezas en revisión pintura."})
+
+        progreso = piezas_realizadas / total_piezas
+
+        return Response({"progreso": progreso})
+    
+    @action(detail=False, methods=['get'], url_path='progreso_inspeccion_proveedor')
+    def progreso_inspeccion_proveedor(self, request):
+        total_piezas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='proveedor',
+            piezaRealizada=True
+        ).count()
+
+        piezas_realizadas = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='proveedor',
+            piezaRealizada=True
+        ).count()
+
+        if total_piezas == 0:
+            return Response({"progreso": "No hay piezas en revisión proveedor."})
+
+        progreso = piezas_realizadas / total_piezas
+
+        return Response({"progreso": progreso})
+    
+    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_dimensional')
+    def ultimas_piezas_pendientes_revision_dimensional(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='dimensional',
+            piezaRealizada=False
+        ).order_by('-id')[:5]
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_pintura')
+    def ultimas_piezas_pendientes_revision_pintura(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='pintura',
+            piezaRealizada=False
+        ).order_by('-id')[:5]
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='ultimas/piezas_pendientes_revision_proveedor')
+    def ultimas_piezas_pendientes_revision_proveedor(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='proveedor',
+            piezaRealizada=False
+        ).order_by('-id')[:5]
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional')
+    def piezas_pendientes_revision_dimensional(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='dimensional',
+            piezaRealizada=False
+        )
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
+    def piezas_pendientes_revision_pintura(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='pintura',
+            piezaRealizada=False
+        )
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_proveedor')
+    def piezas_pendientes_revision_proveedor(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='proveedor',
+            piezaRealizada=False
+        )
+
+        serializer = self.get_serializer(piezas_pendientes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional_contador')
+    def piezas_pendientes_revision_dimensional_contador(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='dimensional',
+            piezaRealizada=False
+        ).count()
+
+        return Response({"cantidad": piezas_pendientes})
+    
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura_contador')
+    def piezas_pendientes_revision_pintura_contador(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='pintura',
+            piezaRealizada=False
+        ).count()
+
+        return Response({"cantidad": piezas_pendientes})
+    
+    @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_proveedor_contador')
+    def piezas_pendientes_revision_proveedor_contador(self, request):
+        piezas_pendientes = Pieza.objects.filter(
+            estatus='revision',
+            tipo_calidad='proveedor',
+            piezaRealizada=False
+        ).count()
+
+        return Response({"cantidad": piezas_pendientes})
+    
     @action(detail=False, methods=['post'], url_path='obtener_pieza_por_consecutivo')
     def obtener_pieza_por_consecutivo(self, request):
         consecutivo = request.data.get('consecutivo')

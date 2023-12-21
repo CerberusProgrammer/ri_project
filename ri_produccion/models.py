@@ -47,7 +47,22 @@ class Pieza(models.Model):
         ('rechazado', 'Rechazado'),
         ('pendiente', 'Pendiente'),
         ('aprobado', 'Aprobado'),
+        ('revision', 'Revision'),
     ]
+    
+    CALIDAD_CHOICES = [
+        ('dimensional', 'Dimensional'),
+        ('pintura', 'Pintura'),
+        ('proveedor', 'Proveedor'),
+        ('ninguno', 'Ninguno'),
+    ]
+    
+    piezas = models.IntegerField()
+    piezasRechazadas = models.IntegerField()
+    piezasTotales = models.IntegerField()
+    piezaRealizada = models.BooleanField(default=False)
+    tipo_calidad = models.CharField(max_length=40, choices=CALIDAD_CHOICES, default="dimensional")
+    tipo_tratamientos = models.CharField(max_length=200, blank=True, null=True)
     
     requiere_nesteo = models.BooleanField(default=True)
     consecutivo = models.CharField(max_length=100, unique=True)
@@ -56,8 +71,6 @@ class Pieza(models.Model):
     motivoRechazo = models.CharField(max_length=300, blank=True, null=True)
     fechaRechazado = models.DateTimeField(null=True)
     ordenCompra = models.CharField(max_length=150)
-    piezas = models.IntegerField()
-    piezasTotales = models.IntegerField()
     material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
     placas = models.ManyToManyField(Placa, blank=True)
     nombreProceso = models.CharField(max_length=100)
