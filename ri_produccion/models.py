@@ -58,7 +58,7 @@ class Pieza(models.Model):
     ]
     
     piezas = models.IntegerField()
-    piezasRechazadas = models.IntegerField()
+    piezasRechazadas = models.IntegerField(default=0)
     piezasTotales = models.IntegerField()
     piezaRealizada = models.BooleanField(default=False)
     tipo_calidad = models.CharField(max_length=40, choices=CALIDAD_CHOICES, default="dimensional")
@@ -74,7 +74,7 @@ class Pieza(models.Model):
     ordenCompra = models.CharField(max_length=150)
     material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
     placas = models.ManyToManyField(Placa, blank=True)
-    nombreProceso = models.CharField(max_length=100)
+    nombreProceso = models.CharField(max_length=100, blank=True, null=True)
     procesos = models.ManyToManyField(Proceso, blank=True)
     creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     fechaCreado = models.DateTimeField(auto_now_add=True)

@@ -1068,8 +1068,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
-    from django.utils import timezone
-
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
     def piezas_actuales_prioritarias_conteo(self, request):
         current_time = timezone.now()
@@ -1404,7 +1402,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def ultima_pieza_creada(self, request):
-        ultima_pieza = Pieza.objects.latest('fechaCreado')
+        try:
+            ultima_pieza = Pieza.objects.filter(
+                Q(estatus='pendiente') | Q(estatus='aprobado'),
+                estatusAsignacion=False
+            ).latest('fechaCreado')
+        except Pieza.DoesNotExist:
+            return Response({"detail": "No hay piezas registradas."}, status=404)
+
         serializer = self.get_serializer(ultima_pieza)
         return Response(serializer.data)
     
