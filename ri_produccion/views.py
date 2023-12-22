@@ -1290,7 +1290,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion_sin_confirmar(self, request):
         total_piezas = Pieza.objects.all().count()
-        piezas_con_asignacion_sin_confirmar = Pieza.objects.filter(material__isnull=False, placas__isnull=False, procesos__isnull=False, estatusAsignacion=False).count()
+        piezas_con_asignacion_sin_confirmar = Pieza.objects.filter(Q(estatus='aprobado'),
+            Q(material__isnull=True) | (Q(placas__isnull=True) & Q(requiere_nesteo=True)) | Q(procesos__isnull=True)).count()
 
         if total_piezas == 0:
             return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1580,7 +1581,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def ultimas_piezas_pendientes_de_asignar(self, request):
         piezas_pendientes_de_asignar = Pieza.objects.filter(
             Q(estatus='aprobado'),
-            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
+            Q(material__isnull=True) | (Q(placas__isnull=True) & Q(requiere_nesteo=True)) | Q(procesos__isnull=True)
         ).order_by('-fechaCreado').distinct()[:5]
         serializer = PiezaSerializer(piezas_pendientes_de_asignar, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1590,7 +1591,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_pendientes_de_confirmar = Pieza.objects.filter(
             Q(estatus='aprobado'),
             Q(material__isnull=False),
-            Q(placas__isnull=False),
+            Q(placas__isnull=False) | Q(requiere_nesteo=False),
             Q(procesos__isnull=False),
             Q(estatusAsignacion=False)
         ).order_by('-fechaCreado').distinct()[:5]
