@@ -14,7 +14,7 @@ from rest_framework.exceptions import NotFound
 from django.utils.dateparse import parse_datetime
 
 from ri_compras.models import Usuarios
-from ri_compras.serializer import UsuariosSerializer, UsuariosVerySimpleSerializer
+from ri_compras.serializer import UsuarioDepartamentoSerializer, UsuariosSerializer, UsuariosVerySimpleSerializer
 
 from .models import Material, Notificacion, Placa, Proceso, Pieza
 from .serializers import MaterialSerializer, NotificacionSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
@@ -454,7 +454,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_todos_los_usuarios_operadores(self, request):
         operadores = Usuarios.objects.filter(rol='OPERADOR', departamento__nombre='Produccion')
-        serializer = UsuariosSerializer(operadores, many=True)
+        serializer = UsuarioDepartamentoSerializer(operadores, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
@@ -1200,7 +1200,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)
             if conflictos.exists():
                 conflicto = conflictos.first()
-                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}"}, status=status.HTTP_400_BAD_REQUEST)
 
             proceso_serializer = ProcesoSerializer(data=proceso_data)
             if proceso_serializer.is_valid():
