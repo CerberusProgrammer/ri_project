@@ -1164,7 +1164,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if not all([material_nombre, espesor]):
             return Response({"error": "Los parámetros 'material' y 'espesor' son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
 
-        material = Material.objects.filter(nombre=material_nombre, espesor=espesor).first()
+        material = Material.objects.filter(nombre=material_nombre, espesor=espesor)
         if material is None:
             return Response([], status=status.HTTP_200_OK)
 
