@@ -1164,14 +1164,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if not all([material_nombre, espesor]):
             return Response({"error": "Los parámetros 'material' y 'espesor' son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
 
-        material = Material.objects.filter(nombre=material_nombre, espesor=espesor)
-        if material is None:
+        materiales = Material.objects.filter(nombre=material_nombre, espesor=espesor)
+
+        if not materiales.exists():
             return Response([], status=status.HTTP_200_OK)
 
-        piezas = Pieza.objects.filter(material=material, estatusAsignacion=False)
+        piezas = Pieza.objects.filter(material__in=materiales, estatusAsignacion=False)
 
         serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
