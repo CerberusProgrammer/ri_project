@@ -803,6 +803,22 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
+    @action(detail=False, methods=['post'], url_path='obtener_piezas_por_subproceso')
+    def obtener_piezas_por_subproceso(self, request):
+        subproceso = request.data.get('subprocesos')
+
+        if subproceso is None:
+            return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__nombre__in=subproceso,
+        ).order_by('-procesos__inicioProceso').distinct()
+
+        serializer = self.get_serializer(piezas, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc1')
     def obtener_piezas_maquina_cnc1(self, request):
         return self.obtener_piezas_maquina(request, 'cnc 1')
@@ -1555,11 +1571,11 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_terminadas_sin_asignacion_confirmada(self, request):
         piezas_terminadas_sin_asignacion_confirmada = Pieza.objects.filter(
-            Q(placas__isnull=True) | Q(requiere_nesteo=False),
-            material__isnull=False,
-            procesos__isnull=False,
-            estatus='aprobado',
-            estatusAsignacion=False
+            Q(estatus='aprobado'),
+            Q(material__isnull=False),
+            Q(placas__isnull=False) | Q(requiere_nesteo=False),
+            Q(procesos__isnull=False),
+            Q(estatusAsignacion=False)
         )
         serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
         return Response(serializer.data)
