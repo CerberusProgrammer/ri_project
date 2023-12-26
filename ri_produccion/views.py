@@ -1170,7 +1170,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response([], status=status.HTTP_200_OK)
 
         piezas = Pieza.objects.filter(
-            Q(placas__isnull=False) | Q(requiere_nesteo=False),
+            Q(placas__isnull=True) | Q(requiere_nesteo=True),
             material__in=materiales, estatusAsignacion=False)
 
         serializer = PiezaSerializer(piezas, many=True)
