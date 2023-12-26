@@ -1169,7 +1169,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if not materiales.exists():
             return Response([], status=status.HTTP_200_OK)
 
-        piezas = Pieza.objects.filter(material__in=materiales, estatusAsignacion=False)
+        piezas = Pieza.objects.filter(
+            Q(placas__isnull=False) | Q(requiere_nesteo=False),
+            material__in=materiales, estatusAsignacion=False)
 
         serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
