@@ -453,7 +453,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_todos_los_usuarios_operadores(self, request):
-        operadores = Usuarios.objects.filter(rol='OPERADOR', departamento__nombre='produccion')
+        operadores = Usuarios.objects.filter(rol='OPERADOR', departamento__nombre='Produccion')
         serializer = UsuariosSerializer(operadores, many=True)
         return Response(serializer.data)
     
