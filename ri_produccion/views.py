@@ -33,7 +33,12 @@ class MaterialViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def materiales_para_nesteo_filtrado(self, request):
-        materiales = Material.objects.filter(pieza__estatusAsignacion=False, pieza__estatus='aprobado').distinct()
+        materiales = Material.objects.filter(
+            pieza__estatusAsignacion=False,
+            pieza__estatus='aprobado',
+            pieza__placas__isnull=True,
+            pieza__requiere_nesteo=True,
+            ).distinct()
         nombres_materiales = list(materiales.values_list('nombre', flat=True).distinct())
         return Response(nombres_materiales)
     
@@ -43,7 +48,13 @@ class MaterialViewSet(viewsets.ModelViewSet):
         if not material_name:
             return Response({"error": "No material name provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        materiales = Material.objects.filter(nombre=material_name, pieza__estatusAsignacion=False, pieza__estatus='aprobado')
+        materiales = Material.objects.filter(
+            nombre=material_name,
+            pieza__estatusAsignacion=False,
+            pieza__estatus='aprobado',
+            pieza__placas__isnull=True,
+            pieza__requiere_nesteo=True,
+        )
         espesores = list(materiales.values_list('espesor', flat=True).distinct())
         return Response(espesores)
 
@@ -1171,7 +1182,10 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas = Pieza.objects.filter(
             Q(placas__isnull=True),
-            material__in=materiales, estatusAsignacion=False)
+            material__in=materiales, 
+            estatusAsignacion=False,
+            requiere_nesteo=True,
+        )
 
         serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
