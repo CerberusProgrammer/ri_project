@@ -104,7 +104,10 @@ class PlacaViewSet(viewsets.ModelViewSet):
         placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza')).filter(num_piezas__gt=0)
         data = []
         for placa in placas_con_piezas:
-            piezas_activas = list(placa.pieza_set.values())
+            # Filtra las piezas de la placa por estatus y estatusAsignacion
+            piezas_activas = list(placa.pieza_set.filter(
+                estatus="aprobado",
+                estatusAsignacion=False,).values())
             placa_data = {
                 "id": placa.id,
                 "nombre": placa.nombre,
@@ -113,8 +116,8 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 "piezas_activas": piezas_activas
             }
             data.append(placa_data)
+        
         return Response(data)
-
 
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
@@ -1632,7 +1635,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             Q(placas__isnull=False) | Q(requiere_nesteo=False),
             Q(procesos__isnull=False),
             Q(estatusAsignacion=False)
-        )
+        ).distinct()
+        
         serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
         return Response(serializer.data)
     
