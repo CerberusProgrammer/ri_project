@@ -59,6 +59,7 @@ class Pieza(models.Model):
     
     piezas = models.IntegerField()
     piezasRechazadas = models.IntegerField(default=0)
+    piezasPendientes = models.IntegerField(default=0)
     piezasTotales = models.IntegerField()
     piezaRealizada = models.BooleanField(default=False)
     tipo_calidad = models.CharField(max_length=40, choices=CALIDAD_CHOICES, default="dimensional")
