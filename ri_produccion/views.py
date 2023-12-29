@@ -105,15 +105,19 @@ class PlacaViewSet(viewsets.ModelViewSet):
         data = []
         for placa in placas_con_piezas:
             # Filtra las piezas de la placa por estatus y estatusAsignacion
-            piezas_activas = list(placa.pieza_set.filter(
+            piezas_activas = placa.pieza_set.filter(
                 estatus="aprobado",
-                estatusAsignacion=False,).values())
+                estatusAsignacion=False,
+            )
+            # Serializa las piezas activas
+            piezas_activas_data = PiezaSerializer(piezas_activas, many=True).data
+            
             placa_data = {
                 "id": placa.id,
                 "nombre": placa.nombre,
                 "descripcion": placa.descripcion,
                 "piezas": placa.piezas,
-                "piezas_activas": piezas_activas
+                "piezas_activas": piezas_activas_data
             }
             data.append(placa_data)
         
@@ -1201,8 +1205,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         pieza.save()
 
         return Response({"success": f"Placa {placa_id} has been successfully assigned to Pieza {pieza.consecutivo}"}, status=status.HTTP_200_OK)
-    
-    from django.db.models import Sum, F, Q
 
     @action(detail=False, methods=['post'], url_path='buscar_piezas_por_material_espesor')
     def buscar_piezas_por_material_espesor(self, request):
@@ -1226,53 +1228,69 @@ class PiezaViewSet(viewsets.ModelViewSet):
             requiere_nesteo=True,
         )
 
-        # Obtiene las piezas que cumplen con cualquiera de los dos conjuntos de condiciones
-        piezas = Pieza.objects.filter(Q(id__in=piezas_incompletas) | Q(id__in=piezas_otro_filtro), material__nombre=material_nombre, material__espesor=espesor)
+        # Filtra las piezas que tienen placas en estado nulo y que están en requiere_nesteo=True, o que placas está en nulo y además requiere_nesteo=False
+        piezas = Pieza.objects.filter(
+            Q(id__in=piezas_incompletas) | Q(id__in=piezas_otro_filtro),
+            Q(placas__isnull=True, requiere_nesteo=True) | Q(placas__isnull=True, requiere_nesteo=False),
+            material__nombre=material_nombre,
+            material__espesor=espesor,
+        )
 
         serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
-        pieza = self.get_object()
-        procesos_data = request.data.get('procesos')
+        pieza = self.get_object()  # Obtiene la instancia de Pieza actual
+        procesos_data = request.data.get('procesos')  # Obtiene los datos de los procesos de la solicitud
         if not procesos_data:
             return Response({"error": "The 'procesos' parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Eliminar los Proceso existentes
+        # Elimina los Proceso existentes
         pieza.procesos.all().delete()
 
-        for proceso_data in procesos_data:
-            placa_id = proceso_data.get('placa_id')
+        for proceso_data in procesos_data:  # Itera sobre cada proceso en los datos de la solicitud
+            placa_id = proceso_data.get('placa_id')  # Obtiene el id de la Placa del proceso
             if not placa_id:
                 return Response({"error": "The 'placa_id' parameter is required for each proceso"}, status=status.HTTP_400_BAD_REQUEST)
             try:
-                placa = Placa.objects.get(id=placa_id)
+                placa = Placa.objects.get(id=placa_id)  # Obtiene la instancia de Placa con el id dado
             except Placa.DoesNotExist:
                 return Response({"error": f"Placa with id {placa_id} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-            proceso_data['placa'] = placa.id
+            proceso_data['placa'] = placa.id  # Asigna el id de la Placa al proceso
 
-            # Comprobar si hay conflictos de horario
-            inicioProceso = proceso_data.get('inicioProceso')
-            finProceso = proceso_data.get('finProceso')
-            maquina = proceso_data.get('maquina')
-            conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)
-            if conflictos.exists():
-                conflicto = conflictos.first()
+            # Comprueba si hay conflictos de horario
+            inicioProceso = proceso_data.get('inicioProceso')  # Obtiene el inicio del proceso
+            finProceso = proceso_data.get('finProceso')  # Obtiene el fin del proceso
+            maquina = proceso_data.get('maquina')  # Obtiene la máquina del proceso
+            conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)  # Busca conflictos de horario
+            if conflictos.exists():  # Si hay conflictos
+                conflicto = conflictos.first()  # Obtiene el primer conflicto
                 return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}"}, status=status.HTTP_400_BAD_REQUEST)
 
-            proceso_serializer = ProcesoSerializer(data=proceso_data)
-            if proceso_serializer.is_valid():
-                proceso = proceso_serializer.save()
-                pieza.procesos.add(proceso)
+            # Comprueba si el horario coincide con el de los procesos CNC existentes
+            if maquina == "Laser":  # Si la máquina del proceso es "Laser"
+                cnc_procesos = Proceso.objects.filter(placa__in=pieza.placas.all(), maquina__in=["CNC 1", "CNC 2"])  # Busca procesos CNC en las mismas placas que la pieza actual
+                if cnc_procesos.exists():  # Si hay procesos CNC
+                    cnc_proceso = cnc_procesos.first()  # Obtiene el primer proceso CNC
+                    if inicioProceso != cnc_proceso.inicioProceso or finProceso != cnc_proceso.finProceso:  # Si el horario no coincide
+                        return Response({"error": f"El horario del proceso 'Laser' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {cnc_proceso.inicioProceso} a {cnc_proceso.finProceso}. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
+
+            proceso_serializer = ProcesoSerializer(data=proceso_data)  # Crea un serializador para el proceso
+            if proceso_serializer.is_valid():  # Si los datos del proceso son válidos
+                proceso = proceso_serializer.save()  # Guarda el proceso
+                pieza.procesos.add(proceso)  # Añade el proceso a la pieza
             else:
                 return Response(proceso_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        pieza.save()
+        pieza.save()  # Guarda la pieza
 
-        # Serializar y devolver el objeto Pieza
+        # Serializa y devuelve el objeto Pieza
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
+
 
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
