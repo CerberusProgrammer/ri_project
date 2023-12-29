@@ -378,8 +378,8 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
                 subtotal += costo
                 variables['requisicion_detail']['productos'][i]['costo_total'] = format(costo, ',.6f')
                 
-            for i in range(len(data['requisicion_detail']['service'])):
-                subtotal += float(data['requisicion_detail']['service'][i]['costo'])
+            for i in range(len(data['requisicion_detail']['servicios'])):
+                subtotal += float(data['requisicion_detail']['servicios'][i]['costo'])
             
             iva = subtotal * float(variables['proveedor_detail']['iva'])
             iva_retenido = subtotal * float(variables['proveedor_detail']['iva_retenido'])
@@ -394,9 +394,9 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             variables['hay_credito'] = "Credito disponible" if float(variables['proveedor_detail']['credito']) > 0 else "Sin credito disponible"
 
             if not variables['requisicion_detail']['productos']:
-                variables['divisa'] = variables['requisicion_detail']['service'][0]['divisa']
+                variables['divisa'] = variables['requisicion_detail']['servicios'][0]['divisa']
 
-            if not variables['requisicion_detail']['service']:
+            if not variables['requisicion_detail']['servicios']:
                 variables['divisa'] = variables['requisicion_detail']['productos'][0]['divisa']
 
             username = data.get("usuario_detail", {}).get("username")

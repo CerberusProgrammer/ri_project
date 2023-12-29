@@ -7,3 +7,5 @@ ri_compras/migrations/*
 ri_produccion/migrations/*
 ri_home/migrations/*
 ri_project/migrations/*
+pdfs/
+pdfs-produccion/
