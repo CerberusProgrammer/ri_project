@@ -1643,7 +1643,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
-        )
+        ).order_by('-fechaCreado').distinct()
         serializer = self.get_serializer(piezas_sin_material_asignado, many=True)
         return Response(serializer.data)
 
