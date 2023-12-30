@@ -16,7 +16,7 @@ from django.utils.dateparse import parse_datetime
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuarioDepartamentoSerializer, UsuariosSerializer, UsuariosVerySimpleSerializer
 
-from .models import Material, Notificacion, Placa, Proceso, Pieza
+from .models import Material, Notificacion, PiezaPlaca, Placa, Proceso, Pieza
 from .serializers import MaterialSerializer, NotificacionSerializer, PlacaSerializer, ProcesoSerializer, PiezaSerializer
 
 from django.db.models import F, ExpressionWrapper, fields
@@ -35,8 +35,10 @@ class MaterialViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def materiales_para_nesteo_filtrado(self, request):
-        # Filtra las piezas cuyo total de piezas pendientes es menor que el total de piezas
-        piezas_incompletas = Pieza.objects.filter(piezasTotales__gt=F('piezasPendientes'))
+        from django.db.models import Sum
+
+        # Filtra las piezas cuyo total de piezas realizadas es menor que el total de piezas y requieren nesteo
+        piezas_incompletas = Pieza.objects.filter(requiere_nesteo=True).annotate(piezas_realizadas=Sum('piezaplaca__piezas_realizadas')).filter(piezasTotales__gt=F('piezas_realizadas'))
 
         # Obtiene los materiales de las piezas incompletas
         materiales_incompletas = Material.objects.filter(pieza__in=piezas_incompletas).distinct()
@@ -45,24 +47,18 @@ class MaterialViewSet(viewsets.ModelViewSet):
         piezas_otro_filtro = Pieza.objects.filter(
             estatusAsignacion=False,
             estatus='aprobado',
-            placas__isnull=True,
             requiere_nesteo=True,
         )
 
         # Obtiene los materiales de las piezas que cumplen con el otro filtro
         materiales_otro_filtro = Material.objects.filter(pieza__in=piezas_otro_filtro).distinct()
 
-        # Filtra las piezas que no requieren nesteo pero tienen piezas pendientes
-        piezas_sin_nesteo_incompletas = Pieza.objects.filter(requiere_nesteo=False, piezasTotales__gt=F('piezasPendientes'))
-
-        # Obtiene los materiales de las piezas sin nesteo pero incompletas
-        materiales_sin_nesteo_incompletos = Material.objects.filter(pieza__in=piezas_sin_nesteo_incompletas).distinct()
-
-        # Une los tres conjuntos de materiales
-        materiales = materiales_incompletas | materiales_otro_filtro | materiales_sin_nesteo_incompletos
+        # Une los dos conjuntos de materiales
+        materiales = materiales_incompletas | materiales_otro_filtro
 
         nombres_materiales = list(materiales.values_list('nombre', flat=True).distinct())
         return Response(nombres_materiales)
+
 
     @action(detail=False, methods=['post'])
     def espesores_para_nesteo_filtrado(self, request):
@@ -1199,17 +1195,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
             placa = Placa.objects.get(id=placa_id)
         except Placa.DoesNotExist:
             return Response({"error": "Placa does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if placa in pieza.placas.all():
-            return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
 
         piezas = request.data.get('piezas')
-        if piezas is not None:
-            pieza.piezasPendientes = piezas + pieza.piezasPendientes
-            pieza.save()
+        if piezas is None:
+            return Response({"error": "Piezas parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        pieza.placas.add(placa)
-        pieza.save()
+        # Check if the PiezaPlaca relationship already exists
+        try:
+            pieza_placa = PiezaPlaca.objects.get(pieza=pieza, placa=placa)
+            return Response({"error": "Placa is already associated with this Pieza"}, status=status.HTTP_400_BAD_REQUEST)
+        except PiezaPlaca.DoesNotExist:
+            # If not, create a new PiezaPlaca relationship
+            pieza_placa = PiezaPlaca.objects.create(pieza=pieza, placa=placa, piezas_realizadas=piezas)
 
         serializer = PiezaSerializer(pieza)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1223,13 +1220,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response({"error": "Los parámetros 'material' y 'espesor' son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Filtra las piezas cuyo total de piezas pendientes es mayor que cero
-        piezas_incompletas = Pieza.objects.filter(piezasTotales__gt=F('piezasPendientes'))
+        piezas_incompletas = Pieza.objects.annotate(piezas_realizadas=Sum('piezaplaca__piezas_realizadas')).filter(piezasTotales__gt=F('piezas_realizadas'))
 
         # Aplica el filtro a todas las piezas
         piezas_otro_filtro = Pieza.objects.filter(
             estatusAsignacion=False,
             estatus='aprobado',
-            placas__isnull=True,
             requiere_nesteo=True,
         )
 
@@ -1245,6 +1241,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
