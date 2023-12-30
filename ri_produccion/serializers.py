@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from ri_compras.models import Usuarios
-
 from ri_compras.serializer import SimpleUsuariosSerializer
-from .models import Material, Notificacion, Placa, Proceso, Pieza
+from .models import Material, Notificacion, Placa, Proceso, Pieza, PiezaPlaca
 
 class NotificacionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,9 +26,16 @@ class ProcesoSerializer(serializers.ModelSerializer):
         model = Proceso
         fields = '__all__'
 
+class PiezaPlacaSerializer(serializers.ModelSerializer):
+    placa = PlacaSerializer()
+
+    class Meta:
+        model = PiezaPlaca
+        fields = ['placa', 'piezas_realizadas']
+
 class PiezaSerializer(serializers.ModelSerializer):
     material = MaterialSerializer(many=False, read_only=True)
-    placas = PlacaSerializer(many=True, read_only=True) 
+    placas = PiezaPlacaSerializer(source='piezaplaca_set', many=True, read_only=True)
     procesos = ProcesoSerializer(many=True, read_only=True)
     creadoPor = SimpleUsuariosSerializer(read_only=True)
     creadoPorId = serializers.PrimaryKeyRelatedField(source='creadoPor', queryset=Usuarios.objects.all(), write_only=True)

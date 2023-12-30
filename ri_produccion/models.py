@@ -66,7 +66,6 @@ class Pieza(models.Model):
     tipo_tratamientos = models.CharField(max_length=200, blank=True, null=True)
     proveedor_entrega_estimada = models.DateTimeField(null=True, blank=True)
     proveedor_entrega_enviado = models.DateTimeField(null=True, blank=True)
-    
     requiere_nesteo = models.BooleanField(default=True)
     consecutivo = models.CharField(max_length=100, unique=True)
     estatus = models.CharField(max_length=40, choices=STATUS_CHOICES, default="pendiente")
@@ -75,7 +74,7 @@ class Pieza(models.Model):
     fechaRechazado = models.DateTimeField(null=True)
     ordenCompra = models.CharField(max_length=150)
     material = models.ForeignKey(Material, on_delete=models.CASCADE, null=True, blank=True)
-    placas = models.ManyToManyField(Placa, blank=True)
+    placas = models.ManyToManyField(Placa, through='PiezaPlaca', blank=True)
     nombreProceso = models.CharField(max_length=100, blank=True, null=True)
     procesos = models.ManyToManyField(Proceso, blank=True)
     creadoPor = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
@@ -88,6 +87,11 @@ class Pieza(models.Model):
 
     def __str__(self):
         return self.consecutivo
+
+class PiezaPlaca(models.Model):
+    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE)
+    placa = models.ForeignKey(Placa, on_delete=models.CASCADE)
+    piezas_realizadas = models.IntegerField(default=0)
 
 class Notificacion(models.Model):
     titulo = models.CharField(max_length=100)
