@@ -34,31 +34,52 @@ class MaterialViewSet(viewsets.ModelViewSet):
     ordering_fields = ['nombre', 'espesor']
     
     @action(detail=False, methods=['get'])
+    def piezas_para_nesteo_filtrado(self, request):
+        # Inicializa una lista vacía para almacenar las piezas que cumplen con las condiciones
+        piezas_validas = []
+
+        # Obtiene todas las piezas
+        todas_las_piezas = Pieza.objects.all()
+
+        # Itera sobre todas las piezas
+        for pieza in todas_las_piezas:
+            # Verifica si la pieza requiere nesteo y tiene un valor en el campo material
+            if pieza.requiere_nesteo and pieza.material is not None:
+                # Calcula el total de piezas realizadas
+                piezas_realizadas = pieza.placas.aggregate(total=Sum('piezaplaca__piezas_realizadas'))['total']
+
+                # Si el total de piezas realizadas es menor que el total de piezas, o si la lista de placas está vacía, añade la pieza a la lista de piezas válidas
+                if piezas_realizadas is None or piezas_realizadas < pieza.piezasTotales:
+                    piezas_validas.append(pieza)
+
+        # Serializa los objetos Pieza
+        piezas_serializer = PiezaSerializer(piezas_validas, many=True)
+
+        return Response(piezas_serializer.data)
+    
+    @action(detail=False, methods=['get'])
     def materiales_para_nesteo_filtrado(self, request):
-        from django.db.models import Sum
+        # Inicializa una lista vacía para almacenar los nombres de los materiales que cumplen con las condiciones
+        nombres_materiales_validos = []
 
-        # Filtra las piezas cuyo total de piezas realizadas es menor que el total de piezas y requieren nesteo
-        piezas_incompletas = Pieza.objects.filter(requiere_nesteo=True).annotate(piezas_realizadas=Sum('piezaplaca__piezas_realizadas')).filter(piezasTotales__gt=F('piezas_realizadas'))
+        # Obtiene todas las piezas
+        todas_las_piezas = Pieza.objects.all()
 
-        # Obtiene los materiales de las piezas incompletas
-        materiales_incompletas = Material.objects.filter(pieza__in=piezas_incompletas).distinct()
+        # Itera sobre todas las piezas
+        for pieza in todas_las_piezas:
+            # Verifica si la pieza requiere nesteo y tiene un valor en el campo material
+            if pieza.requiere_nesteo and pieza.material is not None:
+                # Calcula el total de piezas realizadas
+                piezas_realizadas = pieza.placas.aggregate(total=Sum('piezaplaca__piezas_realizadas'))['total']
 
-        # Aplica el filtro a todas las piezas
-        piezas_otro_filtro = Pieza.objects.filter(
-            estatusAsignacion=False,
-            estatus='aprobado',
-            requiere_nesteo=True,
-        )
+                # Si el total de piezas realizadas es menor que el total de piezas, o si la lista de placas está vacía, añade el nombre del material a la lista de nombres de materiales válidos
+                if piezas_realizadas is None or piezas_realizadas < pieza.piezasTotales:
+                    nombres_materiales_validos.append(pieza.material.nombre)
 
-        # Obtiene los materiales de las piezas que cumplen con el otro filtro
-        materiales_otro_filtro = Material.objects.filter(pieza__in=piezas_otro_filtro).distinct()
+        # Elimina los duplicados de la lista de nombres de materiales válidos
+        nombres_materiales_validos = list(set(nombres_materiales_validos))
 
-        # Une los dos conjuntos de materiales
-        materiales = materiales_incompletas | materiales_otro_filtro
-
-        nombres_materiales = list(materiales.values_list('nombre', flat=True).distinct())
-        return Response(nombres_materiales)
-
+        return Response(nombres_materiales_validos)
 
     @action(detail=False, methods=['post'])
     def espesores_para_nesteo_filtrado(self, request):
@@ -66,34 +87,28 @@ class MaterialViewSet(viewsets.ModelViewSet):
         if not material_name:
             return Response({"error": "No material name provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Filtra las piezas cuyo total de piezas pendientes es mayor que cero
-        piezas_incompletas = Pieza.objects.filter(piezasTotales__gt=F('piezasPendientes'))
+        # Inicializa una lista vacía para almacenar los espesores de los materiales que cumplen con las condiciones
+        espesores_materiales_validos = []
 
-        # Obtiene los materiales de las piezas incompletas
-        materiales_incompletos = Material.objects.filter(nombre=material_name, pieza__in=piezas_incompletas).distinct()
+        # Obtiene todas las piezas
+        todas_las_piezas = Pieza.objects.all()
 
-        # Aplica el filtro a todas las piezas
-        piezas_otro_filtro = Pieza.objects.filter(
-            estatusAsignacion=False,
-            estatus='aprobado',
-            placas__isnull=True,
-            requiere_nesteo=True,
-        )
+        # Itera sobre todas las piezas
+        for pieza in todas_las_piezas:
+            # Verifica si la pieza requiere nesteo, tiene un valor en el campo material y el nombre del material coincide con el nombre proporcionado
+            if pieza.requiere_nesteo and pieza.material is not None and pieza.material.nombre == material_name:
+                # Calcula el total de piezas realizadas
+                piezas_realizadas = pieza.placas.aggregate(total=Sum('piezaplaca__piezas_realizadas'))['total']
 
-        # Obtiene los materiales de las piezas que cumplen con el otro filtro
-        materiales_otro_filtro = Material.objects.filter(nombre=material_name, pieza__in=piezas_otro_filtro).distinct()
+                # Si el total de piezas realizadas es menor que el total de piezas, o si la lista de placas está vacía, añade el espesor del material a la lista de espesores de materiales válidos
+                if piezas_realizadas is None or piezas_realizadas < pieza.piezasTotales:
+                    espesores_materiales_validos.append(pieza.material.espesor)
 
-        # Filtra las piezas que no requieren nesteo pero tienen piezas pendientes
-        piezas_sin_nesteo_incompletas = Pieza.objects.filter(requiere_nesteo=False, piezasTotales__gt=F('piezasPendientes'))
+        # Elimina los duplicados de la lista de espesores de materiales válidos
+        espesores_materiales_validos = list(set(espesores_materiales_validos))
 
-        # Obtiene los materiales de las piezas sin nesteo pero incompletas
-        materiales_sin_nesteo_incompletos = Material.objects.filter(nombre=material_name, pieza__in=piezas_sin_nesteo_incompletas).distinct()
+        return Response(espesores_materiales_validos)
 
-        # Une los tres conjuntos de materiales
-        materiales = materiales_incompletos | materiales_otro_filtro | materiales_sin_nesteo_incompletos
-
-        espesores = list(materiales.values_list('espesor', flat=True).distinct())
-        return Response(espesores)
 
 class PlacaViewSet(viewsets.ModelViewSet):
     queryset = Placa.objects.all().order_by('-id')
@@ -1219,28 +1234,27 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if not all([material_nombre, espesor]):
             return Response({"error": "Los parámetros 'material' y 'espesor' son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Filtra las piezas cuyo total de piezas pendientes es mayor que cero
-        piezas_incompletas = Pieza.objects.annotate(piezas_realizadas=Sum('piezaplaca__piezas_realizadas')).filter(piezasTotales__gt=F('piezas_realizadas'))
+        # Inicializa una lista vacía para almacenar las piezas que cumplen con las condiciones
+        piezas_validas = []
 
-        # Aplica el filtro a todas las piezas
-        piezas_otro_filtro = Pieza.objects.filter(
-            estatusAsignacion=False,
-            estatus='aprobado',
-            requiere_nesteo=True,
-        )
+        # Obtiene todas las piezas
+        todas_las_piezas = Pieza.objects.all()
 
-        # Filtra las piezas que no requieren nesteo pero tienen piezas pendientes
-        piezas_sin_nesteo_incompletas = Pieza.objects.filter(requiere_nesteo=False, piezasTotales__gt=F('piezasPendientes'))
+        # Itera sobre todas las piezas
+        for pieza in todas_las_piezas:
+            # Verifica si la pieza requiere nesteo, tiene un valor en el campo material, y el nombre del material y el espesor coinciden con los proporcionados
+            if pieza.requiere_nesteo and pieza.material is not None and pieza.material.nombre == material_nombre and pieza.material.espesor == espesor:
+                # Calcula el total de piezas realizadas
+                piezas_realizadas = pieza.placas.aggregate(total=Sum('piezaplaca__piezas_realizadas'))['total']
 
-        # Filtra las piezas que cumplen con cualquiera de los tres conjuntos de condiciones y que tienen el material y espesor dados
-        piezas = Pieza.objects.filter(
-            Q(id__in=piezas_incompletas) | Q(id__in=piezas_otro_filtro) | Q(id__in=piezas_sin_nesteo_incompletas),
-            material__nombre=material_nombre,
-            material__espesor=espesor,
-        )
+                # Si el total de piezas realizadas es menor que el total de piezas, o si la lista de placas está vacía, añade la pieza a la lista de piezas válidas
+                if piezas_realizadas is None or piezas_realizadas < pieza.piezasTotales:
+                    piezas_validas.append(pieza)
 
-        serializer = PiezaSerializer(piezas, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Serializa los objetos Pieza
+        piezas_serializer = PiezaSerializer(piezas_validas, many=True)
+
+        return Response(piezas_serializer.data)
 
 
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
