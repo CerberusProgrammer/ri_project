@@ -1255,8 +1255,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_serializer = PiezaSerializer(piezas_validas, many=True)
 
         return Response(piezas_serializer.data)
-
-
+    
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
         pieza = self.get_object()
@@ -1280,17 +1279,19 @@ class PiezaViewSet(viewsets.ModelViewSet):
             finProceso = proceso_data.get('finProceso')
             maquina = proceso_data.get('maquina')
 
+            # Verifica si hay conflictos de horario con otros procesos
             conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)
             if conflictos.exists():
                 conflicto = conflictos.first()
-                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {conflicto.inicioProceso} a {conflicto.finProceso}. La placa '{conflicto.placa.nombre}' está causando el conflicto."}, status=status.HTTP_400_BAD_REQUEST)
 
-            if maquina == "Laser":
-                cnc_procesos = Proceso.objects.filter(placa=placa, maquina__in=["CNC 1", "CNC 2"])
+            # Verifica si el proceso es de tipo "Laser", "CNC 1" o "CNC 2" y si el horario coincide con el de otros procesos del mismo tipo y placa
+            if maquina in ["Laser", "CNC 1", "CNC 2"]:
+                cnc_procesos = Proceso.objects.filter(placa=placa, maquina__in=["CNC 1", "CNC 2", "Laser"])
                 if cnc_procesos.exists():
                     cnc_proceso = cnc_procesos.first()
                     if inicioProceso != cnc_proceso.inicioProceso or finProceso != cnc_proceso.finProceso:
-                        return Response({"error": f"El horario del proceso 'Laser' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {cnc_proceso.inicioProceso} a {cnc_proceso.finProceso}. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {cnc_proceso.inicioProceso} a {cnc_proceso.finProceso}. La placa '{cnc_proceso.placa.nombre}' está causando el conflicto. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
 
             proceso_serializer = ProcesoSerializer(data=proceso_data)
             if proceso_serializer.is_valid():
@@ -1303,7 +1304,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
-
 
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
