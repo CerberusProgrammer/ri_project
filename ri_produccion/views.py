@@ -975,6 +975,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
     def obtener_estadisticas_maquinado_hoy(self, request):
         current_date = timezone.now().date()
+        print(current_date)
         maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
         estadisticas = {}
 
@@ -1078,13 +1079,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
+        print(current_time)
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
             procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
         ).distinct().count()
 
         return Response({"piezas_count": piezas_count})
