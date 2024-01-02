@@ -247,7 +247,7 @@ class Requisicion(models.Model):
     fecha_aprobado = models.DateTimeField(null=True)
     fecha_entrega_estimada = models.DateTimeField(null=True)
     fecha_ordenado = models.DateTimeField(null=True)
-    motivo = models.TextField(blank=True)
+    motivo = models.TextField(blank=True, null=True)
     total = models.DecimalField(max_digits=30, decimal_places=6, null=True)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
     ordenado = models.BooleanField(default=False)
