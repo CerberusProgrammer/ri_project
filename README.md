@@ -43,15 +43,3 @@ Usamos Git para el versionado.
 ## Autores
 
 - Omar Flores Salazar
-
-Ve también la lista de contribuidores que participaron en este proyecto.
-
-## Licencia
-
-Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo LICENSE.md para detalles
-
-## Reconocimientos
-
-- Hat tip to anyone whose code was used
-- Inspiration
-- etc
