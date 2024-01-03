@@ -124,16 +124,22 @@ class PlacaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
-        placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza')).filter(num_piezas__gt=0)
+        # Filtra las piezas por estatus y estatusAsignacion
+        piezas_activas = Pieza.objects.filter(
+            estatus="aprobado",
+            estatusAsignacion=False,
+        )
+
+        # Get all Placa objects associated with at least one active Pieza
+        placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza', filter=Q(pieza__in=piezas_activas))).filter(num_piezas__gt=0)
+        
         data = []
         for placa in placas_con_piezas:
-            # Filtra las piezas de la placa por estatus y estatusAsignacion
-            piezas_activas = placa.pieza_set.filter(
-                estatus="aprobado",
-                estatusAsignacion=False,
-            )
+            # Filtra las piezas activas de la placa
+            piezas_activas_de_placa = piezas_activas.filter(placas=placa)
+            
             # Serializa las piezas activas
-            piezas_activas_data = PiezaSerializer(piezas_activas, many=True).data
+            piezas_activas_data = PiezaSerializer(piezas_activas_de_placa, many=True).data
             
             placa_data = {
                 "id": placa.id,
@@ -1624,26 +1630,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        # Get all Pieza objects where requiere_nesteo=True and placas are not null
-        piezas_con_nesteo = Pieza.objects.filter(
-            placas__isnull=False,
-            requiere_nesteo=True,
+        # Subquery to check if a Placa has any associated Proceso with the same id
+        has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('placas__id')).values('pk')
+
+        # Get all Pieza objects where none of their Placas have a matching Proceso and requiere_nesteo=True
+        # OR where requiere_nesteo=False and placas__isnull=True
+        piezas_sin_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True, placas__pk__in=Placa.objects.filter(~Exists(has_matching_proceso))) |
+            Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus='aprobado',
             estatusAsignacion=False,
-        )
-
-        # Get all Pieza objects where requiere_nesteo=False and placas are null
-        piezas_sin_nesteo = Pieza.objects.filter(
-            placas__isnull=True,
-            requiere_nesteo=False,
-            material__isnull=False,
-            estatus='aprobado',
-            estatusAsignacion=False,
-        )
-
-        # Combine the two querysets
-        piezas_sin_procesos = piezas_con_nesteo | piezas_sin_nesteo
+        ).distinct()
 
         # Check if the queryset is empty
         if not piezas_sin_procesos:
