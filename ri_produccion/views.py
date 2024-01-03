@@ -1627,11 +1627,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
         has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('piezaplaca__placa__id')).values('pk')
 
         piezas_sin_procesos = Pieza.objects.filter(
-            Q(piezaplaca__placa__isnull=False, requiere_nesteo=True, piezaplaca__placa__pk__in=Placa.objects.filter(~Exists(has_matching_proceso))) |
+            Q(piezaplaca__placa__isnull=False, requiere_nesteo=True),
             Q(piezaplaca__placa__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus__in=['aprobado'],
             estatusAsignacion=False,
+            piezaplaca__placa__pk__in=Placa.objects.filter(~Exists(has_matching_proceso)),
         ).distinct()
 
         if not piezas_sin_procesos:
