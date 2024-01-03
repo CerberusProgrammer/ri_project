@@ -1631,7 +1631,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
             material__isnull=False,
             estatus='aprobado',
             estatusAsignacion=False,
-            placas__proceso__isnull=True
         ).distinct()
 
         serializer = self.get_serializer(piezas_sin_procesos_nesteo, many=True)
