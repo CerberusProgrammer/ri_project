@@ -1628,14 +1628,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
         todas_las_piezas = Pieza.objects.all()
 
         for pieza in todas_las_piezas:
+            print(pieza)
             if pieza.material is not None and pieza.estatus == 'aprobado' and not pieza.estatusAsignacion:
                 if pieza.requiere_nesteo:
                     placas = pieza.placas.all()
+                    print(placas)
                     for placa in placas:
                         procesos = Proceso.objects.filter(placa=placa)
                         if not procesos.exists():
                             piezas_sin_procesos.append(pieza)
-                            break
                 else:
                     if not pieza.placas.exists():
                         piezas_sin_procesos.append(pieza)
