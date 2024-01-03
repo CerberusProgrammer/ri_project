@@ -1625,7 +1625,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         # Subquery to check if a Placa has any associated Proceso with the same id
-        has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('placas__id')).values('pk')
+        has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('placas__placa__id')).values('pk')
 
         # Get all Pieza objects where none of their Placas have a matching Proceso and requiere_nesteo=True
         # OR where requiere_nesteo=False and placas__isnull=True
