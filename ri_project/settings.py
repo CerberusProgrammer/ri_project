@@ -78,14 +78,14 @@ WSGI_APPLICATION = 'ri_project.wsgi.application'
 
 DATABASES = {
     'default': {
-         'ENGINE': 'django.db.backends.postgresql',
-         'NAME': 'ri_database',
-         'USER': 'postgres',
-         'PASSWORD': '$RIAutorizacion00',
-         'HOST': 'localhost',
-         'PORT': '5432',
-     }
- }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ri_database',
+        'USER': 'postgres',
+        'PASSWORD': '$RIAutorizacion00',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
