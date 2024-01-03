@@ -1624,20 +1624,27 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        piezas_sin_procesos = Pieza.objects.filter(
-            Q(placas__isnull=False, requiere_nesteo=True) |
-            Q(placas__isnull=True, requiere_nesteo=False),
-            Q(procesos__isnull=True) | Q(procesos__isnull=False),
-            material__isnull=False,
-            estatus='aprobado',
-            estatusAsignacion=False,
-        )
+        piezas_sin_procesos = []
+        todas_las_piezas = Pieza.objects.filter(material__isnull=False, estatus='aprobado', estatusAsignacion=False)
+
+        for pieza in todas_las_piezas:
+            if pieza.requiere_nesteo:
+                placas = pieza.placas.all()
+                for placa in placas:
+                    procesos = Proceso.objects.filter(placa=placa)
+                    if not procesos.exists():
+                        piezas_sin_procesos.append(pieza)
+                        break
+            else:
+                if not pieza.placas.exists() or not pieza.procesos.exists():
+                    piezas_sin_procesos.append(pieza)
 
         if not piezas_sin_procesos:
             return Response({"message": "No se encontraron piezas sin procesos."})
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
