@@ -13,6 +13,9 @@ from rest_framework.exceptions import NotFound
 
 from django.utils.dateparse import parse_datetime
 
+from django.db.models import Exists, OuterRef
+from django.db.models import Q
+
 from ri_compras.models import Usuarios
 from ri_compras.serializer import UsuarioDepartamentoSerializer, UsuariosSerializer, UsuariosVerySimpleSerializer
 
@@ -1620,18 +1623,27 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
         return Response(serializer.data)
     
+    
+
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        piezas_sin_procesos = Pieza.objects.annotate(
-            num_procesos=Count('placas__piezaplaca__proceso__id')
-        ).filter(
-            num_procesos=0,
+        # Subquery to check if a Placa has any associated Proceso
+        has_proceso = Proceso.objects.filter(placa=OuterRef('pk')).values('pk')
+
+        # Get all Pieza objects where none of their Placas have a Proceso
+        piezas_sin_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=False, requiere_nesteo=False) |
+            Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus='aprobado',
-            estatusAsignacion=False
+            estatusAsignacion=False,
+            placas__pk__in=Placa.objects.filter(~Exists(has_proceso))
         ).distinct()
+
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
