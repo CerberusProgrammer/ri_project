@@ -1634,18 +1634,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             placas__proceso__isnull=True
         ).distinct()
 
-        # Get all Pieza objects where requiere_nesteo=False
-        piezas_sin_procesos_no_nesteo = Pieza.objects.filter(
-            requiere_nesteo=False,
-            material__isnull=False,
-            estatus='aprobado',
-            estatusAsignacion=False
-        ).distinct()
-
-        # Combine the two querysets
-        piezas_sin_procesos = piezas_sin_procesos_nesteo.union(piezas_sin_procesos_no_nesteo)
-
-        serializer = self.get_serializer(piezas_sin_procesos, many=True)
+        serializer = self.get_serializer(piezas_sin_procesos_nesteo, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
