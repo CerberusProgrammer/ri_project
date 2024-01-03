@@ -87,6 +87,9 @@ class Pieza(models.Model):
     archivo_pdf = models.FileField(upload_to='pdfs-produccion', blank=True, null=True)
     prioridad = models.BooleanField(default=False)
     
+    def sin_placas_procesos(self):
+        return self.placas.count() == 0 and not self.requiere_nesteo and self.procesos.count() == 0
+    
     def todos_procesos_ligados(self):
         placas_con_procesos = {proceso.placa.id for proceso in self.procesos.all()}
         todas_las_placas = {placa.id for placa in self.placas.all()}
