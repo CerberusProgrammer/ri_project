@@ -19,7 +19,7 @@ class Placa(models.Model):
         return self.proceso_set.count()
     
     def todos_procesos_ligados(self):
-        return all(proceso.placa is not None for proceso in self.proceso_set.all())
+        return all(proceso.placa in self.placas.all() for proceso in self.procesos.all())
 
     def __str__(self):
         return str(self.nombre)
