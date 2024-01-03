@@ -1624,21 +1624,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        piezas_sin_procesos = []
-        todas_las_piezas = Pieza.objects.all()
+        has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('piezaplaca__placa__id')).values('pk')
 
-        for pieza in todas_las_piezas:
-            if pieza.material is not None and pieza.estatus == 'aprobado' and not pieza.estatusAsignacion:
-                if pieza.requiere_nesteo:
-                    placas = pieza.placas.all()
-                    for placa in placas:
-                        procesos = Proceso.objects.filter(placa=placa)
-                        if not procesos.exists():
-                            piezas_sin_procesos.append(pieza)
-                            break
-                else:
-                    if not pieza.placas.exists():
-                        piezas_sin_procesos.append(pieza)
+        piezas_sin_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True),
+            Q(placas__isnull=True, requiere_nesteo=False),
+            material__isnull=False,
+            estatus__in=['aprobado'],
+            estatusAsignacion=False,
+            #piezaplaca__placa__pk__in=Placa.objects.filter(~Exists(has_matching_proceso)),
+        ).distinct()
 
         if not piezas_sin_procesos:
             return Response({"message": "No se encontraron piezas sin procesos."})
