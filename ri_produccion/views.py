@@ -122,24 +122,23 @@ class PlacaViewSet(viewsets.ModelViewSet):
     search_fields = ['piezas']
     ordering_fields = ['piezas']
     
+    from django.db.models import Count, Q
+
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
-        # Filtra las piezas por estatus y estatusAsignacion
-        piezas_activas = Pieza.objects.filter(
-            estatus="aprobado",
-            estatusAsignacion=False,
-        )
-
-        # Get all Placa objects associated with at least one active Pieza
-        placas_con_piezas = Placa.objects.annotate(num_piezas=Count('pieza', filter=Q(pieza__in=piezas_activas))).filter(num_piezas__gt=0)
+        # Get all Placa objects
+        todas_las_placas = Placa.objects.all()
         
         data = []
-        for placa in placas_con_piezas:
-            # Filtra las piezas activas de la placa
-            piezas_activas_de_placa = piezas_activas.filter(placas=placa)
+        for placa in todas_las_placas:
+            # Filtra las piezas de la placa por estatus y estatusAsignacion
+            piezas_activas = placa.pieza_set.filter(
+                estatus="aprobado",
+                estatusAsignacion=False,
+            )
             
             # Serializa las piezas activas
-            piezas_activas_data = PiezaSerializer(piezas_activas_de_placa, many=True).data
+            piezas_activas_data = PiezaSerializer(piezas_activas, many=True).data
             
             placa_data = {
                 "id": placa.id,
@@ -151,6 +150,7 @@ class PlacaViewSet(viewsets.ModelViewSet):
             data.append(placa_data)
         
         return Response(data)
+
 
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
