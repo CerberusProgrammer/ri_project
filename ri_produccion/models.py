@@ -14,6 +14,9 @@ class Placa(models.Model):
     nombre = models.CharField(max_length=100, null=True, blank=True)
     descripcion = models.CharField(max_length=350, null=True, blank=True)
     piezas = models.IntegerField(null=True, blank=True)
+    
+    def num_procesos(self):
+        return self.proceso_set.count()
 
     def __str__(self):
         return str(self.nombre)
