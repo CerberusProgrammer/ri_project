@@ -1622,12 +1622,11 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        piezas_sin_procesos = Pieza.objects.filter(
-            Q(placas__isnull=False, requiere_nesteo=True) |
-            Q(placas__isnull=False, requiere_nesteo=False) |
-            Q(placas__isnull=True, requiere_nesteo=False),
+        piezas_sin_procesos = Pieza.objects.annotate(
+            num_procesos=Count('placas__procesos')
+        ).filter(
+            num_procesos=0,
             material__isnull=False,
-            procesos__isnull=True,
             estatus='aprobado',
             estatusAsignacion=False
         ).distinct()
