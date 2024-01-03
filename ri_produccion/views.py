@@ -1624,20 +1624,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
-        # Subquery to check if a Placa has any associated Proceso with the same id
         has_matching_proceso = Proceso.objects.filter(placa=OuterRef('pk'), placa__id=OuterRef('piezaplaca__placa__id')).values('pk')
 
-        # Get all Pieza objects where none of their Placas have a matching Proceso and requiere_nesteo=True
-        # OR where requiere_nesteo=False and placas__isnull=True
         piezas_sin_procesos = Pieza.objects.filter(
             Q(piezaplaca__placa__isnull=False, requiere_nesteo=True, piezaplaca__placa__pk__in=Placa.objects.filter(~Exists(has_matching_proceso))) |
             Q(piezaplaca__placa__isnull=True, requiere_nesteo=False),
             material__isnull=False,
-            estatus='aprobado',
+            estatus__in=['aprobado', 'rechazado'],  # incluye las piezas con estatus 'aprobado' y 'rechazado'
             estatusAsignacion=False,
         ).distinct()
 
-        # Check if the queryset is empty
         if not piezas_sin_procesos:
             return Response({"message": "No se encontraron piezas sin procesos."})
 
