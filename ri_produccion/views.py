@@ -1634,13 +1634,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).distinct()
 
         # Filtrar las piezas que no tienen procesos asociados
-        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.procesos.exists()]
+        # o que no todos los procesos están ligados a las placas
+        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.procesos.exists() or not pieza.todos_procesos_ligados()]
 
         if not piezas_sin_procesos:
             return Response({"message": "No se encontraron piezas sin procesos."})
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
