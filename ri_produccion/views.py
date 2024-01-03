@@ -1266,8 +1266,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if not procesos_data:
             return Response({"error": "The 'procesos' parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        pieza.procesos.all().delete()
-
         for proceso_data in procesos_data:
             placa_id = proceso_data.get('placa_id')
             if not placa_id:
@@ -1307,6 +1305,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
