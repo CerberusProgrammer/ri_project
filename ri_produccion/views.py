@@ -1625,8 +1625,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         # Get all Pieza objects
-        todas_las_piezas = Pieza.objects.all()
-        
+        todas_las_piezas = Pieza.objects.filter(
+            material__isnull=False,
+            estatus='aprobado',
+            estatusAsignacion=False,
+        )
+
         piezas_sin_procesos = []
 
         for pieza in todas_las_piezas:
@@ -1637,7 +1641,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 # For each Placa, check if there is a Proceso with the same id
                 proceso_asociado = Proceso.objects.filter(placa=placa)
 
-                if not proceso_asociado.exists():
+                if not proceso_asociado.exists() and (pieza.requiere_nesteo and placa is not None) or (not pieza.requiere_nesteo and placa is None):
                     # If no such Proceso exists, add the Pieza to the list
                     piezas_sin_procesos.append(pieza)
                     # No need to check other Placa for this Pieza
