@@ -19,7 +19,8 @@ class Placa(models.Model):
         return self.proceso_set.count()
     
     def todos_procesos_ligados(self):
-        return all(proceso.placa in self.placas.all() for proceso in self.procesos.all())
+        num_procesos_primer_nesteo = self.procesos.first().placa.proceso_set.count() if self.procesos.exists() else 0
+        return all(proceso.placa in self.placas.all() and proceso.placa.proceso_set.count() == num_procesos_primer_nesteo for proceso in self.procesos.all())
 
     def __str__(self):
         return str(self.nombre)

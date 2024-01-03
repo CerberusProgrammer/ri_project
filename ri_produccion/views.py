@@ -1635,6 +1635,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         # Filtrar las piezas que no tienen procesos asociados
         # o que no todos los procesos están ligados a las placas
+        # o que el número total de procesos no es correcto
         piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.procesos.exists() or not pieza.todos_procesos_ligados()]
 
         if not piezas_sin_procesos:
