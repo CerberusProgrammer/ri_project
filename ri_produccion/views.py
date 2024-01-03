@@ -1626,8 +1626,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_sin_procesos(self, request):
 
         piezas_sin_procesos = Pieza.objects.filter(
-            Q(placas__placa__isnull=False, requiere_nesteo=True), 
-            Q(placas__placa__isnull=True, requiere_nesteo=False),
+            Q(placas__isnull=False, requiere_nesteo=True), 
+            Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus__in=['aprobado'],
             estatusAsignacion=False,
