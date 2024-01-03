@@ -19,8 +19,7 @@ class Placa(models.Model):
         return self.proceso_set.count()
     
     def todos_procesos_ligados(self):
-        num_procesos_primer_nesteo = self.procesos.first().placa.proceso_set.count() if self.procesos.exists() else 0
-        return all(proceso.placa in self.placas.all() and proceso.placa.proceso_set.count() == num_procesos_primer_nesteo for proceso in self.procesos.all())
+        return all(proceso.placa in self.placas.all() for proceso in self.procesos.all())
 
     def __str__(self):
         return str(self.nombre)
@@ -87,6 +86,10 @@ class Pieza(models.Model):
     fechaCreado = models.DateTimeField(auto_now_add=True)
     archivo_pdf = models.FileField(upload_to='pdfs-produccion', blank=True, null=True)
     prioridad = models.BooleanField(default=False)
+    
+    def todos_procesos_ligados(self):
+        num_procesos_primer_nesteo = self.procesos.first().placa.proceso_set.count() if self.procesos.exists() else 0
+        return all(proceso.placa in self.placas.all() and proceso.placa.proceso_set.count() == num_procesos_primer_nesteo for proceso in self.procesos.all())
 
     def esta_retrasada(self):
         return any(proceso.finProceso < timezone.now() and proceso.estatus != 'realizado' for proceso in self.procesos.all())
