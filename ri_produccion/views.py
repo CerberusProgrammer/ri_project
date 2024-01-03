@@ -1633,17 +1633,34 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=False,
         ).distinct()
 
-        # Filtrar las piezas que no tienen procesos asociados
-        # o que no todos los procesos están ligados a las placas
-        # o que el número total de procesos no es correcto
-        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.procesos.exists() or not pieza.todos_procesos_ligados()]
+        # Filtrar las piezas que no tienen procesos asociados a todas las placas
+        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.todos_procesos_ligados()]
 
         if not piezas_sin_procesos:
             return Response({"message": "No se encontraron piezas sin procesos."})
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_piezas_sin_procesos_numericos(self, request):
+        # Obtener todas las piezas que tienen placas
+        piezas_con_placas = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=True, requiere_nesteo=False),
+            material__isnull=False,
+            estatus='aprobado',
+            estatusAsignacion=False,
+        ).distinct()
 
+        # Filtrar las piezas que no tienen la cantidad correcta de procesos asociados a las placas
+        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.cantidad_correcta_de_procesos()]
+
+        if not piezas_sin_procesos:
+            return Response({"message": "No se encontraron piezas sin procesos."})
+
+        serializer = self.get_serializer(piezas_sin_procesos, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):

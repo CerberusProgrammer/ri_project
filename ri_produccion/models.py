@@ -88,8 +88,14 @@ class Pieza(models.Model):
     prioridad = models.BooleanField(default=False)
     
     def todos_procesos_ligados(self):
-        num_procesos_primer_nesteo = self.procesos.first().placa.proceso_set.count() if self.procesos.exists() else 0
-        return all(proceso.placa in self.placas.all() and proceso.placa.proceso_set.count() == num_procesos_primer_nesteo for proceso in self.procesos.all())
+        placas_con_procesos = {proceso.placa.id for proceso in self.procesos.all()}
+        todas_las_placas = {placa.id for placa in self.placas.all()}
+        return placas_con_procesos == todas_las_placas
+    
+    def cantidad_correcta_de_procesos(self):
+        num_procesos = self.procesos.count()
+        num_placas = self.placas.count()
+        return num_procesos == num_placas * num_procesos // num_placas if num_placas else False
 
     def esta_retrasada(self):
         return any(proceso.finProceso < timezone.now() and proceso.estatus != 'realizado' for proceso in self.procesos.all())
