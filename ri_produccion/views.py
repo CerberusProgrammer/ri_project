@@ -1622,27 +1622,34 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
         return Response(serializer.data)
     
-    
-
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         # Subquery to check if a Placa has any associated Proceso
         has_proceso = Proceso.objects.filter(placa=OuterRef('pk')).values('pk')
 
-        # Get all Pieza objects where none of their Placas have a Proceso
-        piezas_sin_procesos = Pieza.objects.filter(
-            Q(placas__isnull=False, requiere_nesteo=True) |
-            Q(placas__isnull=False, requiere_nesteo=False) |
-            Q(placas__isnull=True, requiere_nesteo=False),
+        # Get all Pieza objects where none of their Placas have a Proceso and requiere_nesteo=True
+        piezas_sin_procesos_nesteo = Pieza.objects.filter(
+            placas__isnull=False,
+            requiere_nesteo=True,
             material__isnull=False,
             estatus='aprobado',
             estatusAsignacion=False,
             placas__pk__in=Placa.objects.filter(~Exists(has_proceso))
         ).distinct()
 
+        # Get all Pieza objects where requiere_nesteo=False
+        piezas_sin_procesos_no_nesteo = Pieza.objects.filter(
+            requiere_nesteo=False,
+            material__isnull=False,
+            estatus='aprobado',
+            estatusAsignacion=False
+        ).distinct()
+
+        # Combine the two querysets
+        piezas_sin_procesos = piezas_sin_procesos_nesteo.union(piezas_sin_procesos_no_nesteo)
+
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
-
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
