@@ -1625,15 +1625,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         # Get all Pieza objects where none of their Placas have a Proceso and requiere_nesteo=True
-        piezas_sin_procesos_nesteo = Pieza.objects.filter(
-            placas__isnull=False,
-            requiere_nesteo=True,
+        # OR where requiere_nesteo=False and placas__isnull=True
+        piezas_sin_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus='aprobado',
             estatusAsignacion=False,
         ).distinct()
 
-        serializer = self.get_serializer(piezas_sin_procesos_nesteo, many=True)
+        serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
