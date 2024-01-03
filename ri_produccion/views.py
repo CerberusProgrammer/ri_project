@@ -1627,7 +1627,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         # Get all Pieza objects where none of their Placas have a Proceso and requiere_nesteo=True
         # OR where requiere_nesteo=False and placas__isnull=True
         piezas_sin_procesos = Pieza.objects.filter(
-            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=False, requiere_nesteo=True),
             Q(placas__isnull=True, requiere_nesteo=False),
             material__isnull=False,
             estatus='aprobado',
