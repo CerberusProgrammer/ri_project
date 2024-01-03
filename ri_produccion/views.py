@@ -1623,7 +1623,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         piezas_sin_procesos = Pieza.objects.annotate(
-            num_procesos=Count('placas__procesos')
+            num_procesos=Count('placas__piezaplaca__proceso')
         ).filter(
             num_procesos=0,
             material__isnull=False,
