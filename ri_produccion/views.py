@@ -1622,6 +1622,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos(self, request):
         piezas_sin_procesos = []
         todas_las_piezas = Pieza.objects.all()
@@ -1644,6 +1645,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_placa_asignado(self, request):
