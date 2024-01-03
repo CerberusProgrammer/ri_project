@@ -140,7 +140,7 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 "nombre": placa.nombre,
                 "descripcion": placa.descripcion,
                 "piezas": placa.piezas,
-                "piezas_asociadas": piezas_data
+                "piezas_activas": piezas_data
             }
             data.append(placa_data)
         
