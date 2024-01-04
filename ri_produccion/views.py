@@ -112,7 +112,6 @@ class MaterialViewSet(viewsets.ModelViewSet):
 
         return Response(espesores_materiales_validos)
 
-
 class PlacaViewSet(viewsets.ModelViewSet):
     queryset = Placa.objects.all().order_by('-id')
     serializer_class = PlacaSerializer
@@ -121,6 +120,28 @@ class PlacaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['piezas']
     ordering_fields = ['piezas']
+    
+    @action(detail=False, methods=['get'])
+    def obtener_placas_disponibles(self, request):
+        # Obtener todas las Placas
+        todas_las_placas = Placa.objects.all()
+
+        data = []
+        for placa in todas_las_placas:
+            # Obtener todas las Piezas asociadas a la Placa actual
+            piezas_de_placa = Pieza.objects.filter(placas=placa)
+
+            # Si la Placa no tiene Piezas asociadas o todas las Piezas asociadas tienen estatusAsignacion=False, entonces la Placa está disponible
+            if not piezas_de_placa or not any(pieza.estatusAsignacion == True for pieza in piezas_de_placa):
+                placa_data = {
+                    "id": placa.id,
+                    "nombre": placa.nombre,
+                    "descripcion": placa.descripcion,
+                    "piezas": placa.piezas,
+                }
+                data.append(placa_data)
+
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
@@ -133,24 +154,26 @@ class PlacaViewSet(viewsets.ModelViewSet):
             piezas_de_placa = Pieza.objects.filter(
                 placas=placa,
                 estatus="aprobado",
-                estatusAsignacion=False,
             )
             
-            # Serializa las piezas
-            piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
-            
-            placa_data = {
-                "id": placa.id,
-                "nombre": placa.nombre,
-                "descripcion": placa.descripcion,
-                "piezas": placa.piezas,
-                "piezas_activas": piezas_data
-            }
-            data.append(placa_data)
+            # If the Placa has no Piezas associated or at least one associated Pieza has estatusAsignacion=False, then the Placa is available
+            if not piezas_de_placa or any(pieza.estatusAsignacion == False for pieza in piezas_de_placa):
+                # Serializa las piezas
+                piezas_data = PiezaSerializer([pieza for pieza in piezas_de_placa if pieza.estatusAsignacion == False], many=True).data
+                
+                placa_data = {
+                    "id": placa.id,
+                    "nombre": placa.nombre,
+                    "descripcion": placa.descripcion,
+                    "piezas": placa.piezas,
+                    "piezas_activas": piezas_data
+                }
+                data.append(placa_data)
         
         data.reverse()
         
         return Response(data)
+
 
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
