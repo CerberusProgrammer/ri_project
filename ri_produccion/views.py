@@ -28,17 +28,45 @@ from django.db.models.functions import Coalesce
 from ri_produccion import models
 
 class MaterialViewSet(viewsets.ModelViewSet):
+    
+    """
+    API endpoint que permite ver y editar los materiales.
+    """
+    # El conjunto de objetos que se mostrarán en la vista
+    
     queryset = Material.objects.all()
+    
+    # La clase que se encarga de serializar los datos del modelo
     serializer_class = MaterialSerializer
+    
+    # Las clases que se encargan de autenticar y autorizar las peticiones
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    # Los filtros que se pueden aplicar a la vista
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    
+     # Los campos por los que se puede buscar
     search_fields = ['nombre', 'espesor', 'proveedor']
+    
+    # Los campos por los que se puede ordenar
     ordering_fields = ['nombre', 'espesor']
     
     @action(detail=False, methods=['get'])
     def piezas_para_nesteo_filtrado(self, request):
-        # Inicializa una lista vacía para almacenar las piezas que cumplen con las condiciones
+        
+        """
+        Devuelve una lista de piezas que requieren nesteo y tienen un material asignado.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /piezas/piezas_para_nesteo_filtrado/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Pieza,
+        serializados con la clase PiezaSerializer.
+        """
+    # Inicializa una lista vacía para almacenar las piezas que cumplen con las condiciones
         piezas_validas = []
 
         # Obtiene todas las piezas
@@ -62,6 +90,19 @@ class MaterialViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def materiales_para_nesteo_filtrado(self, request):
+        
+        """
+        Devuelve una lista de nombres de materiales que requieren nesteo.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /materiales/materiales_para_nesteo_filtrado/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de cadenas de texto,
+        que corresponden a los nombres de los materiales que cumplen con las condiciones
+        de requerir nesteo y tener un valor en el campo material.
+        """
         # Inicializa una lista vacía para almacenar los nombres de los materiales que cumplen con las condiciones
         nombres_materiales_validos = []
 
@@ -86,7 +127,24 @@ class MaterialViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def espesores_para_nesteo_filtrado(self, request):
+        
+        """
+        Devuelve una lista de espesores de materiales que requieren nesteo.
+
+        Este método se puede acceder mediante una petición POST a la URL
+        /materiales/espesores_para_nesteo_filtrado/.
+
+        Los parámetros de la petición deben incluir el nombre del material
+        del que se quieren obtener los espesores.
+
+        El formato de la respuesta es JSON, y contiene un array de números,
+        que corresponden a los espesores de los materiales que cumplen con las condiciones
+        de requerir nesteo y tener el nombre del material especificado.
+        """
+        # Obtiene el nombre del material de los parámetros de la petición
         material_name = request.data.get('material')
+        
+        # Si no se proporciona el nombre del material, devuelve un error
         if not material_name:
             return Response({"error": "No material name provided"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -98,7 +156,7 @@ class MaterialViewSet(viewsets.ModelViewSet):
 
         # Itera sobre todas las piezas
         for pieza in todas_las_piezas:
-            # Verifica si la pieza requiere nesteo, tiene un valor en el campo material y el nombre del material coincide con el nombre proporcionado
+            # Verifica si la pieza requiere nesteo y tiene un valor en el campo material
             if pieza.requiere_nesteo and pieza.material is not None and pieza.material.nombre == material_name:
                 # Calcula el total de piezas realizadas
                 piezas_realizadas = pieza.placas.aggregate(total=Sum('piezaplaca__piezas_realizadas'))['total']
@@ -114,22 +172,55 @@ class MaterialViewSet(viewsets.ModelViewSet):
 
 
 class PlacaViewSet(viewsets.ModelViewSet):
+    
+    """
+    API endpoint que permite ver y editar las placas.
+    """
+    # El conjunto de objetos que se mostrarán en la vista, ordenados por id descendente
     queryset = Placa.objects.all().order_by('-id')
+    
+    # La clase que se encarga de serializar los datos del modelo
     serializer_class = PlacaSerializer
+    
+    # Las clases que se encargan de autenticar y autorizar las peticiones
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    # Los filtros que se pueden aplicar a la vista
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    
+    # Los campos por los que se puede buscar
     search_fields = ['piezas']
+    
+    # Los campos por los que se puede ordenar
     ordering_fields = ['piezas']
     
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
-        # Get all Placa objects
+        
+        """
+        Devuelve una lista de placas con sus piezas activas.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /placas/placas_con_piezas/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Placa,
+        serializados con la clase PlacaSerializer, con un campo adicional
+        "piezas_activas" que contiene un array de objetos Pieza, serializados con la
+        clase PiezaSerializer, que están asociados a la placa, tienen el estatus
+        "aprobado" y el estatusAsignacion False.
+        """
+        # Obtiene todas las placas
         todas_las_placas = Placa.objects.all()
         
+        # Inicializa una lista vacía para almacenar los datos de las placas con sus piezas activas
         data = []
+        
+        # Itera sobre todas las placas
         for placa in todas_las_placas:
-            # Get all Pieza objects associated with the current Placa
+            # Obtiene todas las piezas asociadas a la placa actual que cumplen con las condiciones
             piezas_de_placa = Pieza.objects.filter(
                 placas=placa,
                 estatus="aprobado",
@@ -139,6 +230,7 @@ class PlacaViewSet(viewsets.ModelViewSet):
             # Serializa las piezas
             piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
             
+            # Crea un diccionario con los datos de la placa y las piezas activas
             placa_data = {
                 "id": placa.id,
                 "nombre": placa.nombre,
@@ -146,57 +238,137 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 "piezas": placa.piezas,
                 "piezas_activas": piezas_data
             }
+            
+            # Añade el diccionario a la lista de datos
             data.append(placa_data)
-        
+            
+        # Invierte el orden de la lista de datos para que las placas más recientes aparezcan primero
         data.reverse()
         
+        # Devuelve una respuesta con los datos en formato JSON
         return Response(data)
 
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
+        
+        """
+        Devuelve una lista de piezas que están asignadas a una placa específica.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /placas/{id}/obtener_piezas_asignadas_a_placa/, donde {id} es el identificador
+        de la placa.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Pieza,
+        serializados con la clase PiezaSerializer, que están asociados a la placa
+        con el id especificado.
+        """
+        # Obtiene el objeto Placa correspondiente al id proporcionado
         placa = self.get_object()
 
+        # Obtiene todas las piezas asociadas a la placa
         piezas = Pieza.objects.filter(placas=placa)
 
+        # Serializa las piezas
         serializer = PiezaSerializer(piezas, many=True)
 
+        # Devuelve una respuesta con los datos en formato JSON
         return Response(serializer.data)
 
 class ProcesoViewSet(viewsets.ModelViewSet):
+    
+    """
+    API endpoint que permite ver y editar los procesos.
+    """
+    # El conjunto de objetos que se mostrarán en la vista, ordenados por id descendente
     queryset = Proceso.objects.all().order_by('-id')
+    
+    # La clase que se encarga de serializar los datos del modelo
     serializer_class = ProcesoSerializer
+    
+    # Las clases que se encargan de autenticar y autorizar las peticiones
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    # Los filtros que se pueden aplicar a la vista
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    
+    # Los campos por los que se puede buscar
     search_fields = ['nombre', 'estatus', 'maquina']
+    
+    # Los campos por los que se puede ordenar
     ordering_fields = ['nombre', 'estatus', 'maquina']
 
     @action(detail=False, methods=['get'], url_path='mi_progreso_procesos/(?P<id>\d+)')
     def mi_progreso_procesos(self, request, id=None):
+        
+        """
+        Devuelve el progreso de un usuario en la realización de los procesos.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /procesos/mi_progreso_procesos/{id}/, donde {id} es el identificador
+        del usuario.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un objeto con un campo
+        "progreso" que contiene un número entre 0 y 1, que representa la proporción
+        de procesos realizados por el usuario sobre el total de procesos asignados
+        al usuario.
+        """
+        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
+        
+        # Obtiene el número total de procesos asignados al usuario
         total_procesos = Proceso.objects.filter(realizadoPor=usuario).count()
+        
+        # Obtiene el número de procesos realizados por el usuario
         procesos_realizados = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus='realizado')
         ).count()
-
+        
+        # Calcula el progreso del usuario como la proporción de procesos realizados sobre el total de procesos
         if total_procesos == 0:
             progreso = 0
         else:
             progreso = procesos_realizados / total_procesos
-
+            
+        # Devuelve una respuesta con el progreso en formato JSON    
         return Response({"progreso": progreso})
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_actuales_cantidad/(?P<id>\d+)')
     def mis_procesos_actuales_cantidad(self, request, id=None):
+        
+        """
+        Devuelve la cantidad de procesos que un usuario tiene pendientes u operando.
+
+        Este método se puede acceder mediante una petición GET a la URL
+        /procesos/mis_procesos_actuales_cantidad/{id}/, donde {id} es el identificador
+        del usuario.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un objeto con un campo
+        "cantidad" que contiene un número entero, que representa la cantidad de procesos
+        que el usuario tiene con estatus "pendiente" o "operando" y que tienen un inicioProceso
+        mayor o igual que la hora actual.
+        """
+        # Obtiene la hora actual
         current_time = timezone.now()
+        
+        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
+        
+        # Obtiene la cantidad de procesos que cumplen con las condiciones
         cantidad = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(inicioProceso__gte=current_time)
         ).count()
-
+        
+        # Devuelve una respuesta con la cantidad en formato JSON
         return Response({"cantidad": cantidad})
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados_cantidad/(?P<id>\d+)')
