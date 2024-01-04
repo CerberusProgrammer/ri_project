@@ -1267,6 +1267,26 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
+        """
+        Esta función agrega procesos a un objeto Pieza. Toma un objeto de solicitud y una clave primaria (pk) como parámetros.
+
+        Parámetros:
+        request (HttpRequest): El objeto de solicitud que contiene los datos a procesar. Debe incluir los datos de 'procesos', que es una lista de procesos a agregar a la Pieza.
+        pk (int): La clave primaria del objeto Pieza al que se van a agregar los procesos.
+
+        Devoluciones:
+        Response: Un objeto de respuesta con un código de estado y un mensaje. Si la función se ejecuta con éxito, devuelve un código de estado HTTP 200 junto con los datos serializados del objeto Pieza actualizado. Si hay algún error durante la ejecución, devuelve un código de estado HTTP 400 junto con un mensaje de error.
+
+        Excepciones:
+        HTTP400: Este error se genera en los siguientes escenarios:
+            - Si los datos de 'procesos' no están incluidos en la solicitud.
+            - Si el parámetro 'placa_id' no está incluido para cada proceso en los datos de 'procesos'.
+            - Si no existe un objeto Placa con el 'placa_id' proporcionado.
+            - Si hay conflictos de programación con otros procesos.
+            - Si el tipo de proceso es "Laser", "CNC 1" o "CNC 2" y el horario no coincide con otros procesos del mismo tipo y Placa.
+
+        La función primero recupera el objeto Pieza usando la clave primaria proporcionada (pk). Luego recupera los datos de 'procesos' de la solicitud. Para cada proceso en los datos de 'procesos', realiza varias comprobaciones y validaciones antes de agregar el proceso al objeto Pieza. Una vez que todos los procesos se han agregado con éxito, guarda el objeto Pieza y devuelve una respuesta con los datos serializados del objeto Pieza actualizado.
+        """
         pieza = self.get_object()
         procesos_data = request.data.get('procesos')
         if not procesos_data:
@@ -1287,7 +1307,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             maquina = proceso_data.get('maquina')
 
             # Verifica si hay conflictos de horario con otros procesos
-            conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso)
+            conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso).exclude(placa=placa)
             if conflictos.exists():
                 conflicto = conflictos.first()
                 inicioProceso_local = timezone.localtime(conflicto.inicioProceso).strftime('%d/%m/%Y %H:%M')
