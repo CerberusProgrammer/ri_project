@@ -170,7 +170,6 @@ class MaterialViewSet(viewsets.ModelViewSet):
 
         return Response(espesores_materiales_validos)
 
-
 class PlacaViewSet(viewsets.ModelViewSet):
     
     """
@@ -194,6 +193,28 @@ class PlacaViewSet(viewsets.ModelViewSet):
     
     # Los campos por los que se puede ordenar
     ordering_fields = ['piezas']
+    
+    @action(detail=False, methods=['get'])
+    def obtener_placas_disponibles(self, request):
+        # Obtener todas las Placas
+        todas_las_placas = Placa.objects.all()
+
+        data = []
+        for placa in todas_las_placas:
+            # Obtener todas las Piezas asociadas a la Placa actual
+            piezas_de_placa = Pieza.objects.filter(placas=placa)
+
+            # Si la Placa no tiene Piezas asociadas o todas las Piezas asociadas tienen estatusAsignacion=False, entonces la Placa está disponible
+            if not piezas_de_placa or not any(pieza.estatusAsignacion == True for pieza in piezas_de_placa):
+                placa_data = {
+                    "id": placa.id,
+                    "nombre": placa.nombre,
+                    "descripcion": placa.descripcion,
+                    "piezas": placa.piezas,
+                }
+                data.append(placa_data)
+
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def placas_con_piezas(self, request):
@@ -224,9 +245,9 @@ class PlacaViewSet(viewsets.ModelViewSet):
             piezas_de_placa = Pieza.objects.filter(
                 placas=placa,
                 estatus="aprobado",
-                estatusAsignacion=False,
             )
             
+<<<<<<< HEAD
             # Serializa las piezas
             piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
             
@@ -243,6 +264,22 @@ class PlacaViewSet(viewsets.ModelViewSet):
             data.append(placa_data)
             
         # Invierte el orden de la lista de datos para que las placas más recientes aparezcan primero
+=======
+            # If the Placa has no Piezas associated or at least one associated Pieza has estatusAsignacion=False, then the Placa is available
+            if not piezas_de_placa or any(pieza.estatusAsignacion == False for pieza in piezas_de_placa):
+                # Serializa las piezas
+                piezas_data = PiezaSerializer([pieza for pieza in piezas_de_placa if pieza.estatusAsignacion == False], many=True).data
+                
+                placa_data = {
+                    "id": placa.id,
+                    "nombre": placa.nombre,
+                    "descripcion": placa.descripcion,
+                    "piezas": placa.piezas,
+                    "piezas_activas": piezas_data
+                }
+                data.append(placa_data)
+        
+>>>>>>> 5dcb9395bddf8dc471fe36bc4c66216ae48b948c
         data.reverse()
         
         # Devuelve una respuesta con los datos en formato JSON
@@ -267,8 +304,15 @@ class PlacaViewSet(viewsets.ModelViewSet):
         # Obtiene el objeto Placa correspondiente al id proporcionado
         placa = self.get_object()
 
+<<<<<<< HEAD
         # Obtiene todas las piezas asociadas a la placa
         piezas = Pieza.objects.filter(placas=placa)
+=======
+        piezas = Pieza.objects.filter(
+            placas=placa,
+            estatus="aprobado",
+        )
+>>>>>>> 5dcb9395bddf8dc471fe36bc4c66216ae48b948c
 
         # Serializa las piezas
         serializer = PiezaSerializer(piezas, many=True)
@@ -1439,26 +1483,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
-        """
-        Esta función agrega procesos a un objeto Pieza. Toma un objeto de solicitud y una clave primaria (pk) como parámetros.
-
-        Parámetros:
-        request (HttpRequest): El objeto de solicitud que contiene los datos a procesar. Debe incluir los datos de 'procesos', que es una lista de procesos a agregar a la Pieza.
-        pk (int): La clave primaria del objeto Pieza al que se van a agregar los procesos.
-
-        Devoluciones:
-        Response: Un objeto de respuesta con un código de estado y un mensaje. Si la función se ejecuta con éxito, devuelve un código de estado HTTP 200 junto con los datos serializados del objeto Pieza actualizado. Si hay algún error durante la ejecución, devuelve un código de estado HTTP 400 junto con un mensaje de error.
-
-        Excepciones:
-        HTTP400: Este error se genera en los siguientes escenarios:
-            - Si los datos de 'procesos' no están incluidos en la solicitud.
-            - Si el parámetro 'placa_id' no está incluido para cada proceso en los datos de 'procesos'.
-            - Si no existe un objeto Placa con el 'placa_id' proporcionado.
-            - Si hay conflictos de programación con otros procesos.
-            - Si el tipo de proceso es "Laser", "CNC 1" o "CNC 2" y el horario no coincide con otros procesos del mismo tipo y Placa.
-
-        La función primero recupera el objeto Pieza usando la clave primaria proporcionada (pk). Luego recupera los datos de 'procesos' de la solicitud. Para cada proceso en los datos de 'procesos', realiza varias comprobaciones y validaciones antes de agregar el proceso al objeto Pieza. Una vez que todos los procesos se han agregado con éxito, guarda el objeto Pieza y devuelve una respuesta con los datos serializados del objeto Pieza actualizado.
-        """
         pieza = self.get_object()
         procesos_data = request.data.get('procesos')
         if not procesos_data:
