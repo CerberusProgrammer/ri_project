@@ -1114,11 +1114,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
         current_time = timezone.localtime(timezone.now())
-        print(current_time)
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
+            procesos__inicioProceso__date=current_time.date(),
             procesos__inicioProceso__lte=current_time,
+            procesos__finProceso__gte=current_time,
         ).distinct().count()
 
         return Response({"piezas_count": piezas_count})
