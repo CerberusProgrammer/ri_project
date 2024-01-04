@@ -1700,7 +1700,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=False,
             procesos__isnull=False
         ).distinct()
-
+        
         # Filtrar las piezas que tienen todos los procesos asociados a todas las placas
         piezas_terminadas_sin_asignacion_confirmada = [pieza for pieza in piezas_con_placas_procesos if pieza.todos_procesos_ligados()]
 
