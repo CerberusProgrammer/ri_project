@@ -1290,6 +1290,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response(piezas_serializer.data)
     
+    from django.utils.dateparse import parse_datetime
+
     @action(detail=True, methods=['post'], url_path='agregar_procesos_a_pieza')
     def agregar_procesos_a_pieza(self, request, pk=None):
         pieza = self.get_object()
@@ -1307,16 +1309,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 return Response({"error": f"Placa with id {placa_id} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             proceso_data['placa'] = placa.id
 
-            inicioProceso = proceso_data.get('inicioProceso')
-            finProceso = proceso_data.get('finProceso')
+            inicioProceso = parse_datetime(proceso_data.get('inicioProceso'))
+            finProceso = parse_datetime(proceso_data.get('finProceso'))
             maquina = proceso_data.get('maquina')
 
             conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso).exclude(placa=placa)
             for conflicto in conflictos:
                 piezas_conflicto = Pieza.objects.filter(procesos=conflicto, estatusAsignacion=False, estatus="aprobado")
                 for pieza_conflicto in piezas_conflicto:
-                    inicioProceso_local = timezone.localtime(conflicto.inicioProceso).strftime('%d/%m/%Y %H:%M')
-                    finProceso_local = timezone.localtime(conflicto.finProceso).strftime('%d/%m/%Y %H:%M')
+                    inicioProceso_local = timezone.localtime(conflicto.inicioProceso).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+                    finProceso_local = timezone.localtime(conflicto.finProceso).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
                     return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{conflicto.placa.nombre}' está causando el conflicto. La pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] tiene el proceso que genera el conflicto. inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
             if maquina in ["Laser", "CNC 1", "CNC 2"]:
@@ -1324,8 +1326,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 for cnc_proceso in cnc_procesos:
                     piezas_conflicto = Pieza.objects.filter(procesos=cnc_proceso, estatusAsignacion=False, estatus="aprobado")
                     for pieza_conflicto in piezas_conflicto:
-                        inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso).strftime('%d/%m/%Y %H:%M')
-                        finProceso_local = timezone.localtime(cnc_proceso.finProceso).strftime('%d/%m/%Y %H:%M')
+                        inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+                        finProceso_local = timezone.localtime(cnc_proceso.finProceso).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
                         if inicioProceso != inicioProceso_local or finProceso != finProceso_local:
                             return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{cnc_proceso.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual. inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1340,8 +1342,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
-
-
 
 # inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}
 
