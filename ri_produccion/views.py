@@ -1317,8 +1317,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 for pieza_conflicto in piezas_conflicto:
                     inicioProceso_local = timezone.localtime(conflicto.inicioProceso)
                     finProceso_local = timezone.localtime(conflicto.finProceso)
-                    if inicioProceso != inicioProceso_local or finProceso != finProceso_local:
-                        return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{conflicto.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
+                    if (inicioProceso.day != inicioProceso_local.day or inicioProceso.month != inicioProceso_local.month or inicioProceso.year != inicioProceso_local.year or inicioProceso.hour != inicioProceso_local.hour or inicioProceso.minute != inicioProceso_local.minute or finProceso.day != finProceso_local.day or finProceso.month != finProceso_local.month or finProceso.year != finProceso_local.year or finProceso.hour != finProceso_local.hour or finProceso.minute != finProceso_local.minute):
+                        return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{conflicto.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual.inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
             if maquina in ["Laser", "CNC 1", "CNC 2"]:
                 cnc_procesos = Proceso.objects.filter(placa=placa, maquina__in=["CNC 1", "CNC 2", "Laser"])
@@ -1327,8 +1327,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                     for pieza_conflicto in piezas_conflicto:
                         inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso)
                         finProceso_local = timezone.localtime(cnc_proceso.finProceso)
-                        if inicioProceso != inicioProceso_local or finProceso != finProceso_local:
-                            return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{cnc_proceso.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
+                        if (inicioProceso.day != inicioProceso_local.day or inicioProceso.month != inicioProceso_local.month or inicioProceso.year != inicioProceso_local.year or inicioProceso.hour != inicioProceso_local.hour or inicioProceso.minute != inicioProceso_local.minute or finProceso.day != finProceso_local.day or finProceso.month != finProceso_local.month or finProceso.year != finProceso_local.year or finProceso.hour != finProceso_local.hour or finProceso.minute != finProceso_local.minute):
+                            return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{cnc_proceso.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual.inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
             proceso_serializer = ProcesoSerializer(data=proceso_data)
             if proceso_serializer.is_valid():
@@ -1341,6 +1341,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
 
 # inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}
 
