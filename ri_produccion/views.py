@@ -1644,7 +1644,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
-
     
     @action(detail=False, methods=['get'])
     def obtener_piezas_sin_procesos_numericos(self, request):
@@ -1692,14 +1691,22 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def obtener_piezas_terminadas_sin_asignacion_confirmada(self, request):
-        piezas_terminadas_sin_asignacion_confirmada = Pieza.objects.filter(
-            Q(estatus='aprobado'),
-            Q(material__isnull=False),
-            Q(placas__isnull=False) | Q(requiere_nesteo=False),
-            Q(procesos__isnull=False),
-            Q(estatusAsignacion=False)
+        # Obtener todas las piezas que tienen placas y procesos
+        piezas_con_placas_procesos = Pieza.objects.filter(
+            Q(placas__isnull=False, requiere_nesteo=True) |
+            Q(placas__isnull=True, requiere_nesteo=False),
+            material__isnull=False,
+            estatus='aprobado',
+            estatusAsignacion=False,
+            procesos__isnull=False
         ).distinct()
-        
+
+        # Filtrar las piezas que tienen todos los procesos asociados a todas las placas
+        piezas_terminadas_sin_asignacion_confirmada = [pieza for pieza in piezas_con_placas_procesos if pieza.todos_procesos_ligados()]
+
+        if not piezas_terminadas_sin_asignacion_confirmada:
+            raise NotFound(detail="No se encontraron piezas terminadas sin asignación confirmada.")
+
         serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
         return Response(serializer.data)
     
