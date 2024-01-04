@@ -90,10 +90,17 @@ class Pieza(models.Model):
     def sin_placas_procesos(self):
         return self.placas.count() == 0 and not self.requiere_nesteo and self.procesos.count() == 0
     
+    def piezas_correctas(self):
+        total_piezas_realizadas = sum(
+            pieza_placa.piezas_realizadas for pieza_placa in self.piezaplaca_set.all()
+        )
+        return total_piezas_realizadas == self.piezasTotales
+    
     def todos_procesos_ligados(self):
-        placas_con_procesos = {proceso.placa.id for proceso in self.procesos.all()}
+        placas_con_procesos = {proceso.placa.id for proceso in self.procesos.all() if proceso.placa is not None}
         todas_las_placas = {placa.id for placa in self.placas.all()}
         return placas_con_procesos == todas_las_placas
+    
     
     def cantidad_correcta_de_procesos(self):
         num_procesos = self.procesos.count()
@@ -101,7 +108,10 @@ class Pieza(models.Model):
         return num_procesos == num_placas * num_procesos // num_placas if num_placas else False
 
     def esta_retrasada(self):
-        return any(proceso.finProceso < timezone.now() and proceso.estatus != 'realizado' for proceso in self.procesos.all())
+        return any(
+            proceso.finProceso < timezone.now() and proceso.estatus not in ('realizado', 'cancelado')
+            for proceso in self.procesos.all()
+        )
 
     def __str__(self):
         return self.consecutivo

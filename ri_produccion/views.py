@@ -1374,7 +1374,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion(self, request):
-        total_piezas = Pieza.objects.filter(estatus='pendiente').count()
+        total_piezas = Pieza.objects.filter(estatus='aprobado', estatusAsignacion=False).count()
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', estatusAsignacion=True).count()
         if total_piezas == 0:
             return Response({"progreso": 100}, status=status.HTTP_200_OK)
@@ -1621,7 +1621,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_sin_asignaciones(self, request):
         piezas_sin_asignaciones = Pieza.objects.filter(
             Q(estatus='aprobado'),
-            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True)
+            Q(estatusAsignacion=False),
+            Q(material__isnull=True) | Q(placas__isnull=True) | Q(procesos__isnull=True),
         ).order_by('-fechaCreado').distinct()
         serializer = self.get_serializer(piezas_sin_asignaciones, many=True)
         return Response(serializer.data)
@@ -1638,7 +1639,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).distinct()
 
         # Filtrar las piezas que no tienen procesos asociados a todas las placas
-        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.todos_procesos_ligados()]
+        # y que tienen la cantidad correcta de Piezas_realizadas en todas las Placas asociadas
+        piezas_sin_procesos = [pieza for pieza in piezas_con_placas if not pieza.todos_procesos_ligados() and pieza.piezas_correctas()]
 
         # Agregar las piezas que no tienen placas, no requieren nesteo y no tienen procesos asociados
         piezas_sin_procesos += [pieza for pieza in Pieza.objects.all() if pieza.sin_placas_procesos()]
