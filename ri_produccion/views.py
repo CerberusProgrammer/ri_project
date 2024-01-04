@@ -1328,8 +1328,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                     # Busca la pieza que tiene el proceso que genera el conflicto
                     piezas_conflicto = Pieza.objects.filter(procesos=cnc_proceso, estatusAsignacion=False, estatus="aprobado")
                     for pieza_conflicto in piezas_conflicto:
-                        inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso).strftime('%d/%m/%Y %H:%M')
-                        finProceso_local = timezone.localtime(cnc_proceso.finProceso).strftime('%d/%m/%Y %H:%M')
+                        inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso)
+                        finProceso_local = timezone.localtime(cnc_proceso.finProceso)
                         if inicioProceso != inicioProceso_local or finProceso != finProceso_local:
                             return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{cnc_proceso.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual. \n\n inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
