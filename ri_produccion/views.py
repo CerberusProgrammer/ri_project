@@ -1315,8 +1315,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso).exclude(placa=placa)
             for conflicto in conflictos:
                 # Busca la pieza que tiene el proceso que genera el conflicto
-                pieza_conflicto = Pieza.objects.get(procesos=conflicto, estatusAsignacion=False, estatus="aprobado")
-                if pieza_conflicto:
+                piezas_conflicto = Pieza.objects.filter(procesos=conflicto, estatusAsignacion=False, estatus="aprobado")
+                for pieza_conflicto in piezas_conflicto:
                     inicioProceso_local = timezone.localtime(conflicto.inicioProceso).strftime('%d/%m/%Y %H:%M')
                     finProceso_local = timezone.localtime(conflicto.finProceso).strftime('%d/%m/%Y %H:%M')
                     return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{conflicto.placa.nombre}' está causando el conflicto. La pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] tiene el proceso que genera el conflicto."}, status=status.HTTP_400_BAD_REQUEST)
@@ -1326,8 +1326,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 cnc_procesos = Proceso.objects.filter(placa=placa, maquina__in=["CNC 1", "CNC 2", "Laser"])
                 for cnc_proceso in cnc_procesos:
                     # Busca la pieza que tiene el proceso que genera el conflicto
-                    pieza_conflicto = Pieza.objects.get(procesos=cnc_proceso, estatusAsignacion=False, estatus="aprobado")
-                    if pieza_conflicto:
+                    piezas_conflicto = Pieza.objects.filter(procesos=cnc_proceso, estatusAsignacion=False, estatus="aprobado")
+                    for pieza_conflicto in piezas_conflicto:
                         inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso).strftime('%d/%m/%Y %H:%M')
                         finProceso_local = timezone.localtime(cnc_proceso.finProceso).strftime('%d/%m/%Y %H:%M')
                         if inicioProceso != cnc_proceso.inicioProceso or finProceso != cnc_proceso.finProceso:
@@ -1344,6 +1344,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
