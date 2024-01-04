@@ -130,7 +130,11 @@ class PlacaViewSet(viewsets.ModelViewSet):
         data = []
         for placa in todas_las_placas:
             # Get all Pieza objects associated with the current Placa
-            piezas_de_placa = Pieza.objects.filter(placas=placa)
+            piezas_de_placa = Pieza.objects.filter(
+                placas=placa,
+                estatus="aprobado",
+                estatusAsignacion=False,
+            )
             
             # Serializa las piezas
             piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
