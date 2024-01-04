@@ -1104,8 +1104,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatus='aprobado',
             estatusAsignacion=True,
             procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
+            procesos__inicioProceso__gte=current_time,
         ).distinct()
 
         serializer = self.get_serializer(piezas, many=True)
@@ -1118,8 +1117,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatus='aprobado',
             estatusAsignacion=True,
             procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
+            procesos__inicioProceso__gte=current_time,
         ).distinct().count()
 
         return Response({"piezas_count": piezas_count})
