@@ -146,7 +146,9 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 "piezas": placa.piezas,
                 "piezas_activas": piezas_data
             }
-            data.append(placa_data).reverse()
+            data.append(placa_data)
+        
+        data.reverse()
         
         return Response(data)
 
