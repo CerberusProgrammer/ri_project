@@ -174,12 +174,14 @@ class PlacaViewSet(viewsets.ModelViewSet):
         
         return Response(data)
 
-
     @action(detail=True, methods=['get'])
     def obtener_piezas_asignadas_a_placa(self, request, pk=None):
         placa = self.get_object()
 
-        piezas = Pieza.objects.filter(placas=placa)
+        piezas = Pieza.objects.filter(
+            placas=placa,
+            estatus="aprobado",
+        )
 
         serializer = PiezaSerializer(piezas, many=True)
 
