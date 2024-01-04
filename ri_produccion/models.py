@@ -91,9 +91,9 @@ class Pieza(models.Model):
         return self.placas.count() == 0 and not self.requiere_nesteo and self.procesos.count() == 0
     
     def piezas_correctas(self):
-        total_piezas_realizadas = sum(
-            pieza_placa.piezas_realizadas for pieza_placa in self.piezaplaca_set.all()
-        )
+        if not self.requiere_nesteo:
+            return True
+        total_piezas_realizadas = sum(pieza_placa.piezas_realizadas for pieza_placa in self.piezaplaca_set.all())
         return total_piezas_realizadas == self.piezasTotales
     
     def todos_procesos_ligados(self):
