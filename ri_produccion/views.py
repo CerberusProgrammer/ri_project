@@ -58,6 +58,13 @@ class MaterialViewSet(viewsets.ModelViewSet):
         """
         Devuelve una lista de piezas que requieren nesteo y tienen un material asignado.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /piezas/piezas_para_nesteo_filtrado/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Pieza,
+        serializados con la clase PiezaSerializer.
         """
     # Inicializa una lista vacía para almacenar las piezas que cumplen con las condiciones
         piezas_validas = []
@@ -87,6 +94,14 @@ class MaterialViewSet(viewsets.ModelViewSet):
         """
         Devuelve una lista de nombres de materiales que requieren nesteo.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /materiales/materiales_para_nesteo_filtrado/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de cadenas de texto,
+        que corresponden a los nombres de los materiales que cumplen con las condiciones
+        de requerir nesteo y tener un valor en el campo material.
         """
         # Inicializa una lista vacía para almacenar los nombres de los materiales que cumplen con las condiciones
         nombres_materiales_validos = []
@@ -116,6 +131,15 @@ class MaterialViewSet(viewsets.ModelViewSet):
         """
         Devuelve una lista de espesores de materiales que requieren nesteo.
 
+        Este método se puede acceder mediante una petición POST a la URL
+        /materiales/espesores_para_nesteo_filtrado/.
+
+        Los parámetros de la petición deben incluir el nombre del material
+        del que se quieren obtener los espesores.
+
+        El formato de la respuesta es JSON, y contiene un array de números,
+        que corresponden a los espesores de los materiales que cumplen con las condiciones
+        de requerir nesteo y tener el nombre del material especificado.
         """
         # Obtiene el nombre del material de los parámetros de la petición
         material_name = request.data.get('material')
@@ -198,6 +222,16 @@ class PlacaViewSet(viewsets.ModelViewSet):
         """
         Devuelve una lista de placas con sus piezas activas.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /placas/placas_con_piezas/.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Placa,
+        serializados con la clase PlacaSerializer, con un campo adicional
+        "piezas_activas" que contiene un array de objetos Pieza, serializados con la
+        clase PiezaSerializer, que están asociados a la placa, tienen el estatus
+        "aprobado" y el estatusAsignacion False.
         """
         # Obtiene todas las placas
         todas_las_placas = Placa.objects.all()
@@ -240,6 +274,15 @@ class PlacaViewSet(viewsets.ModelViewSet):
         """
         Devuelve una lista de piezas que están asignadas a una placa específica.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /placas/{id}/obtener_piezas_asignadas_a_placa/, donde {id} es el identificador
+        de la placa.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un array de objetos Pieza,
+        serializados con la clase PiezaSerializer, que están asociados a la placa
+        con el id especificado.
         """
         # Obtiene el objeto Placa correspondiente al id proporcionado
         placa = self.get_object()
@@ -283,6 +326,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         """
         Devuelve el progreso de un usuario en la realización de los procesos.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /procesos/mi_progreso_procesos/{id}/, donde {id} es el identificador
+        del usuario.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un objeto con un campo
+        "progreso" que contiene un número entre 0 y 1, que representa la proporción
+        de procesos realizados por el usuario sobre el total de procesos asignados
+        al usuario.
         """
         # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
@@ -311,6 +364,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         """
         Devuelve la cantidad de procesos que un usuario tiene pendientes u operando.
 
+        Este método se puede acceder mediante una petición GET a la URL
+        /procesos/mis_procesos_actuales_cantidad/{id}/, donde {id} es el identificador
+        del usuario.
+
+        Los parámetros de la petición no se utilizan.
+
+        El formato de la respuesta es JSON, y contiene un objeto con un campo
+        "cantidad" que contiene un número entero, que representa la cantidad de procesos
+        que el usuario tiene con estatus "pendiente" o "operando" y que tienen un inicioProceso
+        mayor o igual que la hora actual.
         """
         # Obtiene la hora actual
         current_time = timezone.now()
@@ -330,66 +393,36 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados_cantidad/(?P<id>\d+)')
     def mis_procesos_retrasados_cantidad(self, request, id=None):
-        
-        """
-        Devuelve la cantidad de procesos que un usuario tiene retrasados.
-
-        """
-         # Obtiene la hora actual
         current_time = timezone.now()
-        
-        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
-        
         print(Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(finProceso__lt=current_time)
         ))
         print('uwu')
-        # Obtiene la cantidad de procesos que cumplen con las condiciones
         cantidad = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(finProceso__lt=current_time)
         ).count()
-        
-        # Devuelve una respuesta con la cantidad en formato JSON
+
         return Response({"cantidad": cantidad})
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios_cantidad/(?P<id>\d+)')
     def mis_procesos_prioritarios_cantidad(self, request, id=None):
-        
-        """
-        Devuelve la cantidad de procesos que un usuario tiene con piezas prioritarias.
-
-        """
-        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
-        
-        # Obtiene todas las piezas que tienen el atributo prioridad igual a True
         piezas_prioritarias = Pieza.objects.filter(prioridad=True)
-        
-        # Obtiene la cantidad de procesos que tienen como realizadoPor el usuario y como pieza una de las piezas prioritarias
         cantidad = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(pieza__in=piezas_prioritarias)
         ).distinct().count()
-        
-        # Devuelve una respuesta con la cantidad en formato JSON
+
         return Response({"cantidad": cantidad})
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_actuales/(?P<id>\d+)')
     def mis_procesos_actuales(self, request, id=None):
-        
-        """
-        Devuelve una lista de procesos que un usuario tiene pendientes u operando.
-        
-        """
-
         current_time = timezone.now()
-        
-        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
@@ -421,15 +454,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados/(?P<id>\d+)')
     def mis_procesos_retrasados(self, request, id=None):
-        
-        """
-        Devuelve una lista de procesos que un usuario tiene retrasados.
-
-        """
-    
         current_time = timezone.now()
-        
-        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
@@ -438,8 +463,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         )
         response = []
         for proceso in procesos:
-            
-            # Obtiene las piezas asociadas al proceso
             piezas = proceso.pieza_set.all()
             for pieza in piezas:
                 response.append({
@@ -462,15 +485,8 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_prioritarios/(?P<id>\d+)')
     def mis_procesos_prioritarios(self, request, id=None):
-        
-        """
-        Devuelve una lista de procesos que un usuario tiene con piezas prioritarias.
-
-        """
-        # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
         piezas_prioritarias = Pieza.objects.filter(prioridad=True)
-        # Obtiene los procesos que tienen como realizadoPor el usuario y como pieza una de las piezas prioritarias
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(pieza__in=piezas_prioritarias)
@@ -500,12 +516,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_retrasados_piezas')
     def procesos_maquinado_retrasados_piezas(self, request):
-        
-        """
-        Devuelve una lista de procesos que están retrasados en el maquinado.
-
-        """
-    
         current_time = timezone.now()
         maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
         procesos = Proceso.objects.filter(
@@ -520,12 +530,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_retrasados_piezas')
     def procesos_soldadura_retrasados_piezas(self, request):
-        
-        """
-        Devuelve una lista de procesos que están retrasados en la soldadura.
-
-        """
-    
         current_time = timezone.now()
         maquinas = ['corte', 'pintura', 'pulido']
         procesos = Proceso.objects.filter(
@@ -540,12 +544,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_sm_retrasados_piezas')
     def procesos_sm_retrasados_piezas(self, request):
-        
-        """
-        Devuelve una lista de procesos que están retrasados en el servicio de maquinado.
-
-        """
-    
         current_time = timezone.now()
         maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
         procesos = Proceso.objects.filter(
@@ -560,12 +558,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
     def procesos_maquinado_por_asignar(self, request):
-        
-        """
-        Devuelve una lista de procesos que están retrasados en el servicio de maquinado.
-
-        """
-    
         maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
@@ -578,12 +570,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_por_asignar')
     def procesos_soldadura_por_asignar(self, request):
-        
-        """
-        Devuelve una lista de procesos que están pendientes de asignar a un usuario en la soldadura.
-
-        """
-    
         maquinas = ['corte', 'pintura', 'pulido']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
@@ -1283,13 +1269,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
     def obtener_piezas_actuales(self, request):
         current_date = timezone.localtime(timezone.now())
-        print('current_date: {current_date}')
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
         ).distinct()
 
-        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.finProceso.time() <= current_date.time() for proceso in pieza.procesos.all())]
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
