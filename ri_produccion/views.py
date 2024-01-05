@@ -1084,7 +1084,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__nombre__in=subproceso,
+            procesos__maquina__in=subproceso,
         ).order_by('-procesos__inicioProceso').distinct()
 
         serializer = self.get_serializer(piezas, many=True)
