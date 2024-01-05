@@ -1356,7 +1356,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
     def piezas_actuales_prioritarias_conteo(self, request):
         current_date = timezone.localtime(timezone.now())
-        piezas_count = Pieza.objects.filter(
+        piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
             prioridad=True,
@@ -1364,7 +1364,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         
         piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
-        return Response({"piezas_count": piezas_count})
+        return Response({"piezas_count": piezas})
     
     @action(detail=True, methods=['get'], url_path='obtener_piezas_pendientes')
     def obtener_piezas_pendientes(self, request, pk=None):
