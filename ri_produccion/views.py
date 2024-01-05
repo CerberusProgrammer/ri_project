@@ -46,7 +46,7 @@ class MaterialViewSet(viewsets.ModelViewSet):
     # Los filtros que se pueden aplicar a la vista
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     
-     # Los campos por los que se puede buscar
+    # Los campos por los que se puede buscar
     search_fields = ['nombre', 'espesor', 'proveedor']
     
     # Los campos por los que se puede ordenar
@@ -247,7 +247,6 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 estatus="aprobado",
             )
             
-<<<<<<< HEAD
             # Serializa las piezas
             piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
             
@@ -264,22 +263,6 @@ class PlacaViewSet(viewsets.ModelViewSet):
             data.append(placa_data)
             
         # Invierte el orden de la lista de datos para que las placas más recientes aparezcan primero
-=======
-            # If the Placa has no Piezas associated or at least one associated Pieza has estatusAsignacion=False, then the Placa is available
-            if not piezas_de_placa or any(pieza.estatusAsignacion == False for pieza in piezas_de_placa):
-                # Serializa las piezas
-                piezas_data = PiezaSerializer([pieza for pieza in piezas_de_placa if pieza.estatusAsignacion == False], many=True).data
-                
-                placa_data = {
-                    "id": placa.id,
-                    "nombre": placa.nombre,
-                    "descripcion": placa.descripcion,
-                    "piezas": placa.piezas,
-                    "piezas_activas": piezas_data
-                }
-                data.append(placa_data)
-        
->>>>>>> 5dcb9395bddf8dc471fe36bc4c66216ae48b948c
         data.reverse()
         
         # Devuelve una respuesta con los datos en formato JSON
@@ -304,15 +287,8 @@ class PlacaViewSet(viewsets.ModelViewSet):
         # Obtiene el objeto Placa correspondiente al id proporcionado
         placa = self.get_object()
 
-<<<<<<< HEAD
         # Obtiene todas las piezas asociadas a la placa
         piezas = Pieza.objects.filter(placas=placa)
-=======
-        piezas = Pieza.objects.filter(
-            placas=placa,
-            estatus="aprobado",
-        )
->>>>>>> 5dcb9395bddf8dc471fe36bc4c66216ae48b948c
 
         # Serializa las piezas
         serializer = PiezaSerializer(piezas, many=True)
