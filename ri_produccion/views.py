@@ -1288,7 +1288,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
         return Response({"piezas_count": piezas_count})
-
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
     def obtener_piezas_terminadas(self, request):
@@ -1303,9 +1302,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_futuras')
     def obtener_piezas_futuras(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
+        next_day = current_time + timezone.timedelta(days=1)
         piezas_futuras = Pieza.objects.filter(
-            Q(procesos__inicioProceso__gt=current_time) | Q(procesos__finProceso__gt=current_time)
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__gte=next_day,
+            procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
 
         serializer = self.get_serializer(piezas_futuras, many=True)
@@ -1317,7 +1320,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
             procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
@@ -1332,7 +1334,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
             procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
