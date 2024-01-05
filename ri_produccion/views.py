@@ -1283,6 +1283,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
     def obtener_piezas_actuales(self, request):
         current_date = timezone.localtime(timezone.now())
+        print('current_date: {current_date}')
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
