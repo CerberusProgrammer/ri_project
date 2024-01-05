@@ -1091,6 +1091,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='obtener_piezas_por_subproceso')
     def obtener_piezas_por_subproceso(self, request):
         subproceso = request.data.get('subprocesos')
+        maquina = request.data.get('maquinas')
 
         if subproceso is None:
             return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1098,6 +1099,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
+            procesos__maquina__in=maquina,
             procesos__nombre__in=subproceso,
         ).order_by('-procesos__inicioProceso').distinct()
 
@@ -1302,7 +1304,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
         return Response({"piezas_count": piezas_count})
-
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
     def obtener_piezas_terminadas(self, request):
@@ -1317,9 +1318,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_futuras')
     def obtener_piezas_futuras(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
+        next_day = current_time.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
         piezas_futuras = Pieza.objects.filter(
-            Q(procesos__inicioProceso__gt=current_time) | Q(procesos__finProceso__gt=current_time)
+            estatus='aprobado',
+            estatusAsignacion=True,
+            procesos__inicioProceso__gte=next_day,
+            procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
 
         serializer = self.get_serializer(piezas_futuras, many=True)
@@ -1327,12 +1332,10 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas')
     def piezas_actuales_retrasadas(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
@@ -1342,12 +1345,10 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas_conteo')
     def piezas_actuales_retrasadas_conteo(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct().count()
@@ -1356,30 +1357,28 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias')
     def piezas_actuales_prioritarias(self, request):
-        current_time = timezone.now()
+        current_date = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
             prioridad=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
         ).distinct()
+        
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
     def piezas_actuales_prioritarias_conteo(self, request):
-        current_time = timezone.now()
-        piezas_count = Pieza.objects.filter(
+        current_date = timezone.localtime(timezone.now())
+        piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
             prioridad=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
-        ).distinct().count()
+        ).distinct()
+        
+        piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
         return Response({"piezas_count": piezas_count})
     
