@@ -1105,23 +1105,23 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
         ).distinct()
 
-        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date for proceso in pieza.procesos.all())]
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
-        return Response({"piezas": serializer.data, "tiempo_actual": current_date})
-
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
-        current_date = timezone.now().date()
+        current_date = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
         ).distinct()
 
-        piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date for proceso in pieza.procesos.all()))
+        piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
         return Response({"piezas_count": piezas_count})
+
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
     def obtener_piezas_terminadas(self, request):
