@@ -1313,7 +1313,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas')
     def piezas_actuales_retrasadas(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
@@ -1328,7 +1328,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas_conteo')
     def piezas_actuales_retrasadas_conteo(self, request):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
