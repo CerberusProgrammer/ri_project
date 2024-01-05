@@ -1279,6 +1279,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response({
             "piezas": serializer.data,
+            "fecha_total": current_date,
             "fecha_actual": current_date.date(),
             "hora_actual": current_date.time(),
             })
