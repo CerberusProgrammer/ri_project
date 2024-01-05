@@ -1108,7 +1108,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
-        return Response(serializer.data)
+        return Response({"piezas": serializer.data, "tiempo_actual": current_date})
 
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
