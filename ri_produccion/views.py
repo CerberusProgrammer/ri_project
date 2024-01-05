@@ -1279,27 +1279,23 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
 
-        # for pieza in piezas:
-        #     for proceso in pieza.procesos.all():
-        #         if proceso.finProceso.date() == current_date.date():
-        #             piezas_filtradas.append(pieza)
-        #             break
-
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
         current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-        ).distinct()
-
-        piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
+            procesos__finProceso__lte=next_day,
+            procesos__finProceso__gte=current_date,
+            procesos__estatus__in=['pendiente', 'operando'],
+        ).distinct().count()
 
         return Response({
-            "piezas_count": piezas_count,
+            "piezas_count": piezas,
         })
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
