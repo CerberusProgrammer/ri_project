@@ -1303,7 +1303,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_piezas_futuras')
     def obtener_piezas_futuras(self, request):
         current_time = timezone.localtime(timezone.now())
-        next_day = current_time + timezone.timedelta(days=1)
+        next_day = current_time.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
         piezas_futuras = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
