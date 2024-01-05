@@ -1274,7 +1274,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
         ).distinct()
 
-        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.finProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
