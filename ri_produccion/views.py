@@ -1320,7 +1320,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
@@ -1334,7 +1333,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__lte=current_time,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct().count()
@@ -1343,30 +1341,28 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias')
     def piezas_actuales_prioritarias(self, request):
-        current_time = timezone.now()
+        current_date = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
             prioridad=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
         ).distinct()
+        
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
     def piezas_actuales_prioritarias_conteo(self, request):
-        current_time = timezone.now()
+        current_date = timezone.localtime(timezone.now())
         piezas_count = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
             prioridad=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
         ).distinct().count()
+        
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         return Response({"piezas_count": piezas_count})
     
