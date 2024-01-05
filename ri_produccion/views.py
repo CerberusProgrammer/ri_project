@@ -1290,29 +1290,29 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
     def obtener_piezas_actuales(self, request):
-        current_time = timezone.now()
+        current_date = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__date=current_time.date(),
-            procesos__inicioProceso__lte=current_time,
-            procesos__finProceso__gte=current_time,
         ).distinct()
+
+        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
-        current_time = timezone.localtime(timezone.now())
-        print(current_time)
-        piezas_count = Pieza.objects.filter(
+        current_date = timezone.localtime(timezone.now())
+        piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__inicioProceso__lte=current_time,
-        ).distinct().count()
+        ).distinct()
+
+        piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
         return Response({"piezas_count": piezas_count})
+
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
     def obtener_piezas_terminadas(self, request):
@@ -1498,27 +1498,28 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 return Response({"error": f"Placa with id {placa_id} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             proceso_data['placa'] = placa.id
 
-            inicioProceso = proceso_data.get('inicioProceso')
-            finProceso = proceso_data.get('finProceso')
+            inicioProceso = parse_datetime(proceso_data.get('inicioProceso'))
+            finProceso = parse_datetime(proceso_data.get('finProceso'))
             maquina = proceso_data.get('maquina')
 
-            # Verifica si hay conflictos de horario con otros procesos
             conflictos = Proceso.objects.filter(maquina=maquina, inicioProceso__lt=finProceso, finProceso__gt=inicioProceso).exclude(placa=placa)
-            if conflictos.exists():
-                conflicto = conflictos.first()
-                inicioProceso_local = timezone.localtime(conflicto.inicioProceso).strftime('%d/%m/%Y %H:%M')
-                finProceso_local = timezone.localtime(conflicto.finProceso).strftime('%d/%m/%Y %H:%M')
-                return Response({"error": f"Horario de proceso en conflicto con el proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{conflicto.placa.nombre}' está causando el conflicto."}, status=status.HTTP_400_BAD_REQUEST)
+            for conflicto in conflictos:
+                piezas_conflicto = Pieza.objects.filter(procesos=conflicto, estatusAsignacion=False, estatus="aprobado")
+                for pieza_conflicto in piezas_conflicto:
+                    inicioProceso_local = timezone.localtime(conflicto.inicioProceso)
+                    finProceso_local = timezone.localtime(conflicto.finProceso)
+                    if (inicioProceso.day != inicioProceso_local.day or inicioProceso.month != inicioProceso_local.month or inicioProceso.year != inicioProceso_local.year or inicioProceso.hour != inicioProceso_local.hour or inicioProceso.minute != inicioProceso_local.minute or finProceso.day != finProceso_local.day or finProceso.month != finProceso_local.month or finProceso.year != finProceso_local.year or finProceso.hour != finProceso_local.hour or finProceso.minute != finProceso_local.minute):
+                        return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{conflicto.nombre}' en la máquina '{maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{conflicto.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual.inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Verifica si el proceso es de tipo "Laser", "CNC 1" o "CNC 2" y si el horario coincide con el de otros procesos del mismo tipo y placa
             if maquina in ["Laser", "CNC 1", "CNC 2"]:
                 cnc_procesos = Proceso.objects.filter(placa=placa, maquina__in=["CNC 1", "CNC 2", "Laser"])
-                if cnc_procesos.exists():
-                    cnc_proceso = cnc_procesos.first()
-                    inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso).strftime('%d/%m/%Y %H:%M')
-                    finProceso_local = timezone.localtime(cnc_proceso.finProceso).strftime('%d/%m/%Y %H:%M')
-                    if inicioProceso != cnc_proceso.inicioProceso or finProceso != cnc_proceso.finProceso:
-                        return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local} a {finProceso_local}. La placa '{cnc_proceso.placa.nombre}' está causando el conflicto. Debe ser exactamente igual."}, status=status.HTTP_400_BAD_REQUEST)
+                for cnc_proceso in cnc_procesos:
+                    piezas_conflicto = Pieza.objects.filter(procesos=cnc_proceso, estatusAsignacion=False, estatus="aprobado")
+                    for pieza_conflicto in piezas_conflicto:
+                        inicioProceso_local = timezone.localtime(cnc_proceso.inicioProceso)
+                        finProceso_local = timezone.localtime(cnc_proceso.finProceso)
+                        if (inicioProceso.day != inicioProceso_local.day or inicioProceso.month != inicioProceso_local.month or inicioProceso.year != inicioProceso_local.year or inicioProceso.hour != inicioProceso_local.hour or inicioProceso.minute != inicioProceso_local.minute or finProceso.day != finProceso_local.day or finProceso.month != finProceso_local.month or finProceso.year != finProceso_local.year or finProceso.hour != finProceso_local.hour or finProceso.minute != finProceso_local.minute):
+                            return Response({"error": f"El horario del proceso '{maquina}' no coincide con el horario del proceso '{cnc_proceso.nombre}' en la máquina '{cnc_proceso.maquina}' que tiene horario de {inicioProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]} a {finProceso_local.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}. La placa '{cnc_proceso.placa.nombre}' y la pieza '{pieza_conflicto.consecutivo}'['{pieza_conflicto.id}'] están causando el conflicto. Debe ser exactamente igual.inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}"}, status=status.HTTP_400_BAD_REQUEST)
 
             proceso_serializer = ProcesoSerializer(data=proceso_data)
             if proceso_serializer.is_valid():
@@ -1531,6 +1532,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         pieza_serializer = PiezaSerializer(pieza)
         return Response(pieza_serializer.data, status=status.HTTP_200_OK)
+
+
+# inicioProceso={inicioProceso}, finProceso={finProceso}, conflictoInicioProceso={inicioProceso_local}, conflictoFinProceso={finProceso_local}
 
     @action(detail=True, methods=['put'], url_path='agregar_placa_a_pieza/(?P<placa_id>\d+)')
     def agregar_placa_a_pieza(self, request, pk=None, placa_id=None):
