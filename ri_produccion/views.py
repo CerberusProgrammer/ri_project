@@ -1269,26 +1269,24 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
     def obtener_piezas_actuales(self, request):
         current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
+            procesos__finProceso__lte=next_day,
+            procesos__finProceso__gte=current_date,
+            procesos__estatus__in=['pendiente', 'operando'],
         ).distinct()
 
-        piezas_filtradas = []
-
-        for pieza in piezas:
-            for proceso in pieza.procesos.all():
-                if proceso.finProceso.date() == current_date.date():
-                    piezas_filtradas.append(pieza)
-                    break
+        # for pieza in piezas:
+        #     for proceso in pieza.procesos.all():
+        #         if proceso.finProceso.date() == current_date.date():
+        #             piezas_filtradas.append(pieza)
+        #             break
 
         serializer = self.get_serializer(piezas, many=True)
-        return Response({
-            "piezas": serializer.data,
-            "fecha_total": current_date,
-            "fecha_actual": current_date.date(),
-            "hora_actual": current_date.time(),
-            })
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
