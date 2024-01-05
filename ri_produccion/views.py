@@ -233,24 +233,19 @@ class PlacaViewSet(viewsets.ModelViewSet):
         clase PiezaSerializer, que están asociados a la placa, tienen el estatus
         "aprobado" y el estatusAsignacion False.
         """
-        # Obtiene todas las placas
         todas_las_placas = Placa.objects.all()
         
-        # Inicializa una lista vacía para almacenar los datos de las placas con sus piezas activas
         data = []
         
-        # Itera sobre todas las placas
         for placa in todas_las_placas:
-            # Obtiene todas las piezas asociadas a la placa actual que cumplen con las condiciones
             piezas_de_placa = Pieza.objects.filter(
                 placas=placa,
                 estatus="aprobado",
+                estatusAsignacion=False,
             )
             
-            # Serializa las piezas
             piezas_data = PiezaSerializer(piezas_de_placa, many=True).data
             
-            # Crea un diccionario con los datos de la placa y las piezas activas
             placa_data = {
                 "id": placa.id,
                 "nombre": placa.nombre,
@@ -259,13 +254,10 @@ class PlacaViewSet(viewsets.ModelViewSet):
                 "piezas_activas": piezas_data
             }
             
-            # Añade el diccionario a la lista de datos
             data.append(placa_data)
             
-        # Invierte el orden de la lista de datos para que las placas más recientes aparezcan primero
         data.reverse()
         
-        # Devuelve una respuesta con los datos en formato JSON
         return Response(data)
 
     @action(detail=True, methods=['get'])
