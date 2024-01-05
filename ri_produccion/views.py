@@ -1077,6 +1077,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='obtener_piezas_por_subproceso')
     def obtener_piezas_por_subproceso(self, request):
         subproceso = request.data.get('subprocesos')
+        maquina = request.data.get('maquinas')
 
         if subproceso is None:
             return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1084,7 +1085,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
-            procesos__maquina__in=subproceso,
+            procesos__maquina__in=maquina,
+            procesos__nombre__in=subproceso,
         ).order_by('-procesos__inicioProceso').distinct()
 
         serializer = self.get_serializer(piezas, many=True)
@@ -1272,10 +1274,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
         ).distinct()
 
-        piezas = [pieza for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all())]
+        piezas_procesos = []
+        for pieza in piezas:
+            for proceso in pieza.procesos.all():
+                if proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time():
+                    piezas_procesos.append((pieza, proceso))
 
-        serializer = self.get_serializer(piezas, many=True)
+        serializer = self.get_serializer(piezas_procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
     def obtener_piezas_actuales_conteo(self, request):
