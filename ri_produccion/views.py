@@ -310,6 +310,18 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     # Los campos por los que se puede ordenar
     ordering_fields = ['nombre', 'estatus', 'maquina']
+    
+    @action(detail=True, methods=['put', 'patch'], url_path='asignar_procesos_a_usuario/(?P<user_id>\d+)')
+    def asignar_procesos_a_usuario(self, request, pk=None, user_id=None):
+        proceso = get_object_or_404(Proceso, id=pk)
+
+        usuario = get_object_or_404(Usuarios, id=user_id)
+
+        proceso.realizadoPor = usuario
+        proceso.save()
+
+        serializer = ProcesoSerializer(proceso)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='mi_progreso_procesos/(?P<id>\d+)')
     def mi_progreso_procesos(self, request, id=None):
