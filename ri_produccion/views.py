@@ -1073,12 +1073,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if subproceso is None:
             return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Primero, filtrar los objetos Pieza
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+        )
+
+        # Luego, filtrar los objetos Proceso de esas Piezas
         procesos = Proceso.objects.filter(
+            placa__pieza__in=piezas,
             estatus='pendiente',
             maquina__in=maquina,
             nombre__in=subproceso,
-            placa__pieza__estatus='aprobado',
-            placa__pieza__estatusAsignacion=True,
         ).order_by('-inicioProceso').distinct()
 
         # Serializar los objetos Proceso
