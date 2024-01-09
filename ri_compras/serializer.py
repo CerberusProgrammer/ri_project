@@ -277,6 +277,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
         return requisicion
 
 
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['usuario'] = SimpleUserProjectSerializer(instance.usuario).data
