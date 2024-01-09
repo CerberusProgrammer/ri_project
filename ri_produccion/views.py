@@ -311,8 +311,8 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     # Los campos por los que se puede ordenar
     ordering_fields = ['nombre', 'estatus', 'maquina']
     
-    @action(detail=True, methods=['put', 'patch'], url_path='asignar_procesos_a_usuario/(?P<user_id>\d+)')
-    def asignar_procesos_a_usuario(self, request, pk=None, user_id=None):
+    @action(detail=True, methods=['put', 'patch'], url_path='asignar_proceso_a_usuario/(?P<user_id>\d+)')
+    def asignar_proceso_a_usuario(self, request, pk=None, user_id=None):
         proceso = get_object_or_404(Proceso, id=pk)
 
         usuario = get_object_or_404(Usuarios, id=user_id)
@@ -562,14 +562,21 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
     def procesos_maquinado_por_asignar(self, request):
         maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
-        procesos = Proceso.objects.filter(
-            Q(realizadoPor__isnull=True),
-            Q(estatus='pendiente'),
-            Q(maquina__in=maquinas)
-        )
+
+        procesos = Proceso.objects.none()
+
+        for maquina in maquinas:
+            procesos |= Proceso.objects.filter(
+                Q(realizadoPor__isnull=True),
+                Q(estatus='pendiente'),
+                Q(maquina__iexact=maquina)
+            )
+
+        procesos = procesos.order_by('-inicioProceso').distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_por_asignar')
     def procesos_soldadura_por_asignar(self, request):
