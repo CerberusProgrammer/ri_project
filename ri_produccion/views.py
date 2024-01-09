@@ -311,6 +311,11 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     # Los campos por los que se puede ordenar
     ordering_fields = ['nombre', 'estatus', 'maquina']
     
+    maquinasMaquinado = ['CNC 1', 'CNC 2', 'Fresadora 1', 'Fresadora 2', 'Torno', 'Machueleado', 'Limpieza']
+    maquinasSoldadura = ['Corte', 'Pintura', 'Pulido']
+    maquinasSM = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
+
+    
     @action(detail=True, methods=['put', 'patch'], url_path='asignar_proceso_a_usuario/(?P<user_id>\d+)')
     def asignar_proceso_a_usuario(self, request, pk=None, user_id=None):
         proceso = get_object_or_404(Proceso, id=pk)
@@ -519,12 +524,11 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_retrasados_piezas')
     def procesos_maquinado_retrasados_piezas(self, request):
-        current_time = timezone.now()
-        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
+        current_time = timezone.localtime(timezone.now())
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__iexact=maquinas),
+            Q(maquina__in=self.maquinasMaquinado),
             Q(finProceso__lt=current_time)
         ).order_by('inicioProceso')
 
@@ -533,12 +537,11 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_retrasados_piezas')
     def procesos_soldadura_retrasados_piezas(self, request):
-        current_time = timezone.now()
-        maquinas = ['corte', 'pintura', 'pulido']
+        current_time = timezone.localtime(timezone.now())
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__iexact=maquinas),
+            Q(maquina__in=self.maquinasSoldadura),
             Q(finProceso__lt=current_time)
         ).order_by('inicioProceso')
 
@@ -547,12 +550,11 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='procesos_sm_retrasados_piezas')
     def procesos_sm_retrasados_piezas(self, request):
-        current_time = timezone.now()
-        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
+        current_time = timezone.localtime(timezone.now())
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__iexact=maquinas),
+            Q(maquina__in=self.maquinasSM),
             Q(finProceso__lt=current_time)
         ).order_by('inicioProceso')
 
@@ -561,11 +563,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
     def procesos_maquinado_por_asignar(self, request):
-        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
-
         procesos = Proceso.objects.none()
 
-        for maquina in maquinas:
+        for maquina in self.maquinasMaquinado:
             procesos |= Proceso.objects.filter(
                 Q(realizadoPor__isnull=True),
                 Q(estatus='pendiente'),
@@ -579,11 +579,10 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_por_asignar')
     def procesos_soldadura_por_asignar(self, request):
-        maquinas = ['corte', 'pintura', 'pulido']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
-            Q(maquina__in=maquinas)
+            Q(maquina__in=self.maquinasSoldadura)
         )
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -591,11 +590,10 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_sm_por_asignar')
     def procesos_sm_por_asignar(self, request):
-        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
-            Q(maquina__in=maquinas)
+            Q(maquina__in=self.maquinasSM)
         )
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -603,25 +601,21 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_actuales_piezas')
     def procesos_maquinado_actuales_piezas(self, request):
-        maquinas = ['CNC 1', 'CNC 2', 'Fresadora 1', 'Fresadora 2', 'Torno', 'Machueleado', 'Limpieza']
-
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__in=maquinas)
+            Q(maquina__in=self.maquinasMaquinado)
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
         return Response(serializer.data)
 
-
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_actuales_piezas')
     def procesos_soldadura_actuales_piezas(self, request):
-        maquinas = ['Corte', 'Pintura', 'Pulido']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__in=maquinas)
+            Q(maquina__in=self.maquinasSoldadur)
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -629,11 +623,10 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_sm_actuales_piezas')
     def procesos_sm_actuales_piezas(self, request):
-        maquinas = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__in=maquinas)
+            Q(maquina__in=self.maquinasSM)
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
@@ -642,10 +635,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
     def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
         current_date = timezone.localtime(timezone.now().date())
-        maquinas = ['CNC 1', 'CNC 2', 'Fresadora 1', 'Fresadora 2', 'Torno', 'Machueleado', 'Limpieza']
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasMaquinado:
             procesos = Proceso.objects.filter(
                 maquina=maquina,
                 estatus='realizado',
@@ -671,10 +663,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_soldadura_hoy')
     def obtener_estadisticas_tiempos_soldadura_hoy(self, request):
         current_date = timezone.localtime(timezone.now().date())
-        maquinas = ['Corte', 'Pintura', 'Pulido']
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasSoldadura:
             procesos = Proceso.objects.filter(
                 maquina=maquina,
                 estatus='realizado',
@@ -700,10 +691,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_sm_hoy')
     def obtener_estadisticas_tiempos_sm_hoy(self, request):
         current_date = timezone.localtime(timezone.now().date())
-        maquinas = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasSM:
             procesos = Proceso.objects.filter(
                 maquina=maquina,
                 estatus='realizado',
