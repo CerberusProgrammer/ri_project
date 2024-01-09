@@ -615,7 +615,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__in=self.maquinasSoldadur)
+            Q(maquina__in=self.maquinasSoldadura)
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
