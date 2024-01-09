@@ -258,6 +258,12 @@ class RequisicionSerializer(serializers.ModelSerializer):
         usuario_id = validated_data.pop('usuario_id')
         validated_data['usuario'] = Usuarios.objects.get(id=usuario_id)
         productos_data = validated_data.pop('productos', [])
+        
+        for producto_data in productos_data:
+            producto_data.pop('id', None)  # Elimina el id de producto_data si existe
+            producto, created = ProductoRequisicion.objects.get_or_create(**producto_data)
+            requisicion.productos.add(producto)
+        
         servicios_data = validated_data.pop('servicios', [])
         requisicion = Requisicion.objects.create(**validated_data)
 
