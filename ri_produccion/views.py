@@ -1072,16 +1072,22 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         if subproceso is None:
             return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas = Pieza.objects.filter(
-            estatus='aprobado',
-            estatusAsignacion=True,
-            procesos__estatus='pendiente',
-            procesos__maquina__in=maquina,
-            procesos__nombre__in=subproceso,
+        pieza = Pieza.objects.filter(
+                estatus='aprobado',
+                estatusAsignacion=True,
         ).order_by('-procesos__inicioProceso').distinct()
 
-        serializer = self.get_serializer(piezas, many=True)
+        
+        proceso = Proceso.objects.filter(
+                pieza__in=pieza,
+                estatus='pendiente',
+                maquina__in=maquina,
+                nombre__in=subproceso,
+        ).order_by('-inicioProceso').distinct()
+
+
+
+        serializer = self.get_serializer(proceso, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc1')
