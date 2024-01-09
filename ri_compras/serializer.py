@@ -253,25 +253,20 @@ class RequisicionSerializer(serializers.ModelSerializer):
         return SimpleOrdenDeCompraSerializer(ordenes, many=True).data
 
     def create(self, validated_data):
-        print(validated_data)
         archivo_pdf = validated_data.pop('archivo_pdf', None)
         usuario_id = validated_data.pop('usuario_id')
         validated_data['usuario'] = Usuarios.objects.get(id=usuario_id)
         productos_data = validated_data.pop('productos', [])
-        
-        for producto_data in productos_data:
-            producto_data.pop('id', None)  # Elimina el id de producto_data si existe
-            producto, created = ProductoRequisicion.objects.get_or_create(**producto_data)
-            requisicion.productos.add(producto)
-        
         servicios_data = validated_data.pop('servicios', [])
         requisicion = Requisicion.objects.create(**validated_data)
 
         for producto_data in productos_data:
+            producto_data.pop('id', None)  # Elimina el id de producto_data si existe
             producto, created = ProductoRequisicion.objects.get_or_create(**producto_data)
             requisicion.productos.add(producto)
 
         for servicio_data in servicios_data:
+            servicio_data.pop('id', None)  # Elimina el id de servicio_data si existe
             servicio, created = ServicioRequisicion.objects.get_or_create(**servicio_data)
             requisicion.servicios.add(servicio)
 
@@ -280,6 +275,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
             requisicion.save()
 
         return requisicion
+
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
