@@ -533,7 +533,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
 
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_retrasados_piezas')
     def procesos_soldadura_retrasados_piezas(self, request):
@@ -546,7 +552,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
 
     @action(detail=False, methods=['get'], url_path='procesos_sm_retrasados_piezas')
     def procesos_sm_retrasados_piezas(self, request):
@@ -559,23 +571,30 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_por_asignar')
     def procesos_maquinado_por_asignar(self, request):
-        procesos = Proceso.objects.none()
-
-        for maquina in self.maquinasMaquinado:
-            procesos |= Proceso.objects.filter(
-                Q(realizadoPor__isnull=True),
-                Q(estatus='pendiente'),
-                Q(maquina__iexact=maquina)
-            )
-
-        procesos = procesos.order_by('-inicioProceso').distinct()
+        procesos = Proceso.objects.filter(
+            Q(realizadoPor__isnull=True),
+            Q(estatus='pendiente'),
+            Q(maquina__in=self.maquinasMaquinado)
+        ).distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_por_asignar')
     def procesos_soldadura_por_asignar(self, request):
@@ -583,10 +602,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
             Q(maquina__in=self.maquinasSoldadura)
-        )
+        ).distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='procesos_sm_por_asignar')
     def procesos_sm_por_asignar(self, request):
@@ -594,10 +619,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor__isnull=True),
             Q(estatus='pendiente'),
             Q(maquina__in=self.maquinasSM)
-        )
+        ).distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_actuales_piezas')
     def procesos_maquinado_actuales_piezas(self, request):
@@ -608,7 +639,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
 
     @action(detail=False, methods=['get'], url_path='procesos_soldadura_actuales_piezas')
     def procesos_soldadura_actuales_piezas(self, request):
@@ -619,7 +656,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='procesos_sm_actuales_piezas')
     def procesos_sm_actuales_piezas(self, request):
@@ -630,7 +673,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = Pieza.objects.get(placas__proceso=proceso)
+            proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
     def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
