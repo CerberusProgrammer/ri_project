@@ -1073,27 +1073,26 @@ class PiezaViewSet(viewsets.ModelViewSet):
         if subproceso is None:
             return Response({"error": "El parámetro 'subprocesos' es requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Primero, filtrar los objetos Pieza
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
         )
 
-        # Luego, filtrar los objetos Proceso de esas Piezas
-        procesos = Proceso.objects.filter(
-            placa__pieza__in=piezas,
-            estatus='pendiente',
-            maquina__in=maquina,
-            nombre__in=subproceso,
-        ).order_by('-inicioProceso').distinct()
+        data = []
+        for pieza in piezas:
+            procesos = pieza.procesos.filter(
+                estatus='pendiente',
+                maquina__in=maquina,
+                nombre__in=subproceso,
+            ).order_by('-inicioProceso').distinct()
 
-        # Serializar los objetos Proceso
-        serializer = ProcesoSerializer(procesos, many=True)
-        data = serializer.data
+            serializer = ProcesoSerializer(procesos, many=True)
+            procesos_data = serializer.data
 
-        # Agregar el campo 'consecutivo' a cada objeto Proceso
-        for proceso_data, proceso in zip(data, procesos):
-            proceso_data['consecutivo'] = proceso.placa.pieza.consecutivo
+            for proceso_data in procesos_data:
+                proceso_data['consecutivo'] = pieza.consecutivo
+
+            data.extend(procesos_data)
 
         return Response(data)
     
