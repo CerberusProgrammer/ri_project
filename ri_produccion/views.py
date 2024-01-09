@@ -82,10 +82,9 @@ class MaterialViewSet(viewsets.ModelViewSet):
                 # Si el total de piezas realizadas es menor que el total de piezas, o si la lista de placas está vacía, añade la pieza a la lista de piezas válidas
                 if piezas_realizadas is None or piezas_realizadas < pieza.piezasTotales:
                     piezas_validas.append(pieza)
-
-        # Serializa los objetos Pieza
+                    
         piezas_serializer = PiezaSerializer(piezas_validas, many=True)
-
+        
         return Response(piezas_serializer.data)
     
     @action(detail=False, methods=['get'])
@@ -1077,6 +1076,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             estatusAsignacion=True,
+            procesos__estatus='pendiente',
             procesos__maquina__in=maquina,
             procesos__nombre__in=subproceso,
         ).order_by('-procesos__inicioProceso').distinct()
