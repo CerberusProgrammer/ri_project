@@ -644,7 +644,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
             Q(maquina__in=self.maquinasMaquinado),
-            finProceso__lte=next_day,
+            #finProceso__lte=next_day,
             finProceso__gte=current_date,
         ).order_by('inicioProceso')
 
