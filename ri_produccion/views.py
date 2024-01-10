@@ -437,27 +437,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(inicioProceso__gte=current_time)
         ).order_by('inicioProceso')
 
-        response = []
-        for proceso in procesos:
-            piezas = proceso.pieza_set.all()
-            for pieza in piezas:
-                response.append({
-                    'id': proceso.id,
-                    'nombre': proceso.nombre,
-                    'estatus': proceso.estatus,
-                    'maquina': proceso.maquina,
-                    'inicioProceso': proceso.inicioProceso,
-                    'finProceso': proceso.finProceso,
-                    'terminadoProceso': proceso.terminadoProceso,
-                    'comentarios': proceso.comentarios,
-                    'prioridad': proceso.prioridad,
-                    'piezasRealizadas': proceso.piezasRealizadas,
-                    'realizadoPor': proceso.realizadoPor.id if proceso.realizadoPor else None,
-                    'pieza_id': pieza.id,
-                    'consecutivo': pieza.consecutivo
-                })
+        serializer = ProcesoSerializer(procesos, many=True)
+        data = serializer.data
 
-        return Response(response)
+        for proceso_data, proceso in zip(data, procesos):
+            pieza = proceso.pieza_set.first()
+            if pieza:
+                proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
+
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados/(?P<id>\d+)')
     def mis_procesos_retrasados(self, request, id=None):
