@@ -21,6 +21,7 @@ class PlacaSerializer(serializers.ModelSerializer):
 class ProcesoSerializer(serializers.ModelSerializer):
     placa = serializers.PrimaryKeyRelatedField(queryset=Placa.objects.all(), write_only=True, required=False)
     placa_detail = PlacaSerializer(source='placa', read_only=True)
+    realizadoPor = SimpleUsuariosSerializer(read_only=True)
 
     class Meta:
         model = Proceso
