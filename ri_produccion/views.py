@@ -785,9 +785,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     def obtener_usuarios_con_procesos_pendientes(self, request):
         now = timezone.localtime(timezone.now())
         
-        procesos_pendientes = Proceso.objects.filter(finProceso__gte=now, realizadoPor__isnull=False, estatus='pendiente')
+        procesos_pendientes = Proceso.objects.filter(finProceso__lt=now, realizadoPor__isnull=False, estatus='pendiente')
         serializer = ProcesoSerializer(procesos_pendientes, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        for proceso_data, proceso in zip(data, procesos_pendientes):
+            pieza = proceso.pieza_set.first()
+            if pieza:
+                proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def obtener_todos_los_usuarios_operadores(self, request):
