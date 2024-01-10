@@ -1412,7 +1412,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
             procesos__finProceso__lt=current_time,
             procesos__estatus__in=['pendiente', 'operando'],
-        ).distinct()
+        ).annotate(
+            tiempo_restante=Min(F('procesos__finProceso') - current_time)
+        ).order_by('tiempo_restante').distinct()
 
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
