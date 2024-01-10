@@ -785,6 +785,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_usuarios_con_procesos_pendientes(self, request):
         now = timezone.localtime(timezone.now())
+        
         procesos_pendientes = Proceso.objects.filter(finProceso__gte=now, realizadoPor__isnull=False, estatus='pendiente')
         serializer = ProcesoSerializer(procesos_pendientes, many=True)
         return Response(serializer.data)
@@ -800,13 +801,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, estatus='operando')
         serializer = ProcesoSerializer(procesos_activos, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def obtener_usuarios_con_procesos_pendientes(self, request):
-        now = timezone.now()
-        procesos_pendientes = Proceso.objects.filter(finProceso__gt=now, estatus__in=['pendiente', 'operando'])
-        serializer = ProcesoSerializer(procesos_pendientes, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
