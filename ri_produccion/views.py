@@ -591,8 +591,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         data = serializer.data
 
         for proceso_data, proceso in zip(data, procesos):
-            pieza = Pieza.objects.get(placas__proceso=proceso)
-            proceso_data['consecutivo'] = pieza.consecutivo
+            pieza = proceso.pieza_set.first()
+            if pieza:
+                proceso_data['consecutivo'] = pieza.consecutivo
 
         return Response(data)
     
