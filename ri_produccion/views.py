@@ -314,7 +314,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     maquinasMaquinado = ['CNC 1', 'CNC 2', 'Fresadora 1', 'Fresadora 2', 'Torno', 'Machueleado', 'Limpieza']
     maquinasSoldadura = ['Corte', 'Pintura', 'Pulido']
     maquinasSM = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
-
     
     @action(detail=True, methods=['put', 'patch'], url_path='asignar_proceso_a_usuario/(?P<user_id>\d+)')
     def asignar_proceso_a_usuario(self, request, pk=None, user_id=None):
@@ -904,6 +903,10 @@ class PiezaViewSet(viewsets.ModelViewSet):
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
     
+    maquinasMaquinado = ['CNC 1', 'CNC 2', 'Fresadora 1', 'Fresadora 2', 'Torno', 'Machueleado', 'Limpieza']
+    maquinasSoldadura = ['Corte', 'Pintura', 'Pulido']
+    maquinasSM = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
+    
     @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas')
     def progreso_tasa_error_piezas(self, request):
         piezas_revision = Pieza.objects.filter(estatus='revision')
@@ -1253,11 +1256,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
     def obtener_estadisticas_maquinado_hoy(self, request):
         current_date = timezone.now().date()
-        print(current_date)
-        maquinas = ['cnc 1', 'cnc 2', 'fresadora 1', 'fresadora 2', 'torno', 'machueleado', 'limpieza']
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasMaquinado:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
@@ -1284,10 +1285,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_soldadura_hoy')
     def obtener_estadisticas_soldadura_hoy(self, request):
         current_date = timezone.now().date()
-        maquinas = ['corte', 'pintura', 'pulido']
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasSoldadura:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
@@ -1314,10 +1314,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_sheetmetal_hoy')
     def obtener_estadisticas_sheetmetal_hoy(self, request):
         current_date = timezone.now().date()
-        maquinas = ['cortadora laser', 'dobladora', 'machueleado', 'limpieza'] 
         estadisticas = {}
 
-        for maquina in maquinas:
+        for maquina in self.maquinasSM:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
