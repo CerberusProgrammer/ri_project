@@ -638,10 +638,14 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='procesos_maquinado_actuales_piezas')
     def procesos_maquinado_actuales_piezas(self, request):
+        current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
-            Q(maquina__in=self.maquinasMaquinado)
+            Q(maquina__in=self.maquinasMaquinado),
+            finProceso__lte=next_day,
+            finProceso__gte=current_date,
         ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
