@@ -1149,6 +1149,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         data = []
         for pieza in piezas:
             procesos = pieza.procesos.filter(
+                realizadoPor__isnull=True,
                 estatus='pendiente',
                 maquina__in=maquina,
                 nombre__in=subproceso,
