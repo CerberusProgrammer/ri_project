@@ -1185,59 +1185,59 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc1')
     def obtener_piezas_maquina_cnc1(self, request):
-        return self.obtener_piezas_maquina(request, 'cnc 1')
+        return self.obtener_piezas_maquina(request, 'CNC 1')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cnc2')
     def obtener_piezas_maquina_cnc2(self, request):
-        return self.obtener_piezas_maquina(request, 'cnc 2')
+        return self.obtener_piezas_maquina(request, 'CNC 2')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_fresadora1')
     def obtener_piezas_maquina_fresadora1(self, request):
-        return self.obtener_piezas_maquina(request, 'fresadora 1')
+        return self.obtener_piezas_maquina(request, 'Fresadora 1')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_fresadora2')
     def obtener_piezas_maquina_fresadora2(self, request):
-        return self.obtener_piezas_maquina(request, 'fresadora 2')
+        return self.obtener_piezas_maquina(request, 'Fresadora 2')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_torno')
     def obtener_piezas_maquina_torno(self, request):
-        return self.obtener_piezas_maquina(request, 'torno')
+        return self.obtener_piezas_maquina(request, 'Torno')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_machueleado')
     def obtener_piezas_maquina_machueleado(self, request):
-        return self.obtener_piezas_maquina(request, 'machueleado')
+        return self.obtener_piezas_maquina(request, 'Machueleado')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_limpieza')
     def obtener_piezas_maquina_limpieza(self, request):
-        return self.obtener_piezas_maquina(request, 'limpieza')
+        return self.obtener_piezas_maquina(request, 'Limpieza')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_corte')
     def obtener_piezas_maquina_corte(self, request):
-        return self.obtener_piezas_maquina(request, 'corte')
+        return self.obtener_piezas_maquina(request, 'Corte')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_pintura')
     def obtener_piezas_maquina_pintura(self, request):
-        return self.obtener_piezas_maquina(request, 'pintura')
+        return self.obtener_piezas_maquina(request, 'Pintura')
 
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_pulido')
     def obtener_piezas_maquina_pulido(self, request):
-        return self.obtener_piezas_maquina(request, 'pulido')
+        return self.obtener_piezas_maquina(request, 'Pulido')
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_cortadoralaser')
     def obtener_piezas_maquina_cortadoralaser(self, request):
-        return self.obtener_piezas_maquina(request, 'cortadoralaser')
+        return self.obtener_piezas_maquina(request, 'Laser')
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_dobladora')
     def obtener_piezas_maquina_dobladora(self, request):
-        return self.obtener_piezas_maquina(request, 'dobladora')
+        return self.obtener_piezas_maquina(request, 'Dobladora')
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_machueleadosm')
     def obtener_piezas_maquina_machueleadosm(self, request):
-        return self.obtener_piezas_maquina(request, 'machueleadosm')
+        return self.obtener_piezas_maquina(request, 'Machueleadosm')
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina_limpiezasm')
     def obtener_piezas_maquina_limpiezasm(self, request):
-        return self.obtener_piezas_maquina(request, 'limpiezasm')
+        return self.obtener_piezas_maquina(request, 'Limpiezasm')
     
     def obtener_piezas_maquina(self, request, maquina):
         current_time = timezone.now()
