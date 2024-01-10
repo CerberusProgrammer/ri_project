@@ -804,10 +804,16 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def obtener_usuarios_trabajando_en_procesos(self, request):
-        now = timezone.now()
-        procesos_activos = Proceso.objects.filter(inicioProceso__lte=now, finProceso__gte=now, estatus='operando')
+        
+        procesos_activos = Proceso.objects.filter(estatus='operando')
         serializer = ProcesoSerializer(procesos_activos, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+        for proceso_data, proceso in zip(data, procesos_activos):
+            pieza = proceso.pieza_set.first()
+            if pieza:
+                proceso_data['consecutivo'] = pieza.consecutivo
+
+        return Response(data)
 
     @action(detail=False, methods=['get'])
     def porcentaje_realizados_hoy(self, request):
