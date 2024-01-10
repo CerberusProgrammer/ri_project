@@ -444,6 +444,10 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             pieza = proceso.pieza_set.first()
             if pieza:
                 proceso_data['consecutivo'] = pieza.consecutivo
+                # Encuentra el objeto PiezaPlaca relacionado
+                pieza_placa = PiezaPlaca.objects.filter(pieza=pieza, placa=proceso.placa).first()
+                if pieza_placa:
+                    proceso_data['piezas_realizadas'] = pieza_placa.piezas_realizadas
 
         return Response(data)
 
