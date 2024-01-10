@@ -1271,7 +1271,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                procesos__inicioProceso__date=current_date,
             ).distinct().count()
 
             piezas_planeadas = Pieza.objects.filter(
@@ -1279,7 +1278,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus__in=['pendiente', 'operando'],
-                procesos__inicioProceso__date=current_date,
             ).distinct().count()
 
             estadisticas[maquina] = {
