@@ -699,14 +699,14 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
     def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
-        current_date = timezone.localtime(timezone.now().date())
+        current_date = timezone.localtime(timezone.now())
         estadisticas = {}
 
         for maquina in self.maquinasMaquinado:
             procesos = Proceso.objects.filter(
                 maquina=maquina,
                 estatus='realizado',
-                inicioProceso__date=current_date,
+                inicioProceso__date=current_date.date(),
             )
 
             tiempo_excedente = ExpressionWrapper(
@@ -724,6 +724,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             estadisticas[maquina] = int(total_excedente)
 
         return Response(estadisticas)
+
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_soldadura_hoy')
     def obtener_estadisticas_tiempos_soldadura_hoy(self, request):
