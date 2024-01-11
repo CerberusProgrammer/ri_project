@@ -1017,18 +1017,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional')
     def piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='aprobado',
+            estatus='revision',
             tipo_calidad='dimensional',
+            piezaRealizada=False
         ).annotate(
-            all_procesos_realizados=ExpressionWrapper(
-                Q(procesos__estatus='realizado'),
-                output_field=BooleanField()
-            )
-        ).filter(all_procesos_realizados=True)
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados')
+        )
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
-
 
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
     def piezas_pendientes_revision_pintura(self, request):
