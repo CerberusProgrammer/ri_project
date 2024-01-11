@@ -1017,7 +1017,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional')
     def piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='dimensional',
             piezaRealizada=False
         ).annotate(
