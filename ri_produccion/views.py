@@ -978,9 +978,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_dimensional')
     def ultimas_piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='dimensional',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).order_by('-id')[:5]
         
         if not piezas_pendientes:
@@ -992,9 +998,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_pintura')
     def ultimas_piezas_pendientes_revision_pintura(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='pintura',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).order_by('-id')[:5]
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
@@ -1003,9 +1015,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_proveedor')
     def ultimas_piezas_pendientes_revision_proveedor(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='proveedor',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).order_by('-id')[:5]
         
         if not piezas_pendientes:
@@ -1035,9 +1053,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
     def piezas_pendientes_revision_pintura(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='pintura',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         )
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
@@ -1046,9 +1070,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_proveedor')
     def piezas_pendientes_revision_proveedor(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='proveedor',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         )
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
@@ -1057,9 +1087,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional_contador')
     def piezas_pendientes_revision_dimensional_contador(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='dimensional',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).count()
 
         return Response({"cantidad": piezas_pendientes})
@@ -1067,9 +1103,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura_contador')
     def piezas_pendientes_revision_pintura_contador(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='pintura',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).count()
 
         return Response({"cantidad": piezas_pendientes})
@@ -1077,9 +1119,15 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_proveedor_contador')
     def piezas_pendientes_revision_proveedor_contador(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
             tipo_calidad='proveedor',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
+        ).annotate(
+            total_procesos=Count('procesos'),
+            procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
+        ).filter(
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         ).count()
 
         return Response({"cantidad": piezas_pendientes})
