@@ -34,6 +34,7 @@ class Proceso(models.Model):
     ]
 
     nombre = models.CharField(max_length=100)
+    piezasScrap = models.IntegerField(default=0)
     piezasRealizadas = models.IntegerField(null=True, blank=True)
     estatus = models.CharField(max_length=50, choices=ESTATUS_CHOICES, default="pendiente")
     maquina = models.CharField(max_length=100)
@@ -100,7 +101,6 @@ class Pieza(models.Model):
         placas_con_procesos = {proceso.placa.id for proceso in self.procesos.all() if proceso.placa is not None}
         todas_las_placas = {placa.id for placa in self.placas.all()}
         return placas_con_procesos == todas_las_placas
-    
     
     def cantidad_correcta_de_procesos(self):
         num_procesos = self.procesos.count()
