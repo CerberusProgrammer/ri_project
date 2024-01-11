@@ -435,7 +435,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(inicioProceso__gte=current_time)
-        ).order_by('-inicioProceso')
+        ).order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -459,7 +459,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(finProceso__lt=current_time)
-        ).order_by('-inicioProceso')
+        ).order_by('inicioProceso')
         
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -481,7 +481,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(pieza__in=piezas_prioritarias)
-        ).distinct().order_by('-inicioProceso')
+        ).distinct().order_by('inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
