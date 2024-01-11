@@ -429,13 +429,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_actuales/(?P<id>\d+)')
     def mis_procesos_actuales(self, request, id=None):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now().date())
         usuario = get_object_or_404(Usuarios, id=id)
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
             Q(estatus__in=['pendiente', 'operando']),
             Q(inicioProceso__gte=current_time)
-        ).order_by('inicioProceso')
+        ).order_by('-inicioProceso')
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -450,8 +450,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
                     proceso_data['piezas_realizadas'] = pieza_placa.piezas_realizadas
 
         return Response(data)
-
-
+    
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados/(?P<id>\d+)')
     def mis_procesos_retrasados(self, request, id=None):
         current_time = timezone.now()
