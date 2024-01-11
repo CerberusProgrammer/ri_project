@@ -383,7 +383,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         mayor o igual que la hora actual.
         """
         # Obtiene la hora actual
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         
         # Obtiene el objeto Usuarios correspondiente al id proporcionado o devuelve un error 404 si no existe
         usuario = get_object_or_404(Usuarios, id=id)
@@ -429,7 +429,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='mis_procesos_actuales/(?P<id>\d+)')
     def mis_procesos_actuales(self, request, id=None):
-        current_time = timezone.localtime(timezone.now().date())
+        current_time = timezone.localtime(timezone.now())
         usuario = get_object_or_404(Usuarios, id=id)
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
@@ -444,7 +444,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             pieza = proceso.pieza_set.first()
             if pieza:
                 proceso_data['consecutivo'] = pieza.consecutivo
-                # Encuentra el objeto PiezaPlaca relacionado
                 pieza_placa = PiezaPlaca.objects.filter(pieza=pieza, placa=proceso.placa).first()
                 if pieza_placa:
                     proceso_data['piezas_realizadas'] = pieza_placa.piezas_realizadas
@@ -453,7 +452,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='mis_procesos_retrasados/(?P<id>\d+)')
     def mis_procesos_retrasados(self, request, id=None):
-        current_time = timezone.now()
+        current_time = timezone.localtime(timezone.now())
         usuario = get_object_or_404(Usuarios, id=id)
         procesos = Proceso.objects.filter(
             Q(realizadoPor=usuario),
