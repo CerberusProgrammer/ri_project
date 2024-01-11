@@ -1018,7 +1018,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
             tipo_calidad='dimensional',
-            piezaRealizada=False
+            piezaRealizada=False,
+            estatusAsignacion=True,
         ).annotate(
             total_procesos=Count('procesos'),
             procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
