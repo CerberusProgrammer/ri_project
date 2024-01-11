@@ -1023,11 +1023,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
             total_procesos=Count('procesos'),
             procesos_realizados=Count('procesos', filter=Q(procesos__estatus='realizado'))
         ).filter(
-            total_procesos=F('procesos_realizados')
+            total_procesos=F('procesos_realizados'),
+            total_procesos__gt=0
         )
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
+
 
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
     def piezas_pendientes_revision_pintura(self, request):
