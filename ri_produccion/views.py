@@ -1,3 +1,4 @@
+from django.forms import BooleanField
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
@@ -1016,13 +1017,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_dimensional')
     def piezas_pendientes_revision_dimensional(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            estatus='revision',
+            estatus='aprobado',
             tipo_calidad='dimensional',
-            piezaRealizada=False
-        )
+        ).annotate(
+            all_procesos_realizados=ExpressionWrapper(
+                Q(procesos__estatus='realizado'),
+                output_field=BooleanField()
+            )
+        ).filter(all_procesos_realizados=True)
 
         serializer = self.get_serializer(piezas_pendientes, many=True)
         return Response(serializer.data)
+
 
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
     def piezas_pendientes_revision_pintura(self, request):
