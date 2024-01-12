@@ -60,6 +60,7 @@ class Pieza(models.Model):
     CALIDAD_CHOICES = [
         ('dimensional', 'Dimensional'),
         ('pintura', 'Pintura'),
+        ('pulido', 'Pulido'),
         ('proveedor', 'Proveedor'),
         ('ninguno', 'Ninguno'),
     ]
