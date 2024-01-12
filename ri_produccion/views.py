@@ -1271,24 +1271,36 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return self.obtener_piezas_maquina(request, 'Limpiezasm')
     
     def obtener_piezas_maquina(self, request, maquina):
-        current_time = timezone.now()
+        current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
         piezas_realizadas = Pieza.objects.filter(
-            estatus='aprobado',
-            estatusAsignacion=True,
-            procesos__maquina=maquina,
-            procesos__estatus='realizado',
-            procesos__inicioProceso__date=current_time.date(),
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
+                procesos__estatus='realizado',
+                procesos__terminadoProceso__gte=today,
+                procesos__terminadoProceso__lt=next_day,
+            ).distinct()
+
+        piezas_planeadas = Pieza.objects.filter(
+                procesos__finProceso__gte=today,
+                procesos__finProceso__lt=next_day,
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
         ).distinct()
 
         piezas_retrasadas = Pieza.objects.filter(
-            estatus='aprobado',
-            estatusAsignacion=True,
-            procesos__maquina=maquina,
-            procesos__estatus__in=['pendiente', 'operando'],
-            procesos__finProceso__lt=current_time,
+                procesos__finProceso__lt=today,
+                procesos__estatus__in=['pendiente', 'operando'],
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
         ).distinct()
 
-        total_piezas = piezas_realizadas.count() + piezas_retrasadas.count()
+        total_piezas = piezas_planeadas.count() + piezas_retrasadas.count()
         progreso = piezas_realizadas.count() / total_piezas if total_piezas > 0 else 0
 
         return Response({
@@ -1323,7 +1335,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 #procesos__estatus__in=['pendiente', 'operando'],
             ).distinct().count()
 
-            piezas_retrazadas = Pieza.objects.filter(
+            piezas_retrasadas = Pieza.objects.filter(
                 procesos__finProceso__lt=today,
                 procesos__estatus__in=['pendiente', 'operando'],
                 estatus='aprobado',
@@ -1334,7 +1346,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
-                'planeado': piezas_planeadas+piezas_retrazadas
+                'planeado': piezas_planeadas+piezas_retrasadas
             }
 
         return Response(estadisticas)
