@@ -1298,8 +1298,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
     def obtener_estadisticas_maquinado_hoy(self, request):
-        # TODO: Cambiar a localtime
-        current_date = timezone.now().date()
+        current_date = timezone.localtime(timezone.now())
         estadisticas = {}
 
         for maquina in self.maquinasMaquinado:
