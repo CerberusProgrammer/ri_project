@@ -1319,7 +1319,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             ).distinct().count()
 
             piezas_retrazadas = Pieza.objects.filter(
-                Q(procesos__finProceso__lte=current_date, procesos__estatus=['pendiente', 'operando']),
+                procesos__finProceso__lt=current_date,
+                procesos__estatus__in=['pendiente', 'operando'],
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
