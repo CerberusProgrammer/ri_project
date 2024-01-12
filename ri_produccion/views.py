@@ -1298,7 +1298,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
     def obtener_estadisticas_maquinado_hoy(self, request):
-        current_date = timezone.localtime(timezone.now()).date()
+        current_date = timezone.localtime(timezone.now().date())
         estadisticas = {}
 
         for maquina in self.maquinasMaquinado:
@@ -1307,7 +1307,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                procesos__terminadoProceso__in=current_date,
+                procesos__terminadoProceso=current_date,
             ).distinct().count()
 
             piezas_planeadas = Pieza.objects.filter(
