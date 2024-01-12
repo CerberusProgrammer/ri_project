@@ -1103,7 +1103,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura_contador')
     def piezas_pendientes_revision_pintura_contador(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            Q(tipo_calidad='pintura' | 'pulido' ),
+            Q(tipo_calidad='pintura') | Q(tipo_calidad='pulido'),
             piezaRealizada=False,
             estatusAsignacion=True,
         ).annotate(
