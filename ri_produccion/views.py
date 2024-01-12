@@ -614,6 +614,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     def procesos_maquinado_actuales_piezas(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        
         procesos = Proceso.objects.filter(
             Q(realizadoPor__isnull=False),
             Q(estatus__in=['pendiente', 'operando']),
@@ -1298,7 +1299,9 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
     def obtener_estadisticas_maquinado_hoy(self, request):
-        current_date = timezone.localtime(timezone.now().date())
+        current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         estadisticas = {}
 
         for maquina in self.maquinasMaquinado:
@@ -1307,11 +1310,13 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                procesos__terminadoProceso=current_date,
+                procesos__terminadoProceso__gte=today,
+                procesos__terminadoProceso__lt=next_day,
             ).distinct().count()
 
             piezas_planeadas = Pieza.objects.filter(
-                procesos__finProceso=current_date,
+                procesos__finProceso__gte=today,
+                procesos__finProceso__lt=next_day,
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
@@ -1319,7 +1324,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             ).distinct().count()
 
             piezas_retrazadas = Pieza.objects.filter(
-                procesos__finProceso__lt=current_date,
+                procesos__finProceso__lt=today,
                 procesos__estatus__in=['pendiente', 'operando'],
                 estatus='aprobado',
                 estatusAsignacion=True,
