@@ -998,7 +998,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='ultimas_piezas_pendientes_revision_pintura')
     def ultimas_piezas_pendientes_revision_pintura(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            tipo_calidad='pintura',
+            Q(tipo_calidad='pintura' | 'pulido' ),
             piezaRealizada=False,
             estatusAsignacion=True,
         ).annotate(
@@ -1053,7 +1053,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura')
     def piezas_pendientes_revision_pintura(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            tipo_calidad='pintura',
+            Q(tipo_calidad='pintura' | 'pulido' ),
             piezaRealizada=False,
             estatusAsignacion=True,
         ).annotate(
@@ -1103,7 +1103,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='piezas_pendientes_revision_pintura_contador')
     def piezas_pendientes_revision_pintura_contador(self, request):
         piezas_pendientes = Pieza.objects.filter(
-            tipo_calidad='pintura',
+            Q(tipo_calidad='pintura' | 'pulido' ),
             piezaRealizada=False,
             estatusAsignacion=True,
         ).annotate(
