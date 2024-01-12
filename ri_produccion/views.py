@@ -1280,8 +1280,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                #procesos__terminadoProceso__gte=today,
-                #procesos__terminadoProceso__lt=next_day,
+                procesos__terminadoProceso__gte=today,
+                procesos__terminadoProceso__lt=next_day,
             ).distinct()
 
         piezas_planeadas = Pieza.objects.filter(
