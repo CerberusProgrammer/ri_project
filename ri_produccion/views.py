@@ -1333,7 +1333,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
-                #procesos__estatus__in=['pendiente', 'operando'],
             ).distinct().count()
 
             piezas_retrasadas = Pieza.objects.filter(
@@ -1342,12 +1341,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
-                #procesos__estatus__in=['pendiente', 'operando'],
             ).distinct().count()
 
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
-                'planeado': piezas_planeadas+piezas_retrasadas
+                'planeado': piezas_planeadas+piezas_retrasadas,
+                'retrasado': piezas_retrasadas
             }
 
         return Response(estadisticas)
