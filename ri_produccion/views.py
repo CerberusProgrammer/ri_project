@@ -1307,7 +1307,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response({
             "progreso": progreso,
             "realizadas": PiezaSerializer(piezas_realizadas, many=True).data,
-            "retrasadas": PiezaSerializer(piezas_retrasadas, many=True).data,
+            "retrasadas": PiezaSerializer(piezas_planeadas, many=True).data,
         })
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
