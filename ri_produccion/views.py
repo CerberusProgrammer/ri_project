@@ -1285,11 +1285,12 @@ class PiezaViewSet(viewsets.ModelViewSet):
             ).distinct()
 
         piezas_planeadas = Pieza.objects.filter(
-                procesos__finProceso__gte=today,
-                procesos__finProceso__lt=next_day,
+                Q(procesos__finProceso__gte=today, procesos__finProceso__lt=next_day) |
+                Q(procesos__finProceso__lt=today, procesos__estatus__in=['pendiente', 'operando']),
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
+                
         ).distinct()
 
         piezas_retrasadas = Pieza.objects.filter(
