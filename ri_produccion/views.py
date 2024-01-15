@@ -1347,65 +1347,86 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
                 'planeado': piezas_planeadas+piezas_retrasadas,
-                'retrasado': today
             }
 
         return Response(estadisticas)
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_soldadura_hoy')
     def obtener_estadisticas_soldadura_hoy(self, request):
-        current_date = timezone.now().date()
+        current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         estadisticas = {}
 
-        for maquina in self.maquinasSoldadura:
+        for maquina in self.maquinasMaquinado:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                procesos__inicioProceso__date=current_date,
+                procesos__terminadoProceso__gte=today,
+                procesos__terminadoProceso__lt=next_day,
             ).distinct().count()
 
             piezas_planeadas = Pieza.objects.filter(
+                procesos__finProceso__gte=today,
+                procesos__finProceso__lt=next_day,
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
+            ).distinct().count()
+
+            piezas_retrasadas = Pieza.objects.filter(
+                procesos__finProceso__lt=today,
                 procesos__estatus__in=['pendiente', 'operando'],
-                procesos__inicioProceso__date=current_date,
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
             ).distinct().count()
 
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
-                'planeado': piezas_planeadas
+                'planeado': piezas_planeadas+piezas_retrasadas,
             }
 
         return Response(estadisticas)
     
     @action(detail=False, methods=['get'], url_path='obtener_estadisticas_sheetmetal_hoy')
     def obtener_estadisticas_sheetmetal_hoy(self, request):
-        current_date = timezone.now().date()
+        current_date = timezone.localtime(timezone.now())
+        next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
+        today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         estadisticas = {}
 
-        for maquina in self.maquinasSM:
+        for maquina in self.maquinasMaquinado:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
                 procesos__estatus='realizado',
-                procesos__inicioProceso__date=current_date,
+                procesos__terminadoProceso__gte=today,
+                procesos__terminadoProceso__lt=next_day,
             ).distinct().count()
 
             piezas_planeadas = Pieza.objects.filter(
+                procesos__finProceso__gte=today,
+                procesos__finProceso__lt=next_day,
                 estatus='aprobado',
                 estatusAsignacion=True,
                 procesos__maquina=maquina,
+            ).distinct().count()
+
+            piezas_retrasadas = Pieza.objects.filter(
+                procesos__finProceso__lt=today,
                 procesos__estatus__in=['pendiente', 'operando'],
-                procesos__inicioProceso__date=current_date,
+                estatus='aprobado',
+                estatusAsignacion=True,
+                procesos__maquina=maquina,
             ).distinct().count()
 
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
-                'planeado': piezas_planeadas
+                'planeado': piezas_planeadas+piezas_retrasadas,
             }
 
         return Response(estadisticas)
