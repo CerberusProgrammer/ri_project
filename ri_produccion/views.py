@@ -11,6 +11,7 @@ from django.db.models import Count, Min, Max, Sum, F,DurationField, ExpressionWr
 from rest_framework import status
 from django.db.models import Q
 from rest_framework.exceptions import NotFound
+from rest_framework.permissions import AllowAny
 
 from django.utils.dateparse import parse_datetime
 
@@ -1954,7 +1955,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         count = Pieza.objects.filter(estatus='rechazado').count()
         return Response({"contador_piezas_rechazadas": count})
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'],authentication_classes=[], permission_classes=[AllowAny])
     def contador_piezas_aprobadas(self, request):
         count = Pieza.objects.filter(estatus='aprobado').count()
         return Response({"contador_piezas_aprobadas": count})
