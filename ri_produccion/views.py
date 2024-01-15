@@ -1270,6 +1270,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_maquina_limpiezasm(self, request):
         return self.obtener_piezas_maquina(request, 'Limpiezasm')
     
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_maquina')
     def obtener_piezas_maquina(self, request, maquina):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
