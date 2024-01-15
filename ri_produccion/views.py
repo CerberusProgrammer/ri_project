@@ -1358,7 +1358,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         estadisticas = {}
 
-        for maquina in self.maquinasMaquinado:
+        for maquina in self.maquinasSoldadura:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
@@ -1398,7 +1398,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         today=current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         estadisticas = {}
 
-        for maquina in self.maquinasMaquinado:
+        for maquina in self.maquinasSM:
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
