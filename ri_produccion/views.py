@@ -1777,17 +1777,24 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_material(self, request):
         total_piezas = Pieza.objects.filter(estatus='aprobado').count()
-        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', placas__isnull=True,).count()
+        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', material__isnull=True,).count()
 
         if total_piezas == 0:
-            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
         progreso = (piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_nesteo(self, request):
-        print(0)
+        total_piezas = Pieza.objects.filter(estatus='aprobado').count()
+        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', placas__isnull=True,).count()
+
+        if total_piezas == 0:
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
+
+        progreso = (piezas_aprobadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_procesos(self, request):
@@ -2100,9 +2107,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
         # Filtrar las piezas que tienen todos los procesos asociados a todas las placas
         # y que tienen la cantidad correcta de Piezas_realizadas en todas las Placas asociadas
         piezas_terminadas_sin_asignacion_confirmada = [pieza for pieza in piezas_con_placas_procesos if pieza.todos_procesos_ligados() and pieza.piezas_correctas()]
-
-        if not piezas_terminadas_sin_asignacion_confirmada:
-            raise NotFound(detail="No se encontraron piezas terminadas sin asignación confirmada.")
 
         serializer = self.get_serializer(piezas_terminadas_sin_asignacion_confirmada, many=True)
         return Response(serializer.data)
