@@ -1776,8 +1776,14 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_material(self, request):
-        total_piezas = Pieza.objects.filter(estatus='aprobado').count()
-        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', material__isnull=True,).count()
+        total_piezas = Pieza.objects.filter(
+            estatus='aprobado',
+        ).count()
+        
+        piezas_aprobadas = Pieza.objects.filter(
+            estatus='aprobado',
+            material__isnull=False,
+        ).count()
 
         if total_piezas == 0:
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
@@ -1787,18 +1793,67 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_nesteo(self, request):
-        total_piezas = Pieza.objects.filter(estatus='aprobado').count()
-        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', placas__isnull=True,).count()
+        total_piezas = Pieza.objects.filter(
+            estatus='aprobado',
+        ).count()
+
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            placas__isnull=False
+        )
+
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
+
+        num_piezas_aprobadas = len(piezas_aprobadas)
 
         if total_piezas == 0:
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
-        progreso = (piezas_aprobadas / total_piezas) * 100
+        progreso = (num_piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_procesos(self, request):
-        print(0)
+        total_piezas = Pieza.objects.filter(
+            estatus='aprobado',
+        ).count()
+
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            procesos_isnull=False,
+        )
+
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
+
+        num_piezas_aprobadas = len(piezas_aprobadas)
+
+        if total_piezas == 0:
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
+
+        progreso = (num_piezas_aprobadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def progreso_de_piezas_pendientes_de_operadores(self, request):
+        total_piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+        ).count()
+
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+        )
+
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=False).count() == pieza.procesos.count()]
+
+        num_piezas_aprobadas = len(piezas_aprobadas)
+
+        if total_piezas == 0:
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
+
+        progreso = (num_piezas_aprobadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion_sin_confirmar(self, request):
