@@ -371,19 +371,25 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         try:
             data = request.data
             variables = data
-            
+
             subtotal = 0
             for i in range(len(data['requisicion_detail']['productos'])):
                 costo = float(data['requisicion_detail']['productos'][i]['costo']) * float(data['requisicion_detail']['productos'][i]['cantidad'])
                 subtotal += costo
                 variables['requisicion_detail']['productos'][i]['costo_total'] = format(costo, ',.6f')
-                
+
             for i in range(len(data['requisicion_detail']['servicios'])):
                 subtotal += float(data['requisicion_detail']['servicios'][i]['costo'])
-            
-            iva = subtotal * float(variables['proveedor_detail']['iva'])
-            iva_retenido = subtotal * float(variables['proveedor_detail']['iva_retenido'])
-            isr_retenido = subtotal * float(variables['proveedor_detail']['isr_retenido'])
+
+            iva_value = variables['proveedor_detail']['iva']
+            iva = subtotal * float(iva_value) if iva_value is not None else 0.0
+
+            iva_retenido_value = variables['proveedor_detail']['iva_retenido']
+            iva_retenido = subtotal * float(iva_retenido_value) if iva_retenido_value is not None else 0.0
+
+            isr_retenido_value = variables['proveedor_detail']['isr_retenido']
+            isr_retenido = subtotal * float(isr_retenido_value) if isr_retenido_value is not None else 0.0
+
             total = subtotal + iva + isr_retenido + iva_retenido
 
             variables['subtotal'] = format(subtotal, ',.6f')
@@ -391,7 +397,9 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             variables['isr_retenido'] = format(isr_retenido, ',.6f')
             variables['iva_retenido'] = format(iva_retenido, ',.6f')
             variables['total'] = format(total, ',.6f')
-            variables['hay_credito'] = "Credito disponible" if float(variables['proveedor_detail']['credito']) > 0 else "Sin credito disponible"
+
+            credito_value = variables['proveedor_detail']['credito']
+            variables['hay_credito'] = "Credito disponible" if credito_value is not None and float(credito_value) > 0 else "Sin credito disponible"
 
             if not variables['requisicion_detail']['productos']:
                 variables['divisa'] = variables['requisicion_detail']['servicios'][0]['divisa']

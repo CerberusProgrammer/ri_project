@@ -674,7 +674,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
         return Response(data)
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_maquinado_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_tiempos_maquinado_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         estadisticas = {}
@@ -702,7 +702,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
         return Response(estadisticas)
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_soldadura_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_soldadura_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_tiempos_soldadura_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         estadisticas = {}
@@ -730,7 +730,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 
         return Response(estadisticas)
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_sm_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_tiempos_sm_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_tiempos_sm_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         estadisticas = {}
@@ -1312,7 +1312,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             "retrasadas": PiezaSerializer(piezas_planeadas, many=True).data,
         })
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_maquinado_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_maquinado_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
@@ -1352,7 +1352,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response(estadisticas)
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_soldadura_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_soldadura_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_soldadura_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
@@ -1392,7 +1392,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response(estadisticas)
     
-    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_sheetmetal_hoy')
+    @action(detail=False, methods=['get'], url_path='obtener_estadisticas_sheetmetal_hoy',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_estadisticas_sheetmetal_hoy(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
