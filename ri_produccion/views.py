@@ -1432,7 +1432,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response(estadisticas)
     
-    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales')
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_piezas_actuales(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
@@ -1448,7 +1448,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo')
+    @action(detail=False, methods=['get'], url_path='obtener_piezas_actuales_conteo',authentication_classes=[], permission_classes=[AllowAny])
     def obtener_piezas_actuales_conteo(self, request):
         current_date = timezone.localtime(timezone.now())
         next_day = current_date.replace(hour=0, minute=0, second=0, microsecond=0) + timezone.timedelta(days=1)
@@ -1504,7 +1504,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas_conteo')
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_retrasadas_conteo',authentication_classes=[], permission_classes=[AllowAny])
     def piezas_actuales_retrasadas_conteo(self, request):
         current_time = timezone.localtime(timezone.now())
         piezas_count = Pieza.objects.filter(
@@ -1530,7 +1530,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(piezas, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo')
+    @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias_conteo',authentication_classes=[], permission_classes=[AllowAny])
     def piezas_actuales_prioritarias_conteo(self, request):
         current_date = timezone.localtime(timezone.now())
         piezas = Pieza.objects.filter(
