@@ -1774,6 +1774,25 @@ class PiezaViewSet(viewsets.ModelViewSet):
         progreso = (piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def progreso_de_piezas_pendientes_de_material(self, request):
+        total_piezas = Pieza.objects.filter(estatus='aprobado').count()
+        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado', placas__isnull=True,).count()
+
+        if total_piezas == 0:
+            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+
+        progreso = (piezas_aprobadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def progreso_de_piezas_pendientes_de_nesteo(self, request):
+        print(0)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def progreso_de_piezas_pendientes_de_procesos(self, request):
+        print(0)
+    
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion_sin_confirmar(self, request):
         total_piezas = Pieza.objects.all().count()
@@ -2018,9 +2037,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         # Agregar las piezas que no tienen placas, no requieren nesteo y no tienen procesos asociados
         piezas_sin_procesos += [pieza for pieza in Pieza.objects.all() if pieza.sin_placas_procesos()]
-
-        if not piezas_sin_procesos:
-            return Response({"message": "No se encontraron piezas sin procesos."})
 
         serializer = self.get_serializer(piezas_sin_procesos, many=True)
         return Response(serializer.data)
