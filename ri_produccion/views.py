@@ -1802,7 +1802,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             placas__isnull=False
         )
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.piezaplaca_set.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
 
         num_piezas_aprobadas = len(piezas_aprobadas)
 
@@ -1820,7 +1820,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas = Pieza.objects.filter(
             estatus='aprobado',
-            procesos_isnull=False,
+            procesos__isnull=True
         )
 
         piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
