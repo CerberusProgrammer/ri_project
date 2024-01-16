@@ -1514,7 +1514,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos__estatus__in=['pendiente', 'operando'],
         ).distinct().count()
 
-        return Response({"piezas_count": piezas_count})
+        return Response({"piezas": piezas_count})
     
     @action(detail=False, methods=['get'], url_path='piezas_actuales_prioritarias')
     def piezas_actuales_prioritarias(self, request):
@@ -1541,7 +1541,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         
         piezas_count = sum(1 for pieza in piezas if any(proceso.inicioProceso.date() == current_date.date() and proceso.inicioProceso.time() >= current_date.time() for proceso in pieza.procesos.all()))
 
-        return Response({"piezas_count": piezas_count})
+        return Response({"piezas": piezas_count})
     
     @action(detail=True, methods=['get'], url_path='obtener_piezas_pendientes')
     def obtener_piezas_pendientes(self, request, pk=None):
@@ -1958,7 +1958,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'],authentication_classes=[], permission_classes=[AllowAny])
     def contador_piezas_aprobadas(self, request):
         count = Pieza.objects.filter(estatus='aprobado').count()
-        return Response({"contador_piezas_aprobadas": count})
+        return Response({"piezas": count})
 
     @action(detail=False, methods=['get'])
     def pendientes(self, request):
