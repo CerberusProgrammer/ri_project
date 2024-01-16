@@ -1763,7 +1763,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         pieza.save()
         return Response({"success": f"La Pieza {pieza.consecutivo} ha sido confirmada para producción"}, status=status.HTTP_200_OK)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas', permission_classes=[AllowAny])
     def progreso_de_piezas_aprobadas(self, request):
         total_piezas = Pieza.objects.all().count()
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado').count()
