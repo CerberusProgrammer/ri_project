@@ -887,8 +887,6 @@ class ProcesoViewSet(viewsets.ModelViewSet):
 class PiezaViewSet(viewsets.ModelViewSet):
     queryset = Pieza.objects.all().order_by('-id')
     serializer_class = PiezaSerializer
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['consecutivo', 'ordenCompra']
     ordering_fields = ['consecutivo', 'ordenCompra']
@@ -1134,7 +1132,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         return Response({"cantidad": piezas_pendientes})
     
-    @action(detail=False, methods=['post'], url_path='obtener_pieza_por_consecutivo')
+    @action(detail=False, methods=['post'], url_path='obtener_pieza_por_consecutivo',permission_classes=[AllowAny])
     def obtener_pieza_por_consecutivo(self, request):
         consecutivo = request.data.get('consecutivo')
         pieza = get_object_or_404(Pieza, consecutivo=consecutivo)
