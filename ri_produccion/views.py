@@ -897,8 +897,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def ver_pieza_para_estadistico(self, request, pk=None):
-        estados = ['Pendiente de aprobar por planeador', 'Pendiente de asignar material', 'Pendiente de asignar nesteo', 'Pendiente de asignar procesos', 'Pendiente de confirmar a produccion', 'Pendiente de asignar operador', 'Pendiente de realizar', 'Pendiente de inspeccionar en calidad', 'Pieza realizada',]
-        
         try:
             pieza = Pieza.objects.get(id=pk)
 
@@ -906,9 +904,30 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos_serializados = ProcesoSerializer(pieza.procesos.all(), many=True).data
             material_serializado = MaterialSerializer(pieza.material).data
 
+            if pieza.estatus == 'pendiente':
+                estatus = 'Pendiente de aprobar por planeador'
+            elif pieza.material is None:
+                estatus = 'Pendiente de asignar material'
+            elif pieza.nesteo is None:
+                estatus = 'Pendiente de asignar nesteo'
+            elif pieza.procesos.count() == 0:
+                estatus = 'Pendiente de asignar procesos'
+            elif not pieza.estatusAsignacion:
+                estatus = 'Pendiente de confirmar a produccion'
+            elif any(proceso.realizadoPor is None for proceso in pieza.procesos.all()):
+                estatus = 'Pendiente de asignar operador'
+            elif any(proceso.estatus == 'pendiente' for proceso in pieza.procesos.all()):
+                estatus = 'Pendiente de realizar'
+            elif any(proceso.estatus == 'realizado' for proceso in pieza.procesos.all()):
+                estatus = 'Pendiente de inspeccionar en calidad'
+            elif pieza.piezaRealizada:
+                estatus = 'Pieza realizada'
+            else:
+                estatus = 'Estado desconocido'
+
             data = {
                 'consecutivo': pieza.consecutivo,
-                'estatus': pieza.estatus,
+                'estatus': estatus,
                 'material': material_serializado,
                 'piezasTotales': pieza.piezasTotales,
                 'placas': placas_serializadas,
@@ -921,6 +940,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response(data, status=status.HTTP_200_OK)
         except Pieza.DoesNotExist:
             return Response({'error': 'Pieza no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
     
     @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas')
     def progreso_tasa_error_piezas(self, request):
