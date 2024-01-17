@@ -917,32 +917,41 @@ class PiezaViewSet(viewsets.ModelViewSet):
             }
 
             if pieza.estatus == 'pendiente':
-                estados["diseño"] = "realizado"
                 estatus = 'Pendiente de aprobar por planeador'
-            elif pieza.material is None:
-                estatus = 'Pendiente de asignar material'
-                estados["material"] = "realizado"
-            elif pieza.placas.count() == 0:
-                estatus = 'Pendiente de asignar nesteo'
-                estados["nesteos"] = "realizado"
-            elif pieza.procesos.count() == 0:
-                estatus = 'Pendiente de asignar procesos'
-                estados["procesos"] = "realizado"
-            elif not pieza.estatusAsignacion:
-                estatus = 'Pendiente de confirmar a produccion'
-                estados["produccion"] = "realizado"
-            elif any(proceso.realizadoPor is None for proceso in pieza.procesos.all()):
-                estatus = 'Pendiente de asignar operador'
-                estados["operador"] = "realizado"
-            elif any(proceso.estatus == 'pendiente' for proceso in pieza.procesos.all()):
-                estatus = 'Pendiente de realizar'
-                estados["realizado"] = "realizado"
-            elif any(proceso.estatus == 'realizado' for proceso in pieza.procesos.all()):
-                estatus = 'Pendiente de inspeccionar en calidad'
-                estados["calidad"] = "realizado"
-            elif pieza.piezaRealizada:
-                estatus = 'Pieza realizada'
-                estados["completado"] = "realizado"
+                
+                if pieza.material is None:
+                    estatus = 'Pendiente de asignar material'
+                    estados["diseño"] = "realizado"
+                
+                if pieza.placas.count() == 0:
+                    estatus = 'Pendiente de asignar nesteo'
+                    estados["material"] = "realizado"
+                
+                    if pieza.procesos.count() == 0:
+                        estatus = 'Pendiente de asignar procesos'
+                        estados["nesteos"] = "realizado"
+
+                        
+                    if not pieza.estatusAsignacion:
+                        estatus = 'Pendiente de confirmar a produccion'
+                        estados["procesos"] = "realizado"
+                        
+                        if any(proceso.realizadoPor is None for proceso in pieza.procesos.all()):
+                            estatus = 'Pendiente de asignar operador'
+                            estados["produccion"] = "realizado"
+                            
+                            if any(proceso.estatus == 'pendiente' for proceso in pieza.procesos.all()):
+                                estatus = 'Pendiente de realizar'
+                                estados["operador"] = "realizado"
+                                
+                                if any(proceso.estatus == 'realizado' for proceso in pieza.procesos.all()):
+                                    estatus = 'Pendiente de inspeccionar en calidad'
+                                    estados["calidad"] = "realizado"
+                                    
+                                    if pieza.piezaRealizada:
+                                        estados["realizado"] = "realizado"
+                                        estatus = 'Pieza realizada'
+                                        estados["completado"] = "realizado"
             else:
                 estatus = 'Estado desconocido'
 
