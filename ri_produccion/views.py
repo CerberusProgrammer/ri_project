@@ -895,6 +895,33 @@ class PiezaViewSet(viewsets.ModelViewSet):
     maquinasSoldadura = ['Corte', 'Pintura', 'Pulido']
     maquinasSM = ['Laser', 'Dobladora', 'Machueleado', 'Limpieza']
     
+    @action(detail=True, methods=['get'])
+    def ver_pieza_para_estadistico(self, request, pk=None):
+        estados = ['Pendiente de aprobar por planeador', 'Pendiente de asignar material', 'Pendiente de asignar nesteo', 'Pendiente de asignar procesos', 'Pendiente de confirmar a produccion', 'Pendiente de asignar operador', 'Pendiente de realizar', 'Pendiente de inspeccionar en calidad', 'Pieza realizada',]
+        
+        try:
+            pieza = Pieza.objects.get(id=pk)
+
+            placas_serializadas = PlacaSerializer(pieza.placas.all(), many=True).data
+            procesos_serializados = ProcesoSerializer(pieza.procesos.all(), many=True).data
+            material_serializado = MaterialSerializer(pieza.material).data
+
+            data = {
+                'consecutivo': pieza.consecutivo,
+                'estatus': pieza.estatus,
+                'material': material_serializado,
+                'piezasTotales': pieza.piezasTotales,
+                'placas': placas_serializadas,
+                'procesos': procesos_serializados,
+                'ordenCompra': pieza.ordenCompra,
+                'fechaCreado': pieza.fechaCreado,
+                'archivo_pdf': pieza.archivo_pdf.url if pieza.archivo_pdf else None,
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+        except Pieza.DoesNotExist:
+            return Response({'error': 'Pieza no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+    
     @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas')
     def progreso_tasa_error_piezas(self, request):
         piezas_revision = Pieza.objects.filter(estatus='revision')
