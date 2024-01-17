@@ -904,30 +904,52 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos_serializados = ProcesoSerializer(pieza.procesos.all(), many=True).data
             material_serializado = MaterialSerializer(pieza.material).data
 
+            estados = {
+                "diseño": "pendiente",
+                "material": "pendiente",
+                "nesteos": "pendiente",
+                "procesos": "pendiente",
+                "produccion": "pendiente",
+                "operador": "pendiente",
+                "realizado": "pendiente",
+                "calidad": "pendiente",
+                "completado": "pendiente",
+            }
+
             if pieza.estatus == 'pendiente':
+                estados["diseño"] = "realizado"
                 estatus = 'Pendiente de aprobar por planeador'
             elif pieza.material is None:
                 estatus = 'Pendiente de asignar material'
-            elif pieza.placas is None:
+                estados["material"] = "realizado"
+            elif pieza.placas.count() == 0:
                 estatus = 'Pendiente de asignar nesteo'
+                estados["nesteos"] = "realizado"
             elif pieza.procesos.count() == 0:
                 estatus = 'Pendiente de asignar procesos'
+                estados["procesos"] = "realizado"
             elif not pieza.estatusAsignacion:
                 estatus = 'Pendiente de confirmar a produccion'
+                estados["produccion"] = "realizado"
             elif any(proceso.realizadoPor is None for proceso in pieza.procesos.all()):
                 estatus = 'Pendiente de asignar operador'
+                estados["operador"] = "realizado"
             elif any(proceso.estatus == 'pendiente' for proceso in pieza.procesos.all()):
                 estatus = 'Pendiente de realizar'
+                estados["realizado"] = "realizado"
             elif any(proceso.estatus == 'realizado' for proceso in pieza.procesos.all()):
                 estatus = 'Pendiente de inspeccionar en calidad'
+                estados["calidad"] = "realizado"
             elif pieza.piezaRealizada:
                 estatus = 'Pieza realizada'
+                estados["completado"] = "realizado"
             else:
                 estatus = 'Estado desconocido'
 
             data = {
                 'consecutivo': pieza.consecutivo,
                 'estatus': estatus,
+                'estados': estados,
                 'material': material_serializado,
                 'piezasTotales': pieza.piezasTotales,
                 'placas': placas_serializadas,
@@ -940,7 +962,6 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response(data, status=status.HTTP_200_OK)
         except Pieza.DoesNotExist:
             return Response({'error': 'Pieza no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-
     
     @action(detail=False, methods=['get'], url_path='progreso_tasa_error_piezas')
     def progreso_tasa_error_piezas(self, request):
