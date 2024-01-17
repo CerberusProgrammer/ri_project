@@ -908,7 +908,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
                 estatus = 'Pendiente de aprobar por planeador'
             elif pieza.material is None:
                 estatus = 'Pendiente de asignar material'
-            elif pieza.nesteo is None:
+            elif pieza.placas is None:
                 estatus = 'Pendiente de asignar nesteo'
             elif pieza.procesos.count() == 0:
                 estatus = 'Pendiente de asignar procesos'
