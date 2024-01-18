@@ -1937,6 +1937,19 @@ class PiezaViewSet(viewsets.ModelViewSet):
         progreso = (piezas_con_asignacion_sin_confirmar / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
+    @action(detail=False, methods=['get'])
+    def progreso_de_piezas_realizadas(self, request):
+        total_piezas = Pieza.objects.all().count()
+        piezas_terminadas = Pieza.objects.filter(
+            piezaRealizada=True
+        )
+
+        if total_piezas == 0:
+            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+
+        progreso = (piezas_terminadas / total_piezas) * 100
+        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+    
     @action(detail=True, methods=['put'])
     def rechazar_pieza(self, request, pk=None):
         pieza = self.get_object()
