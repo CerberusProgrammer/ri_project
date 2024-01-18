@@ -1531,7 +1531,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).distinct().count()
 
         return Response({
-            "progreso": piezas,
+            "piezas": piezas,
         })
     
     @action(detail=False, methods=['get'], url_path='obtener_piezas_terminadas')
