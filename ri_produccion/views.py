@@ -1942,7 +1942,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         total_piezas = Pieza.objects.all().count()
         piezas_terminadas = Pieza.objects.filter(
             piezaRealizada=True
-        )
+        ).count()
 
         if total_piezas == 0:
             return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
