@@ -1839,7 +1839,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado').count()
 
         if total_piezas == 0:
-            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
         progreso = (piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
@@ -1848,11 +1848,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_aprobadas(self, request):
         piezas_aprobadas = Pieza.objects.filter(estatus='aprobado')
 
-        if not piezas_aprobadas:
-            return Response({"error": "No hay Piezas aprobadas"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_aprobadas_ids = [pieza.id for pieza in piezas_aprobadas]
-        return Response({"piezas_aprobadas": piezas_aprobadas_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_material(self, request):
@@ -1878,11 +1875,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             material__isnull=False,
         )
 
-        if not piezas_con_material:
-            return Response({"error": "No hay Piezas aprobadas con material"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_con_material_ids = [pieza.id for pieza in piezas_con_material]
-        return Response({"piezas_con_material": piezas_con_material_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_con_material, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_nesteo(self, request):
@@ -1914,11 +1908,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas_aprobadas = [pieza for pieza in piezas if pieza.piezaplaca_set.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
 
-        if not piezas_aprobadas:
-            return Response({"error": "No hay Piezas aprobadas pendientes de nesteo"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_aprobadas_ids = [pieza.id for pieza in piezas_aprobadas]
-        return Response({"piezas_aprobadas": piezas_aprobadas_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_procesos(self, request):
@@ -1950,11 +1941,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
 
-        if not piezas_aprobadas:
-            return Response({"error": "No hay Piezas aprobadas pendientes de procesos"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_aprobadas_ids = [pieza.id for pieza in piezas_aprobadas]
-        return Response({"piezas_aprobadas": piezas_aprobadas_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_operadores(self, request):
@@ -1987,11 +1975,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=False).count() == pieza.procesos.count()]
 
-        if not piezas_aprobadas:
-            return Response({"error": "No hay Piezas aprobadas pendientes de operadores"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_aprobadas_ids = [pieza.id for pieza in piezas_aprobadas]
-        return Response({"piezas_aprobadas": piezas_aprobadas_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion_sin_confirmar(self, request):
@@ -2000,7 +1985,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             Q(material__isnull=True) | (Q(placas__isnull=True) & Q(requiere_nesteo=True)) | Q(procesos__isnull=True)).count()
 
         if total_piezas == 0:
-            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
         progreso = (piezas_con_asignacion_sin_confirmar / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
@@ -2012,11 +1997,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             Q(material__isnull=True) | (Q(placas__isnull=True) & Q(requiere_nesteo=True)) | Q(procesos__isnull=True)
         )
 
-        if not piezas_con_asignacion_sin_confirmar:
-            return Response({"error": "No hay Piezas con asignación sin confirmar"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_con_asignacion_sin_confirmar_ids = [pieza.id for pieza in piezas_con_asignacion_sin_confirmar]
-        return Response({"piezas_con_asignacion_sin_confirmar": piezas_con_asignacion_sin_confirmar_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_con_asignacion_sin_confirmar, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_realizadas(self, request):
@@ -2026,7 +2008,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         if total_piezas == 0:
-            return Response({"error": "No hay Piezas"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
         progreso = (piezas_terminadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
@@ -2037,11 +2019,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
             piezaRealizada=True
         )
 
-        if not piezas_realizadas:
-            return Response({"error": "No hay Piezas realizadas"}, status=status.HTTP_400_BAD_REQUEST)
-
-        piezas_realizadas_ids = [pieza.id for pieza in piezas_realizadas]
-        return Response({"piezas_realizadas": piezas_realizadas_ids}, status=status.HTTP_200_OK)
+        serializer = PiezaSerializer(piezas_realizadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['put'])
     def rechazar_pieza(self, request, pk=None):
