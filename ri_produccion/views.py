@@ -505,7 +505,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(estatus__in=['pendiente', 'operando']),
             Q(maquina__in=self.maquinasMaquinado),
             Q(finProceso__lt=current_time)
-        ).order_by('inicioProceso')
+        ).order_by('inicioProceso').distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -525,7 +525,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(estatus__in=['pendiente', 'operando']),
             Q(maquina__in=self.maquinasSoldadura),
             Q(finProceso__lt=current_time)
-        ).order_by('inicioProceso')
+        ).order_by('inicioProceso').distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -622,7 +622,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
             Q(maquina__in=self.maquinasMaquinado),
             #finProceso__lte=next_day,
             finProceso__gte=current_date,
-        ).order_by('inicioProceso')
+        ).order_by('inicioProceso').distinct()
 
         serializer = ProcesoSerializer(procesos, many=True)
         data = serializer.data
@@ -859,8 +859,15 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def procesos_pendientes(self, request):
         procesos_pendientes = Proceso.objects.filter(estatus='pendiente')
-        serializer = self.get_serializer(procesos_pendientes, many=True)
-        return Response(serializer.data)
+        data = []
+        for proceso in procesos_pendientes:
+            proceso_data = ProcesoSerializer(proceso).data
+            if proceso.placa and proceso.placa.pieza:
+                proceso_data['consecutivo'] = proceso.placa.pieza.consecutivo
+            else:
+                proceso_data['consecutivo'] = None
+            data.append(proceso_data)
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def procesos_prioritarios(self, request):
