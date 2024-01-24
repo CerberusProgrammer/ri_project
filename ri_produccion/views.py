@@ -862,8 +862,9 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         data = []
         for proceso in procesos_pendientes:
             proceso_data = ProcesoSerializer(proceso).data
-            if proceso.placa and proceso.placa.pieza:
-                proceso_data['consecutivo'] = proceso.placa.pieza.consecutivo
+            piezas = Pieza.objects.filter(procesos=proceso)
+            if piezas.exists():
+                proceso_data['consecutivo'] = piezas.first().consecutivo
             else:
                 proceso_data['consecutivo'] = None
             data.append(proceso_data)
