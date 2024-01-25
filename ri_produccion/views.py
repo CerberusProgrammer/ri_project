@@ -1949,17 +1949,17 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         piezas = Pieza.objects.filter(
             estatus='aprobado',
-            procesos__isnull=True
-        )
+            procesos__isnull=False
+        ).count()
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
+        # piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
 
-        num_piezas_aprobadas = len(piezas_aprobadas)
+        # num_piezas_aprobadas = len(piezas_aprobadas)
 
         if total_piezas == 0:
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
-        progreso = (num_piezas_aprobadas / total_piezas) * 100
+        progreso = (piezas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
