@@ -1909,30 +1909,26 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         piezas = Pieza.objects.filter(
+            placas__isnull=True,
+            requiere_nesteo=True,
             estatus='aprobado',
-            placas__isnull=False
-        )
-
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.piezaplaca_set.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
-
-        num_piezas_aprobadas = len(piezas_aprobadas)
+        ).count()
 
         if total_piezas == 0:
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
-        progreso = (num_piezas_aprobadas / total_piezas) * 100
-        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+        progreso = (piezas / total_piezas) * 100
+        return Response({"progreso": (100 - progreso)}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_nesteo(self, request):
         piezas = Pieza.objects.filter(
+            placas__isnull=True,
+            requiere_nesteo=True,
             estatus='aprobado',
-            placas__isnull=False
         )
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.piezaplaca_set.aggregate(Sum('piezas_realizadas'))['piezas_realizadas__sum'] == pieza.piezasTotales]
-
-        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
      @action(detail=False, methods=['get'], permission_classes=[AllowAny])
