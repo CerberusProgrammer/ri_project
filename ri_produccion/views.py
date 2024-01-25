@@ -1934,10 +1934,11 @@ class PiezaViewSet(viewsets.ModelViewSet):
      @action(detail=False, methods=['get'], permission_classes=[AllowAny])
      def obtener_piezas_pendientes_de_nesteo_conteo(self, request):
         piezas = Pieza.objects.filter(
-            estatus='aprobado',
-            placas__isnull=False
+            placas__isnull=True,
+            requiere_nesteo=True,
+            estatus='aprobado'
         ).count()
-
+        
         return  return Response({"piezas": piezas}, status=status.HTTP_200_OK)
 
     
