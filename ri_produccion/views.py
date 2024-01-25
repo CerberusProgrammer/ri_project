@@ -1950,7 +1950,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             procesos__isnull=False
-        ).count()
+        ).distinct().count()
 
         # piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
 
