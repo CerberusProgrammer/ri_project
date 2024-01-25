@@ -1918,7 +1918,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
 
         progreso = (piezas / total_piezas) * 100
-        return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+        return Response({"progreso": (100 - progreso)}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_nesteo(self, request):
