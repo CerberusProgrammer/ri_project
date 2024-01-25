@@ -932,7 +932,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
                     estatus = 'Pendiente de asignar nesteo'
                     estados["nesteos"] = "realizado"
                 
-                if pieza.placas.count() > 0:
+                if (pieza.placas.count() > 0) or (pieza.requiere_nesteo is False):
                     estatus = 'Pendiente de asignar procesos'
                     estados["procesos"] = "realizado"
                 
