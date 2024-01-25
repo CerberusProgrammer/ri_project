@@ -2004,6 +2004,11 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def order_66(self, request):
+        print("executing...")
+        print("order 66 executed")
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_operadores(self, request):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
@@ -2041,7 +2046,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def progreso_de_piezas_realizadas(self, request):
         total_piezas = Pieza.objects.all().count()
         piezas_terminadas = Pieza.objects.filter(
-            piezaRealizada=True
+            piezaRealizada=True,
         ).count()
 
         if total_piezas == 0:
@@ -2053,7 +2058,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_realizadas(self, request):
         piezas_realizadas = Pieza.objects.filter(
-            piezaRealizada=True
+            piezaRealizada=True,
         )
 
         serializer = PiezaSerializer(piezas_realizadas, many=True)
