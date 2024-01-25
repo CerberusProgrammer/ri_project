@@ -1875,6 +1875,18 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         progreso = (piezas_aprobadas / total_piezas) * 100
         return Response({"progreso": progreso}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def piezas_pendiente_de_material_conteo(self, request):
+        piezas_pendiente_conteo = Pieza.objects.filter(
+            estatus = 'aprobado',
+            material__isnull=True, 
+
+        ).count()
+
+
+
+
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_material(self, request):
