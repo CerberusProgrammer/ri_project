@@ -1959,9 +1959,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             procesos__isnull=True
         )
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.placas.count() == pieza.procesos.aggregate(count=Count('placa', distinct=True))['count']]
-
-        serializer = PiezaSerializer(piezas_aprobadas, many=True)
+        serializer = PiezaSerializer(piezas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
