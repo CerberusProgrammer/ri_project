@@ -1911,7 +1911,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
         piezas = Pieza.objects.filter(
             estatus='aprobado',
             placas__isnull=False
-        ).count
+        ).count()
 
         if total_piezas == 0:
             return Response({"progreso": 0}, status=status.HTTP_200_OK)
