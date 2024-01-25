@@ -1909,8 +1909,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
         ).count()
 
         piezas = Pieza.objects.filter(
+            Q(placas__isnull=False) | Q(requiere_nesteo=False),
             estatus='aprobado',
-            placas__isnull=False
         ).count()
 
         if total_piezas == 0:
@@ -1922,8 +1922,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_nesteo(self, request):
         piezas = Pieza.objects.filter(
+            Q(placas__isnull=True) | Q(requiere_nesteo=False),
             estatus='aprobado',
-            placas__isnull=True
         )
 
         serializer = PiezaSerializer(piezas, many=True)
