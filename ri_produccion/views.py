@@ -1892,7 +1892,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     def obtener_piezas_pendientes_de_material(self, request):
         piezas_con_material = Pieza.objects.filter(
             estatus='aprobado',
-            material__isnull=False,
+            material__isnull=True,
         )
 
         serializer = PiezaSerializer(piezas_con_material, many=True)
