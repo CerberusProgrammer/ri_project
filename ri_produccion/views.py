@@ -1932,6 +1932,16 @@ class PiezaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def obtener_piezas_pendientes_de_nesteo_conteo(self, request):
+        piezas = Pieza.objects.filter(
+            placas__isnull=True,
+            requiere_nesteo=True,
+            estatus='aprobado'
+        ).count()
+        
+        return Response({"piezas": piezas}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_procesos(self, request):
         total_piezas = Pieza.objects.filter(
             estatus='aprobado',
