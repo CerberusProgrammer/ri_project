@@ -1884,8 +1884,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
         ).count()
 
-        serializer = PiezaSerializer(piezas_pendiente_conteo, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"piezas_pendientes": piezas_pendiente_conteo}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_pendientes_de_material(self, request):
