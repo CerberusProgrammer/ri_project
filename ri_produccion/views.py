@@ -1854,7 +1854,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_aprobadas(self, request):
-        piezas_aprobadas = Pieza.objects.filter(estatus='aprobado')
+        piezas_aprobadas = Pieza.objects.filter(estatus='pendiente')
 
         serializer = PiezaSerializer(piezas_aprobadas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
