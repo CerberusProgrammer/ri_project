@@ -1862,8 +1862,8 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def obtener_piezas_aprobadas_conteo(self, request):
         piezas_conteo = Pieza.objects.filter(estatus='pendiente').count()
+        
         return Response({"piezas": piezas_conteo}, status=status.HTTP_200_OK)
-
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def progreso_de_piezas_pendientes_de_material(self, request):
