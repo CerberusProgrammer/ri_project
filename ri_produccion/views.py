@@ -2075,6 +2075,23 @@ class PiezaViewSet(viewsets.ModelViewSet):
         serializer = PiezaSerializer(piezas_realizadas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+    @action(detail=False, methods=['get'])
+    def obtener_piezas_no_realizadas(self, request):
+        piezas_realizadas = Pieza.objects.filter(
+            piezaRealizada=False,
+        )
+
+        serializer = PiezaSerializer(piezas_realizadas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_piezas_no_realizadas_conteo(self, request):
+        piezas_realizadas = Pieza.objects.filter(
+            piezaRealizada=False,
+        )
+
+        return Response({"piezas": len(piezas_realizadas)}, status=status.HTTP_200_OK)
+    
     @action(detail=True, methods=['put'])
     def rechazar_pieza(self, request, pk=None):
         pieza = self.get_object()
