@@ -2015,10 +2015,21 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
         )
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=True).count() == pieza.procesos.count()]
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=False).count() == pieza.procesos.count()]
 
         serializer = PiezaSerializer(piezas_aprobadas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def piezas_pendientes_de_operadores_conteo(self, request):
+        piezas = Pieza.objects.filter(
+            estatus='aprobado',
+            estatusAsignacion=True,
+        )
+
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=True).count() == pieza.procesos.count()]
+
+        return Response({"piezas": len(piezas_aprobadas)}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def progreso_de_piezas_con_asignacion_sin_confirmar(self, request):
