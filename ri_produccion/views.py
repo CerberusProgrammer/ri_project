@@ -2015,7 +2015,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
             estatusAsignacion=True,
         )
 
-        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=False).count() == pieza.procesos.count()]
+        piezas_aprobadas = [pieza for pieza in piezas if pieza.procesos.filter(realizadoPor__isnull=True).count() == pieza.procesos.count()]
 
         serializer = PiezaSerializer(piezas_aprobadas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -2078,6 +2078,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_no_realizadas(self, request):
         piezas_realizadas = Pieza.objects.filter(
+            estatus="aprobado",
             piezaRealizada=False,
         )
 
@@ -2087,6 +2088,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_piezas_no_realizadas_conteo(self, request):
         piezas_realizadas = Pieza.objects.filter(
+            estatus="aprobado",
             piezaRealizada=False,
         )
 
