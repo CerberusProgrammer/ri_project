@@ -1425,7 +1425,7 @@ class PiezaViewSet(viewsets.ModelViewSet):
 
             estadisticas[maquina] = {
                 'realizadas': piezas_realizadas,
-                'planeado': piezas_planeadas+piezas_retrasadas,
+                'planeado': piezas_planeadas + piezas_retrasadas,
             }
 
         return Response(estadisticas)
