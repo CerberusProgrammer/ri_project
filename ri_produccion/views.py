@@ -1398,14 +1398,28 @@ class PiezaViewSet(viewsets.ModelViewSet):
         estadisticas = {}
 
         for maquina in self.maquinasMaquinado:
+            procesos_validos = Proceso.objects.filter(
+                maquina=maquina,
+                estatus='realizado',
+                terminadoProceso__gte=today,
+                terminadoProceso__lt=next_day,
+            )
+
             piezas_realizadas = Pieza.objects.filter(
                 estatus='aprobado',
                 estatusAsignacion=True,
-                procesos__maquina=maquina,
-                procesos__estatus='realizado',
-                procesos__terminadoProceso__gte=today,
-                procesos__terminadoProceso__lt=next_day,
+                procesos__in=procesos_validos,
+            ).annotate(
+                total_procesos=models.Count('procesos'),
+                total_procesos_validos=models.Count(
+                    models.Case(
+                        models.When(procesos__in=procesos_validos, then=1)
+                    )
+                )
+            ).filter(
+                total_procesos=models.F('total_procesos_validos')
             ).distinct().count()
+
 
             piezas_planeadas = Pieza.objects.filter(
                 procesos__finProceso__gte=today,
