@@ -370,24 +370,29 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
-        orden = self.get_object()  # Obtiene la OrdenDeCompra basada en 'pk'
-        productos_data = request.data  # Obtiene la lista de productos del JSON enviado
+        orden = self.get_object()
+        productos_data = request.data
 
+        cantidad_total_recibida = 0
         for producto_data in productos_data:
             id_producto = producto_data.get('id')
             cantidad_recibida = producto_data.get('cantidad')
 
-            # Busca el ProductoRequisicion correspondiente en la orden
+            cantidad_total_recibida += cantidad_recibida
+
             producto_requisicion = get_object_or_404(orden.requisicion.productos, id=id_producto)
 
-            # Actualiza la cantidad recibida
             producto_requisicion.cantidad_recibida = cantidad_recibida
             producto_requisicion.save()
 
-        # Vuelve a obtener la orden de la base de datos para asegurarte de que tiene los datos más recientes
+        cantidad_total_orden = sum([producto.cantidad for producto in orden.requisicion.productos.all()])
+
+        if cantidad_total_recibida >= cantidad_total_orden:
+            orden.orden_recibida = True
+            orden.save()
+
         orden = self.get_object()
 
-        # Serializa y devuelve el objeto OrdenDeCompra
         serializer = self.get_serializer(orden)
         return Response(serializer.data)
 
