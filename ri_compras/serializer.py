@@ -31,7 +31,6 @@ class DepartamentoSerializer(serializers.ModelSerializer):
         lider = Usuarios.objects.filter(departamento=obj, rol='LIDER').first()
         return UsuarioDepartamentoSerializer(lider).data if lider else None
 
-
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
@@ -152,6 +151,12 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class ProductoRequisicionSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ProductoRequisicion
+        fields = ['id', 'identificador', 'nombre', 'descripcion', 'costo', 'divisa', 'cantidad', 'unidad_de_medida', 'cantidad_recibida']
+
 class UsuariosVerySimpleSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -221,7 +226,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
     usuario_id = serializers.IntegerField(write_only=True)
     proyecto = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=True)
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
-    productos = ProductoSerializer(many=True)
+    productos = ProductoRequisicionSerializer(many=True)
     servicios = ServicioSerializer(many=True)
     ordenes = serializers.SerializerMethodField()
     fecha_creacion = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z") # type: ignore
@@ -275,8 +280,6 @@ class RequisicionSerializer(serializers.ModelSerializer):
             requisicion.save()
 
         return requisicion
-
-
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

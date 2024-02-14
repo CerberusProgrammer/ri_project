@@ -44,6 +44,7 @@ class ProductoRequisicion(models.Model):
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.DecimalField(max_digits=20, decimal_places=2)
     unidad_de_medida = models.CharField(max_length=100, null=True)
+    cantidad_recibida = models.DecimalField(max_digits=30, decimal_places=2, default=0, null=True, blank=True)
 
     def __str__(self):
         return self.nombre

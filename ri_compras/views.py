@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -27,6 +28,7 @@ from .serializer import ProveedorSerializer
 from .serializer import OrdenDeCompraSerializer
 from .serializer import ReciboSerializer
 from .serializer import ProjectSerializer
+from .serializer import ProductoRequisicionSerializer
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
@@ -365,6 +367,29 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    @action(detail=True, methods=['post'])
+    def actualizar_productos_recibidos(self, request, pk=None):
+        orden = self.get_object()  # Obtiene la OrdenDeCompra basada en 'pk'
+        productos_data = request.data  # Obtiene la lista de productos del JSON enviado
+
+        for producto_data in productos_data:
+            id_producto = producto_data.get('id')
+            cantidad_recibida = producto_data.get('cantidad')
+
+            # Busca el ProductoRequisicion correspondiente en la orden
+            producto_requisicion = get_object_or_404(orden.requisicion.productos, id=id_producto)
+
+            # Actualiza la cantidad recibida
+            producto_requisicion.cantidad_recibida = cantidad_recibida
+            producto_requisicion.save()
+
+        # Vuelve a obtener la orden de la base de datos para asegurarte de que tiene los datos más recientes
+        orden = self.get_object()
+
+        # Serializa y devuelve el objeto OrdenDeCompra
+        serializer = self.get_serializer(orden)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def exportar(self, request):
