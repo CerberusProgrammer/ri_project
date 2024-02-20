@@ -19,7 +19,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import ContactoSerializer, DepartamentoSerializer
+from .serializer import ContactoSerializer, DepartamentoSerializer, ProductoAlmacenSerializer
 from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -187,6 +187,14 @@ class ProductoViewSet(viewsets.ModelViewSet):
         if search is not None:
             queryset = queryset.filter(Q(nombre__icontains=search) | Q(identificador__icontains=search))
         return queryset
+
+class ProductoAlmacenViewSet(viewsets.ModelViewSet):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoAlmacenSerializer
+    ordering_fields = ['nombre']
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
@@ -397,8 +405,6 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(orden_recibida=orden_recibida)
 
         return queryset
-
-
     
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
