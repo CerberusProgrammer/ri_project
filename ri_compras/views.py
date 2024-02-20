@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils.dateparse import parse_date
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -368,6 +369,37 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
+    # ? DEMO = {{local-server}}/api/ordenes/?id=10&fecha_inicio=2024-01-01&fecha_fin=2024-12-31
+    # ? DEMO = {{local-server}}/api/ordenes/?fecha_fin=2024-02-01&orden_recibida=true
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        id = self.request.query_params.get('id', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+        orden_recibida = self.request.query_params.get('orden_recibida', None)
+
+        if id is not None:
+            queryset = queryset.filter(id=id)
+        
+        if fecha_inicio is not None:
+            fecha_inicio = parse_date(fecha_inicio)
+            if fecha_fin is not None:
+                fecha_fin = parse_date(fecha_fin)
+                queryset = queryset.filter(Q(fecha_entrega__range=[fecha_inicio, fecha_fin]) | Q(fecha_entrega__isnull=True))
+            else:
+                queryset = queryset.filter(Q(fecha_entrega__gte=fecha_inicio) | Q(fecha_entrega__isnull=True))
+        elif fecha_fin is not None:
+            fecha_fin = parse_date(fecha_fin)
+            queryset = queryset.filter(Q(fecha_entrega__lte=fecha_fin) | Q(fecha_entrega__isnull=True))
+
+        if orden_recibida is not None:
+            orden_recibida = orden_recibida.lower() in ['true', '1']
+            queryset = queryset.filter(orden_recibida=orden_recibida)
+
+        return queryset
+
+
+    
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
         orden = self.get_object()
@@ -389,6 +421,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
         if cantidad_total_recibida >= cantidad_total_orden:
             orden.orden_recibida = True
+            orden.estado = "EN ALMACEN"
             orden.save()
 
         orden = self.get_object()
