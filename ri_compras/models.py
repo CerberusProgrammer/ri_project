@@ -54,6 +54,9 @@ class ProductoAlmacen(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(default="Sin descripcion")
     cantidad = models.IntegerField()
+    
+    def __str__(self):
+        return f'{self.nombre} -> {self.cantidad}'
 
 class Servicio(models.Model):
     MONEDAS = (
