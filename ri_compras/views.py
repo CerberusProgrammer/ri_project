@@ -10,7 +10,7 @@ from rest_framework import viewsets
 from rest_framework import filters
 
 from ri_project import settings
-from .models import Contacto, Departamento, Message
+from .models import Contacto, Departamento, Message, ProductoAlmacen
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -189,12 +189,33 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return queryset
 
 class ProductoAlmacenViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
+    queryset = ProductoAlmacen.objects.all()
     serializer_class = ProductoAlmacenSerializer
     ordering_fields = ['nombre']
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        identificador = self.request.query_params.get('identificador', None)
+        nombre = self.request.query_params.get('nombre', None)
+        cantidad = self.request.query_params.get('cantidad', None)
+        id = self.request.query_params.get('id', None)
+
+        if identificador is not None:
+            queryset = queryset.filter(identificador=identificador)
+        
+        if nombre is not None:
+            queryset = queryset.filter(nombre__icontains=nombre)
+        
+        if cantidad is not None:
+            queryset = queryset.filter(cantidad=cantidad)
+        
+        if id is not None:
+            queryset = queryset.filter(id=id)
+
+        return queryset
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
@@ -422,6 +443,17 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
             producto_requisicion.cantidad_recibida = cantidad_recibida
             producto_requisicion.save()
+
+            # Buscar el ProductoAlmacen existente o crear uno nuevo
+            producto_almacen, created = ProductoAlmacen.objects.get_or_create(
+                nombre=producto_requisicion.nombre,
+                identificador=producto_requisicion.identificador,
+                defaults={'descripcion': producto_requisicion.descripcion, 'cantidad': 0}
+            )
+
+            # Actualizar la cantidad del ProductoAlmacen
+            producto_almacen.cantidad += cantidad_recibida
+            producto_almacen.save()
 
         cantidad_total_orden = sum([producto.cantidad for producto in orden.requisicion.productos.all()])
 
