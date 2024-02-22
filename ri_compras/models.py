@@ -300,10 +300,16 @@ class PosicionAlmacen(models.Model):
         return f'Columna: {self.columna} Fila: {self.fila}'
 
 class ProductoAlmacen(models.Model):
+    MONEDAS = (
+        ('MXN', 'MXN'),
+        ('USD', 'USD'),
+    )
+    
     identificador = models.CharField(max_length=100, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(default="Sin descripcion")
-    costo = models.DecimalField(max_digits=20, decimal_places=4)
+    costo = models.FloatField()
+    divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField()
     orden_compra = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='productos_almacen')
     posicion = models.ForeignKey(PosicionAlmacen, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
