@@ -49,15 +49,6 @@ class ProductoRequisicion(models.Model):
     def __str__(self):
         return self.nombre
 
-class ProductoAlmacen(models.Model):
-    identificador = models.CharField(max_length=100, null=True, blank=True)
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(default="Sin descripcion")
-    cantidad = models.IntegerField()
-    
-    def __str__(self):
-        return f'{self.nombre} -> {self.cantidad}'
-
 class Servicio(models.Model):
     MONEDAS = (
         ('MXN', 'MXN'),
@@ -300,6 +291,34 @@ class OrdenDeCompra(models.Model):
         username_formatted = username_formatted.lower().replace(' ', '_')
         
         return f'OC_{self.id}_{username_formatted} | {self.estado}' # type: ignore
+
+class PosicionAlmacen(models.Model):
+    columna = models.IntegerField()
+    fila = models.IntegerField()
+    
+    def __str__(self):
+        return f'Columna: {self.columna} Fila: {self.fila}'
+
+class ProductoAlmacen(models.Model):
+    identificador = models.CharField(max_length=100, null=True, blank=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(default="Sin descripcion")
+    costo = models.DecimalField(max_digits=20, decimal_places=4)
+    cantidad = models.IntegerField()
+    orden_compra = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='productos_almacen')
+    posicion = models.ForeignKey(PosicionAlmacen, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
+    
+    def __str__(self):
+        return f'{self.nombre} -> {self.cantidad}'
+
+class Pedido(models.Model):
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='pedidos')
+    producto = models.ForeignKey(ProductoAlmacen, on_delete=models.CASCADE, related_name='pedidos')
+    cantidad = models.IntegerField(help_text="Cantidad del producto que se pide")
+
+    def __str__(self):
+        return f'{self.usuario.nombre} pidió {self.cantidad} de {self.producto.nombre} el {self.fecha_pedido}'
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)
