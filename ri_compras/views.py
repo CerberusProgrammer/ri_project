@@ -398,25 +398,28 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
-    # ? DEMO = {{local-server}}/api/ordenes/?id=10&fecha_inicio=2024-01-01&fecha_fin=2024-12-31
-    # ? DEMO = {{local-server}}/api/ordenes/?fecha_fin=2024-02-01&orden_recibida=true
     def get_queryset(self):
         queryset = super().get_queryset()
         id = self.request.query_params.get('id', None)
         fecha_inicio = self.request.query_params.get('fecha_inicio', None)
         fecha_fin = self.request.query_params.get('fecha_fin', None)
-        orden_recibida = self.request.query_params.get('orden_recibida', None)
+        orden_recibida = self.request.query_params.get('orden', None)
+        proveedor_nombre = self.request.query_params.get('proveedor', None)
+        requisicion_id = self.request.query_params.get('requisicion', None)
+        usuario_username = self.request.query_params.get('usuario', None)
+        estado = self.request.query_params.get('estado', None)
+        recibido = self.request.query_params.get('recibido', None)
 
         if id is not None:
             queryset = queryset.filter(id=id)
         
-        if fecha_inicio is not None:
+        if fecha_inicio is not None and fecha_fin is not None:
             fecha_inicio = parse_date(fecha_inicio)
-            if fecha_fin is not None:
-                fecha_fin = parse_date(fecha_fin)
-                queryset = queryset.filter(Q(fecha_entrega__range=[fecha_inicio, fecha_fin]) | Q(fecha_entrega__isnull=True))
-            else:
-                queryset = queryset.filter(Q(fecha_entrega__gte=fecha_inicio) | Q(fecha_entrega__isnull=True))
+            fecha_fin = parse_date(fecha_fin)
+            queryset = queryset.filter(Q(fecha_entrega__range=[fecha_inicio, fecha_fin]) | Q(fecha_entrega__isnull=True))
+        elif fecha_inicio is not None:
+            fecha_inicio = parse_date(fecha_inicio)
+            queryset = queryset.filter(Q(fecha_entrega__gte=fecha_inicio) | Q(fecha_entrega__isnull=True))
         elif fecha_fin is not None:
             fecha_fin = parse_date(fecha_fin)
             queryset = queryset.filter(Q(fecha_entrega__lte=fecha_fin) | Q(fecha_entrega__isnull=True))
@@ -425,7 +428,23 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             orden_recibida = orden_recibida.lower() in ['true', '1']
             queryset = queryset.filter(orden_recibida=orden_recibida)
 
+        if proveedor_nombre is not None:
+            queryset = queryset.filter(proveedor__nombre=proveedor_nombre)
+
+        if requisicion_id is not None:
+            queryset = queryset.filter(requisicion__id=requisicion_id)
+
+        if usuario_username is not None:
+            queryset = queryset.filter(usuario__username=usuario_username)
+
+        if estado is not None:
+            queryset = queryset.filter(estado=estado)
+            
+        if recibido is not None:
+            queryset = queryset.filter(orden_recibida=recibido)
+
         return queryset
+
     
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
@@ -435,7 +454,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         cantidad_total_recibida = 0
         for producto_data in productos_data:
             id_producto = producto_data.get('id')
-            cantidad_recibida = producto_data.get('cantidad')
+            cantidad_recibida = producto_data.get('cantidad_recibida')
 
             cantidad_total_recibida += cantidad_recibida
 
