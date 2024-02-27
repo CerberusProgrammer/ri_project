@@ -441,14 +441,20 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
             producto_requisicion = get_object_or_404(orden.requisicion.productos, id=id_producto)
 
-            producto_requisicion.cantidad_recibida = cantidad_recibida
+            # Actualizar la cantidad recibida del ProductoRequisicion
+            producto_requisicion.cantidad_recibida += cantidad_recibida
             producto_requisicion.save()
 
             # Buscar el ProductoAlmacen existente o crear uno nuevo
             producto_almacen, created = ProductoAlmacen.objects.get_or_create(
+                orden_compra=orden,
                 nombre=producto_requisicion.nombre,
-                identificador=producto_requisicion.identificador,
-                defaults={'descripcion': producto_requisicion.descripcion, 'cantidad': 0}
+                defaults={
+                    'identificador': producto_requisicion.identificador,
+                    'descripcion': producto_requisicion.descripcion,
+                    'costo': producto_requisicion.costo,
+                    'cantidad': 0
+                }
             )
 
             # Actualizar la cantidad del ProductoAlmacen
@@ -466,6 +472,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(orden)
         return Response(serializer.data)
+
 
     @action(detail=False, methods=['post'])
     def exportar(self, request):
