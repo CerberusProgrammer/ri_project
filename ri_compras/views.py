@@ -10,7 +10,7 @@ from rest_framework import viewsets
 from rest_framework import filters
 
 from ri_project import settings
-from .models import Contacto, Departamento, Message, ProductoAlmacen
+from .models import Contacto, Departamento, Message, Pedido, ProductoAlmacen
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -19,7 +19,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import ContactoSerializer, DepartamentoSerializer, ProductoAlmacenSerializer
+from .serializer import ContactoSerializer, DepartamentoSerializer, PedidoSerializer, ProductoAlmacenSerializer
 from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -389,6 +389,12 @@ class ProveedorViewSet(viewsets.ModelViewSet):
         if search is not None:
             queryset = queryset.filter(Q(nombre__icontains=search))
         return queryset
+
+class PedidoViewSet(viewsets.ModelViewSet):
+    queryset = Pedido.objects.all().order_by('-id')
+    serializer_class = PedidoSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     queryset = OrdenDeCompra.objects.all().order_by('-id')
