@@ -319,12 +319,22 @@ class ProductoAlmacen(models.Model):
 
 class Pedido(models.Model):
     fecha_pedido = models.DateTimeField(auto_now_add=True)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='pedidos')
-    producto = models.ForeignKey(ProductoAlmacen, on_delete=models.CASCADE, related_name='pedidos')
+    usuario = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, null=True, blank=True, related_name='pedidos')
+    producto = models.ForeignKey(ProductoAlmacen, on_delete=models.SET_NULL, null=True, blank=True, related_name='pedidos')
     cantidad = models.IntegerField(help_text="Cantidad del producto que se pide")
 
+    usuario_nombre = models.CharField(max_length=100, null=True, blank=True)
+    producto_nombre = models.CharField(max_length=100, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.usuario:
+            self.usuario_nombre = self.usuario.nombre
+        if self.producto:
+            self.producto_nombre = self.producto.nombre
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f'{self.usuario.nombre} pidió {self.cantidad} de {self.producto.nombre} el {self.fecha_pedido}'
+        return f'{self.usuario_nombre} pidió {self.cantidad} de {self.producto_nombre} el {self.fecha_pedido}'
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)
