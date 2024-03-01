@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Contacto, Pedido, ProductoAlmacen
+from .models import Contacto, Pedido, PosicionAlmacen, ProductoAlmacen
 from .models import ServicioRequisicion
 from .models import Departamento
 from .models import Message
@@ -150,6 +150,12 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+
+class PosicionAlmacenSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = PosicionAlmacen
+        fields = '__all__'
 
 class ProductoRequisicionSerializer(serializers.ModelSerializer):
     

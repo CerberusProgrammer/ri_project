@@ -10,7 +10,7 @@ from rest_framework import viewsets
 from rest_framework import filters
 
 from ri_project import settings
-from .models import Contacto, Departamento, Message, Pedido, ProductoAlmacen
+from .models import Contacto, Departamento, Message, Pedido, PosicionAlmacen, ProductoAlmacen
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -19,7 +19,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import ContactoSerializer, DepartamentoSerializer, PedidoSerializer, ProductoAlmacenSerializer
+from .serializer import ContactoSerializer, DepartamentoSerializer, PedidoSerializer, PosicionAlmacenSerializer, ProductoAlmacenSerializer
 from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -216,6 +216,15 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(id=id)
 
         return queryset
+    
+    @action(detail=True, methods=['get'])
+    def obtener_pedidos(self, request, pk=None):
+        producto = self.get_object()
+        pedidos = producto.pedidos.all()
+
+        serializer = PedidoSerializer(pedidos, many=True)
+
+        return Response(serializer.data)
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
@@ -390,6 +399,25 @@ class ProveedorViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(Q(nombre__icontains=search))
         return queryset
 
+class PosicionAlmacenViewSet(viewsets.ModelViewSet):
+    queryset = PosicionAlmacen.objects.all().order_by('-id')
+    serializer_class = PosicionAlmacenSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        columna = self.request.query_params.get('columna', None)
+        fila = self.request.query_params.get('fila', None)
+
+        if columna is not None:
+            queryset = queryset.filter(columna=columna)
+        
+        if fila is not None:
+            queryset = queryset.filter(fila=fila)
+
+        return queryset
+
 class PedidoViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all().order_by('-id')
     serializer_class = PedidoSerializer
@@ -451,26 +479,22 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
         orden = self.get_object()
         productos_data = request.data
 
-        cantidad_total_recibida = 0
+        productos_almacen = []  # Lista para almacenar los productos de almacén
+
         for producto_data in productos_data:
             id_producto = producto_data.get('id')
             cantidad_recibida = producto_data.get('cantidad_recibida')
 
-            cantidad_total_recibida += cantidad_recibida
-
             producto_requisicion = get_object_or_404(orden.requisicion.productos, id=id_producto)
 
-            # Actualizar la cantidad recibida del ProductoRequisicion
             producto_requisicion.cantidad_recibida += cantidad_recibida
             producto_requisicion.save()
 
-            # Buscar el ProductoAlmacen existente o crear uno nuevo
             producto_almacen, created = ProductoAlmacen.objects.get_or_create(
                 orden_compra=orden,
                 nombre=producto_requisicion.nombre,
@@ -482,13 +506,15 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
                 }
             )
 
-            # Actualizar la cantidad del ProductoAlmacen
             producto_almacen.cantidad += cantidad_recibida
             producto_almacen.save()
 
-        cantidad_total_orden = sum([producto.cantidad for producto in orden.requisicion.productos.all()])
+            # Añadir el producto de almacén a la lista
+            productos_almacen.append(ProductoAlmacenSerializer(producto_almacen).data)
 
-        if cantidad_total_recibida >= cantidad_total_orden:
+        todos_recibidos = all(producto.cantidad <= producto.cantidad_recibida for producto in orden.requisicion.productos.all())
+
+        if todos_recibidos:
             orden.orden_recibida = True
             orden.estado = "EN ALMACEN"
             orden.save()
@@ -496,7 +522,11 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         orden = self.get_object()
 
         serializer = self.get_serializer(orden)
-        return Response(serializer.data)
+        data = serializer.data
+        # Añadir la lista de productos de almacén a la respuesta
+        data['productos_almacen'] = productos_almacen
+        return Response(data)
+
 
 
     @action(detail=False, methods=['post'])
