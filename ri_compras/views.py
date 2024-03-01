@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import filters
+from django.db.models import CharField
+from django.db.models.functions import Cast
 
 from ri_project import settings
 from .models import Contacto, Departamento, Message, Pedido, PosicionAlmacen, ProductoAlmacen
@@ -200,18 +202,38 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         identificador = self.request.query_params.get('identificador', None)
         nombre = self.request.query_params.get('nombre', None)
+        descripcion = self.request.query_params.get('descripcion', None)
+        costo = self.request.query_params.get('costo', None)
+        divisa = self.request.query_params.get('divisa', None)
         cantidad = self.request.query_params.get('cantidad', None)
+        orden_compra_id = self.request.query_params.get('orden_compra_id', None)
+        posicion_id = self.request.query_params.get('posicion_id', None)
         id = self.request.query_params.get('id', None)
 
         if identificador is not None:
             queryset = queryset.filter(identificador=identificador)
-        
+            
         if nombre is not None:
             queryset = queryset.filter(nombre__icontains=nombre)
-        
+            
+        if descripcion is not None:
+            queryset = queryset.filter(descripcion__icontains=descripcion)
+            
+        if costo is not None:
+            queryset = queryset.filter(costo=costo)
+            
+        if divisa is not None:
+            queryset = queryset.filter(divisa=divisa)
+            
         if cantidad is not None:
             queryset = queryset.filter(cantidad=cantidad)
-        
+            
+        if orden_compra_id is not None:
+            queryset = queryset.filter(orden_compra__id=orden_compra_id)
+            
+        if posicion_id is not None:
+            queryset = queryset.filter(posicion__id=posicion_id)
+            
         if id is not None:
             queryset = queryset.filter(id=id)
 
@@ -445,7 +467,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         recibido = self.request.query_params.get('recibido', None)
 
         if id is not None:
-            queryset = queryset.filter(id=id)
+            queryset = queryset.annotate(id_str=Cast('id', CharField())).filter(id_str__icontains=id)
         
         if fecha_inicio is not None and fecha_fin is not None:
             fecha_inicio = parse_date(fecha_inicio)
