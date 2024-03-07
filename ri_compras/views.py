@@ -220,13 +220,35 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(descripcion__icontains=descripcion)
             
         if costo is not None:
-            queryset = queryset.filter(costo=costo)
+            if '>' in costo and '<' in costo:
+                min_costo, max_costo = costo.split('<')
+                min_costo = min_costo.replace('>', '')
+                queryset = queryset.filter(costo__gt=min_costo, costo__lt=max_costo)
+            elif '>' in costo:
+                min_costo = costo.replace('>', '')
+                queryset = queryset.filter(costo__gt=min_costo)
+            elif '<' in costo:
+                max_costo = costo.replace('<', '')
+                queryset = queryset.filter(costo__lt=max_costo)
+            else:
+                queryset = queryset.filter(costo=costo)
             
         if divisa is not None:
             queryset = queryset.filter(divisa=divisa)
             
         if cantidad is not None:
-            queryset = queryset.filter(cantidad=cantidad)
+            if '>' in cantidad and '<' in cantidad:
+                min_cantidad, max_cantidad = cantidad.split('<')
+                min_cantidad = min_cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad, cantidad__lt=max_cantidad)
+            elif '>' in cantidad:
+                min_cantidad = cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad)
+            elif '<' in cantidad:
+                max_cantidad = cantidad.replace('<', '')
+                queryset = queryset.filter(cantidad__lt=max_cantidad)
+            else:
+                queryset = queryset.filter(cantidad=cantidad)
             
         if orden_compra_id is not None:
             queryset = queryset.filter(orden_compra__id=orden_compra_id)
@@ -445,6 +467,33 @@ class PedidoViewSet(viewsets.ModelViewSet):
     serializer_class = PedidoSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    """
+    /api/pedidos/?fecha_pedido=2024-01-01
+    /api/pedidos/?usuario_nombre=John
+    /api/pedidos/?producto_nombre=Apple
+    /api/pedidos/?cantidad=10
+    """
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        fecha_pedido = self.request.query_params.get('fecha_pedido', None)
+        usuario_nombre = self.request.query_params.get('usuario_nombre', None)
+        producto_nombre = self.request.query_params.get('producto_nombre', None)
+        cantidad = self.request.query_params.get('cantidad', None)
+
+        if fecha_pedido is not None:
+            queryset = queryset.filter(fecha_pedido=fecha_pedido)
+            
+        if usuario_nombre is not None:
+            queryset = queryset.filter(usuario_nombre__icontains=usuario_nombre)
+            
+        if producto_nombre is not None:
+            queryset = queryset.filter(producto_nombre__icontains=producto_nombre)
+            
+        if cantidad is not None:
+            queryset = queryset.filter(cantidad=cantidad)
+
+        return queryset
 
 class OrdenDeCompraViewSet(viewsets.ModelViewSet):
     queryset = OrdenDeCompra.objects.all().order_by('-id')
@@ -465,19 +514,20 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         usuario_username = self.request.query_params.get('usuario', None)
         estado = self.request.query_params.get('estado', None)
         recibido = self.request.query_params.get('recibido', None)
+        limit = self.request.query_params.get('limit', None)
 
         if id is not None:
             queryset = queryset.annotate(id_str=Cast('id', CharField())).filter(id_str__icontains=id)
         
         if fecha_inicio is not None and fecha_fin is not None:
-            fecha_inicio = parse_date(fecha_inicio)
-            fecha_fin = parse_date(fecha_fin)
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
             queryset = queryset.filter(Q(fecha_entrega__range=[fecha_inicio, fecha_fin]) | Q(fecha_entrega__isnull=True))
         elif fecha_inicio is not None:
-            fecha_inicio = parse_date(fecha_inicio)
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
             queryset = queryset.filter(Q(fecha_entrega__gte=fecha_inicio) | Q(fecha_entrega__isnull=True))
         elif fecha_fin is not None:
-            fecha_fin = parse_date(fecha_fin)
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
             queryset = queryset.filter(Q(fecha_entrega__lte=fecha_fin) | Q(fecha_entrega__isnull=True))
 
         if orden_recibida is not None:
@@ -498,15 +548,33 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             
         if recibido is not None:
             queryset = queryset.filter(orden_recibida=recibido)
-
+        
+        queryset = queryset.exclude(fecha_entrega__isnull=True)
+        
+        if limit is not None:
+            try:
+                limit = int(limit)
+                queryset = queryset[:limit]
+            except ValueError:
+                pass
+        
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        count = request.query_params.get('count', 'false').lower() == 'true'
+        if count:
+            queryset = self.filter_queryset(self.get_queryset())
+            count = queryset.count()
+            return Response({'ordenes': count})
+        else:
+            return super().list(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def actualizar_productos_recibidos(self, request, pk=None):
         orden = self.get_object()
         productos_data = request.data
 
-        productos_almacen = []  # Lista para almacenar los productos de almacén
+        productos_almacen = []
 
         for producto_data in productos_data:
             id_producto = producto_data.get('id')
