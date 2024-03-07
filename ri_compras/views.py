@@ -10,6 +10,7 @@ from rest_framework import viewsets
 from rest_framework import filters
 from django.db.models import CharField
 from django.db.models.functions import Cast
+from django.db.models import Count
 
 from ri_project import settings
 from .models import Contacto, Departamento, Message, Pedido, PosicionAlmacen, ProductoAlmacen
@@ -32,6 +33,9 @@ from .serializer import OrdenDeCompraSerializer
 from .serializer import ReciboSerializer
 from .serializer import ProjectSerializer
 from .serializer import ProductoRequisicionSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.db.models import Sum, F, FloatField
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
@@ -269,6 +273,27 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
         serializer = PedidoSerializer(pedidos, many=True)
 
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def obtener_inventariado(self, request):
+        cantidad_total = ProductoAlmacen.objects.all().aggregate(Sum('cantidad'))['cantidad__sum']
+        costo_total = ProductoAlmacen.objects.all().aggregate(total=Sum(F('costo') * F('cantidad'), output_field=FloatField()))['total']
+        pedido_total = Pedido.objects.all().aggregate(Sum('cantidad'))['cantidad__sum']
+
+        usuarios_con_mas_pedidos = Pedido.objects.values('usuario_nombre').annotate(total_pedidos=Count('cantidad')).order_by('-total_pedidos')[:10]
+        productos_mas_pedidos = Pedido.objects.values('producto_nombre').annotate(total_pedidos=Sum('cantidad')).order_by('-total_pedidos')[:10]
+        fecha_con_mas_pedidos = Pedido.objects.extra({'fecha_pedido' : "date(fecha_pedido)"}).values('fecha_pedido').annotate(total_pedidos=Count('id')).order_by('-total_pedidos')[:10]
+        cantidad_por_posicion = ProductoAlmacen.objects.values('posicion__columna', 'posicion__fila').annotate(total_productos=Sum('cantidad')).order_by('-total_productos')
+
+        return Response({
+            "cantidad_total": cantidad_total if cantidad_total else 0,
+            "costo_total": costo_total if costo_total else 0.0,
+            "pedido_total": pedido_total if pedido_total else 0,
+            "usuarios_con_mas_pedidos": usuarios_con_mas_pedidos,
+            "productos_mas_pedidos": productos_mas_pedidos,
+            "fecha_con_mas_pedidos": fecha_con_mas_pedidos,
+            "cantidad_por_posicion": cantidad_por_posicion,
+        })
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
