@@ -284,6 +284,8 @@ class OrdenDeCompra(models.Model):
     estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")
     url_pdf = models.CharField(max_length=255, null=True)
     orden_recibida = models.BooleanField(default=False)
+    orden_compra_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
+    factura_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
     # history = HistoricalRecords()
 
     def __str__(self):

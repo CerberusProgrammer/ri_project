@@ -516,7 +516,18 @@ class PedidoViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(producto_nombre__icontains=producto_nombre)
             
         if cantidad is not None:
-            queryset = queryset.filter(cantidad=cantidad)
+            if '>' in cantidad and '<' in cantidad:
+                min_cantidad, max_cantidad = cantidad.split('<')
+                min_cantidad = min_cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad, cantidad__lt=max_cantidad)
+            elif '>' in cantidad:
+                min_cantidad = cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad)
+            elif '<' in cantidad:
+                max_cantidad = cantidad.replace('<', '')
+                queryset = queryset.filter(cantidad__lt=max_cantidad)
+            else:
+                queryset = queryset.filter(cantidad=cantidad)
 
         return queryset
 
