@@ -289,10 +289,10 @@ class OrdenDeCompra(models.Model):
     # history = HistoricalRecords()
 
     def __str__(self):
-        username_formatted = self.requisicion.usuario.nombre # type: ignore
+        username_formatted = self.requisicion.usuario.nombre
         username_formatted = username_formatted.lower().replace(' ', '_')
         
-        return f'OC_{self.id}_{username_formatted} | {self.estado}' # type: ignore
+        return f'OC_{self.id}_{username_formatted} | {self.estado}'
 
 class PosicionAlmacen(models.Model):
     columna = models.IntegerField()
@@ -313,6 +313,8 @@ class ProductoAlmacen(models.Model):
     costo = models.FloatField()
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     cantidad = models.IntegerField()
+    minimo = models.IntegerField(blank=True, null=True)
+    maximo = models.IntegerField(blank=True, null=True)
     orden_compra = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='productos_almacen')
     posicion = models.ForeignKey(PosicionAlmacen, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     
@@ -345,7 +347,7 @@ class Recibo(models.Model):
     # history = HistoricalRecords()
 
     def __str__(self):
-        return f'Recibo #{self.id}' # type: ignore
+        return f'Recibo #{self.id}'
 
 class Message(models.Model):
     user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='messages')
@@ -357,4 +359,4 @@ class Message(models.Model):
     # history = HistoricalRecords()
 
     def __str__(self):
-        return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}' # type: ignore
+        return f'{self.from_user} to {self.user} | {self.created_at.day}/{self.created_at.month}/{self.created_at.year} {self.created_at.hour}:{self.created_at.minute}'

@@ -493,21 +493,31 @@ class PedidoViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
-    """
-    /api/pedidos/?fecha_pedido=2024-01-01
-    /api/pedidos/?usuario_nombre=John
-    /api/pedidos/?producto_nombre=Apple
-    /api/pedidos/?cantidad=10
-    """
     def get_queryset(self):
         queryset = super().get_queryset()
-        fecha_pedido = self.request.query_params.get('fecha_pedido', None)
-        usuario_nombre = self.request.query_params.get('usuario_nombre', None)
-        producto_nombre = self.request.query_params.get('producto_nombre', None)
+        fecha_pedido = self.request.query_params.get('fecha', None)
+        usuario_nombre = self.request.query_params.get('usuario', None)
+        producto_nombre = self.request.query_params.get('producto', None)
         cantidad = self.request.query_params.get('cantidad', None)
 
         if fecha_pedido is not None:
-            queryset = queryset.filter(fecha_pedido=fecha_pedido)
+            try:
+                if '/' in fecha_pedido:
+                    fecha_desde, fecha_hasta = fecha_pedido.split('/')
+                    parsed_fecha_desde = datetime.strptime(fecha_desde, '%Y-%m-%d')
+                    parsed_fecha_hasta = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+                    queryset = queryset.filter(
+                        fecha_pedido__range=(parsed_fecha_desde, parsed_fecha_hasta)
+                    )
+                else:
+                    parsed_date = datetime.strptime(fecha_pedido, '%Y-%m-%d')
+                    queryset = queryset.filter(
+                        fecha_pedido__year=parsed_date.year,
+                        fecha_pedido__month=parsed_date.month,
+                        fecha_pedido__day=parsed_date.day
+                    )
+            except ValueError:
+                queryset = queryset.none()
             
         if usuario_nombre is not None:
             queryset = queryset.filter(usuario_nombre__icontains=usuario_nombre)
