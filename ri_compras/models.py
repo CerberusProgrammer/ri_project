@@ -295,11 +295,11 @@ class OrdenDeCompra(models.Model):
         return f'OC_{self.id}_{username_formatted} | {self.estado}'
 
 class PosicionAlmacen(models.Model):
-    columna = models.IntegerField()
-    fila = models.IntegerField()
+    columna = models.CharField(max_length=50)
+    fila = models.CharField(max_length=50)
     
     def __str__(self):
-        return f'Columna: {self.columna} Fila: {self.fila}'
+        return f'Rack: {self.columna} Estante: {self.fila}'
 
 class ProductoAlmacen(models.Model):
     MONEDAS = (

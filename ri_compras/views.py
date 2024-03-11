@@ -561,20 +561,28 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
         estado = self.request.query_params.get('estado', None)
         recibido = self.request.query_params.get('recibido', None)
         limit = self.request.query_params.get('limit', None)
+        hayEntrega = self.request.query_params.get('hayEntrega', None)
 
         if id is not None:
             queryset = queryset.annotate(id_str=Cast('id', CharField())).filter(id_str__icontains=id)
         
+        if hayEntrega is not None:
+            hayEntrega = hayEntrega.lower() in ['true', '1']
+            if hayEntrega:
+                queryset = queryset.exclude(fecha_entrega__isnull=True)
+            else:
+                queryset = queryset.filter(fecha_entrega__isnull=True)
+        
         if fecha_inicio is not None and fecha_fin is not None:
             fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
             fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
-            queryset = queryset.filter(Q(fecha_entrega__range=[fecha_inicio, fecha_fin]) | Q(fecha_entrega__isnull=True))
+            queryset = queryset.filter(fecha_entrega__range=[fecha_inicio, fecha_fin])
         elif fecha_inicio is not None:
             fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
-            queryset = queryset.filter(Q(fecha_entrega__gte=fecha_inicio) | Q(fecha_entrega__isnull=True))
+            queryset = queryset.filter(fecha_entrega__gte=fecha_inicio)
         elif fecha_fin is not None:
             fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
-            queryset = queryset.filter(Q(fecha_entrega__lte=fecha_fin) | Q(fecha_entrega__isnull=True))
+            queryset = queryset.filter(fecha_entrega__lte=fecha_fin)
 
         if orden_recibida is not None:
             orden_recibida = orden_recibida.lower() in ['true', '1']
@@ -594,9 +602,7 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             
         if recibido is not None:
             queryset = queryset.filter(orden_recibida=recibido)
-        
-        queryset = queryset.exclude(fecha_entrega__isnull=True)
-        
+            
         if limit is not None:
             try:
                 limit = int(limit)
@@ -645,7 +651,6 @@ class OrdenDeCompraViewSet(viewsets.ModelViewSet):
             producto_almacen.cantidad += cantidad_recibida
             producto_almacen.save()
 
-            # Añadir el producto de almacén a la lista
             productos_almacen.append(ProductoAlmacenSerializer(producto_almacen).data)
 
         todos_recibidos = all(producto.cantidad <= producto.cantidad_recibida for producto in orden.requisicion.productos.all())

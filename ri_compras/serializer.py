@@ -322,7 +322,7 @@ class OrdenDeCompraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'fecha_entrega', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','estado', 'url_pdf', 'orden_recibida']
+        fields = '__all__'
 
     def get_fecha_emision(self, obj):
         return timezone.localtime(obj.fecha_emision)
