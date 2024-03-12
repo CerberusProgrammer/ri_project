@@ -1,6 +1,4 @@
 from django.shortcuts import get_object_or_404
-from django.utils.dateparse import parse_date
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -13,7 +11,7 @@ from django.db.models.functions import Cast
 from django.db.models import Count
 
 from ri_project import settings
-from .models import Contacto, Departamento, Message, Pedido, PosicionAlmacen, ProductoAlmacen
+from .models import Contacto, Departamento, Estante, Message, Pedido, ProductoAlmacen, Rack
 from .models import Usuarios
 from .models import Producto
 from .models import Servicio
@@ -22,7 +20,7 @@ from .models import Proveedor
 from .models import OrdenDeCompra
 from .models import Recibo
 from .models import Project
-from .serializer import ContactoSerializer, DepartamentoSerializer, PedidoSerializer, PosicionAlmacenSerializer, ProductoAlmacenSerializer
+from .serializer import ContactoSerializer, DepartamentoSerializer, EstanteSerializer, PedidoSerializer, ProductoAlmacenSerializer, RackSerializer
 from .serializer import MessageSerializer
 from .serializer import UsuariosSerializer
 from .serializer import ProductoSerializer
@@ -468,24 +466,17 @@ class ProveedorViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(Q(nombre__icontains=search))
         return queryset
 
-class PosicionAlmacenViewSet(viewsets.ModelViewSet):
-    queryset = PosicionAlmacen.objects.all().order_by('-id')
-    serializer_class = PosicionAlmacenSerializer
+class RackViewSet(viewsets.ModelViewSet):
+    queryset = Rack.objects.all().order_by('-id')
+    serializer_class = RackSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        columna = self.request.query_params.get('columna', None)
-        fila = self.request.query_params.get('fila', None)
-
-        if columna is not None:
-            queryset = queryset.filter(columna=columna)
-        
-        if fila is not None:
-            queryset = queryset.filter(fila=fila)
-
-        return queryset
+class EstanteViewSet(viewsets.ModelViewSet):
+    queryset = Estante.objects.all().order_by('-id')
+    serializer_class = EstanteSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 class PedidoViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all().order_by('-id')

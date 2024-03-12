@@ -294,12 +294,21 @@ class OrdenDeCompra(models.Model):
         
         return f'OC_{self.id}_{username_formatted} | {self.estado}'
 
-class PosicionAlmacen(models.Model):
-    columna = models.CharField(max_length=50)
-    fila = models.CharField(max_length=50)
-    
+class Rack(models.Model):
+    nombre = models.CharField(max_length=50, unique=True)
+
     def __str__(self):
-        return f'Rack: {self.columna} Estante: {self.fila}'
+        return self.nombre
+
+class Estante(models.Model):
+    numero = models.CharField(max_length=50)
+    rack = models.ForeignKey(Rack, on_delete=models.CASCADE, related_name='estantes')
+
+    class Meta:
+        unique_together = ('numero', 'rack',)
+
+    def __str__(self):
+        return f'{self.rack.nombre}{self.numero}'
 
 class ProductoAlmacen(models.Model):
     MONEDAS = (
@@ -316,7 +325,7 @@ class ProductoAlmacen(models.Model):
     minimo = models.IntegerField(blank=True, null=True)
     maximo = models.IntegerField(blank=True, null=True)
     orden_compra = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='productos_almacen')
-    posicion = models.ForeignKey(PosicionAlmacen, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
+    posicion = models.ForeignKey(Estante, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     
     def __str__(self):
         return f'{self.nombre} -> {self.cantidad}'
