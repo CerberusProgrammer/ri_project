@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Contacto, Pedido, ProductoAlmacen, Rack
+from .models import Contacto, Estante, Pedido, ProductoAlmacen, Rack
 from .models import ServicioRequisicion
 from .models import Departamento
 from .models import Message
@@ -160,7 +160,7 @@ class RackSerializer(serializers.ModelSerializer):
 class EstanteSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = Rack
+        model = Estante
         fields = '__all__'
 
 class ProductoRequisicionSerializer(serializers.ModelSerializer):

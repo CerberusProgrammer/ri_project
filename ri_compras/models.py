@@ -259,13 +259,12 @@ class Requisicion(models.Model):
     servicios = models.ManyToManyField(ServicioRequisicion, blank=True)
     archivo_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
     tipo_de_cambio = models.DecimalField(max_digits=10, decimal_places=6, blank=True, null=True)
-    # history = HistoricalRecords()
 
     def __str__(self):
-        username_formatted = self.usuario.nombre # type: ignore
+        username_formatted = self.usuario.nombre
         username_formatted = username_formatted.lower().replace(' ', '_')
         
-        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}'
 
 class OrdenDeCompra(models.Model):
     ESTADO_ENVIO = (

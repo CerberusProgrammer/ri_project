@@ -211,6 +211,13 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
         orden_compra_id = self.request.query_params.get('orden_compra_id', None)
         posicion_id = self.request.query_params.get('posicion_id', None)
         id = self.request.query_params.get('id', None)
+        rack_nombre = self.request.query_params.get('rack', None)
+        estante_numero = self.request.query_params.get('estante', None)
+
+        if rack_nombre is not None:
+            queryset = queryset.filter(posicion__rack__nombre=rack_nombre)
+            if estante_numero is not None:
+                queryset = queryset.filter(posicion__numero=estante_numero)
 
         if identificador is not None:
             queryset = queryset.filter(identificador=identificador)
@@ -262,7 +269,7 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(id=id)
 
         return queryset
-    
+
     @action(detail=True, methods=['get'])
     def obtener_pedidos(self, request, pk=None):
         producto = self.get_object()
@@ -275,22 +282,24 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def obtener_inventariado(self, request):
         cantidad_total = ProductoAlmacen.objects.all().aggregate(Sum('cantidad'))['cantidad__sum']
-        costo_total = ProductoAlmacen.objects.all().aggregate(total=Sum(F('costo') * F('cantidad'), output_field=FloatField()))['total']
+        costo_total_pesos = ProductoAlmacen.objects.filter(divisa='MXN').aggregate(total=Sum(F('costo') * F('cantidad'), output_field=FloatField()))['total']
+        costo_total_dolares = ProductoAlmacen.objects.filter(divisa='USD').aggregate(total=Sum(F('costo') * F('cantidad'), output_field=FloatField()))['total']
         pedido_total = Pedido.objects.all().aggregate(Sum('cantidad'))['cantidad__sum']
 
         usuarios_con_mas_pedidos = Pedido.objects.values('usuario_nombre').annotate(total_pedidos=Count('cantidad')).order_by('-total_pedidos')[:10]
         productos_mas_pedidos = Pedido.objects.values('producto_nombre').annotate(total_pedidos=Sum('cantidad')).order_by('-total_pedidos')[:10]
         fecha_con_mas_pedidos = Pedido.objects.extra({'fecha_pedido' : "date(fecha_pedido)"}).values('fecha_pedido').annotate(total_pedidos=Count('id')).order_by('-total_pedidos')[:10]
-        cantidad_por_posicion = ProductoAlmacen.objects.values('posicion__columna', 'posicion__fila').annotate(total_productos=Sum('cantidad')).order_by('-total_productos')
+        cantidad_por_rack = ProductoAlmacen.objects.values('posicion__rack__nombre').annotate(total_productos=Sum('cantidad')).order_by('-total_productos')
 
         return Response({
             "cantidad_total": cantidad_total if cantidad_total else 0,
-            "costo_total": costo_total if costo_total else 0.0,
+            "costo_total_pesos": costo_total_pesos if costo_total_pesos else 0.0,
+            "costo_total_dolares": costo_total_dolares if costo_total_dolares else 0.0,
             "pedido_total": pedido_total if pedido_total else 0,
             "usuarios_con_mas_pedidos": usuarios_con_mas_pedidos,
             "productos_mas_pedidos": productos_mas_pedidos,
             "fecha_con_mas_pedidos": fecha_con_mas_pedidos,
-            "cantidad_por_posicion": cantidad_por_posicion,
+            "cantidad_por_rack": cantidad_por_rack,
         })
 
 class ServicioViewSet(viewsets.ModelViewSet):
@@ -467,16 +476,59 @@ class ProveedorViewSet(viewsets.ModelViewSet):
         return queryset
 
 class RackViewSet(viewsets.ModelViewSet):
-    queryset = Rack.objects.all().order_by('-id')
+    queryset = Rack.objects.all()
     serializer_class = RackSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
+    def get_queryset(self):
+        queryset = Rack.objects.all().order_by('-id')
+        
+        nombre = self.request.query_params.get('nombre', None)
+        productID = self.request.query_params.get('productID', None)
+
+        if nombre is not None:
+            queryset = queryset.filter(nombre__icontains=nombre)
+
+        if productID is not None:
+            producto = ProductoAlmacen.objects.get(id=productID)
+            queryset = queryset.filter(estantes__productos=producto)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        productID = request.query_params.get('productID', None)
+
+        if productID is not None:
+            producto = ProductoAlmacen.objects.get(id=productID)
+            estante = Estante.objects.get(productos=producto)
+            rack = self.get_queryset().get(id=estante.rack.id)
+            serializer = self.get_serializer(rack)
+            data = serializer.data
+            data['estante'] = estante.numero
+            return Response(data)
+
+        return super().list(request, *args, **kwargs)
+
 class EstanteViewSet(viewsets.ModelViewSet):
     queryset = Estante.objects.all().order_by('-id')
     serializer_class = EstanteSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Estante.objects.all().order_by('-id')
+        
+        rack_id = self.request.query_params.get('rack', None)
+        estante_numero = self.request.query_params.get('estante', None)
+
+        if rack_id is not None:
+            queryset = queryset.filter(rack__id=rack_id)
+
+        if estante_numero is not None:
+            queryset = queryset.filter(numero=estante_numero)
+
+        return queryset
 
 class PedidoViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all().order_by('-id')
