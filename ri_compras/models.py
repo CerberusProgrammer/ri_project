@@ -324,6 +324,7 @@ class ProductoAlmacen(models.Model):
     minimo = models.IntegerField(blank=True, null=True)
     maximo = models.IntegerField(blank=True, null=True)
     orden_compra = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='productos_almacen')
+    orden_liberada = models.BooleanField(default=False)
     posicion = models.ForeignKey(Estante, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     
     def __str__(self):

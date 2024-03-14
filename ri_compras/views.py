@@ -208,7 +208,7 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
         costo = self.request.query_params.get('costo', None)
         divisa = self.request.query_params.get('divisa', None)
         cantidad = self.request.query_params.get('cantidad', None)
-        orden_compra_id = self.request.query_params.get('orden_compra_id', None)
+        orden_compra_id = self.request.query_params.get('orden', None)
         posicion_id = self.request.query_params.get('posicion_id', None)
         id = self.request.query_params.get('id', None)
         rack_nombre = self.request.query_params.get('rack', None)
@@ -220,7 +220,7 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(posicion__numero=estante_numero)
 
         if identificador is not None:
-            queryset = queryset.filter(identificador=identificador)
+            queryset = queryset.filter(identificador__icontains=identificador)
             
         if nombre is not None:
             queryset = queryset.filter(nombre__icontains=nombre)
