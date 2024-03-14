@@ -186,10 +186,59 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def get_queryset(self):
-        queryset = Producto.objects.all()
-        search = self.request.query_params.get('search', None) # type: ignore
-        if search is not None:
-            queryset = queryset.filter(Q(nombre__icontains=search) | Q(identificador__icontains=search))
+        queryset = Producto.objects.all().order_by('-id')
+        
+        identificador = self.request.query_params.get('identificador', None)
+        nombre = self.request.query_params.get('nombre', None)
+        descripcion = self.request.query_params.get('descripcion', None)
+        costo = self.request.query_params.get('costo', None)
+        divisa = self.request.query_params.get('divisa', None)
+        cantidad = self.request.query_params.get('cantidad', None)
+        unidad_de_medida = self.request.query_params.get('medida', None)
+
+        if identificador is not None:
+            queryset = queryset.filter(identificador__icontains=identificador)
+
+        if nombre is not None:
+            queryset = queryset.filter(nombre__icontains=nombre)
+
+        if descripcion is not None:
+            queryset = queryset.filter(descripcion__icontains=descripcion)
+
+        if costo is not None:
+            if '>' in costo and '<' in costo:
+                min_costo, max_costo = costo.split('<')
+                min_costo = min_costo.replace('>', '')
+                queryset = queryset.filter(costo__gt=min_costo, costo__lt=max_costo)
+            elif '>' in costo:
+                min_costo = costo.replace('>', '')
+                queryset = queryset.filter(costo__gt=min_costo)
+            elif '<' in costo:
+                max_costo = costo.replace('<', '')
+                queryset = queryset.filter(costo__lt=max_costo)
+            else:
+                queryset = queryset.filter(costo=costo)
+
+        if divisa is not None:
+            queryset = queryset.filter(divisa=divisa)
+
+        if cantidad is not None:
+            if '>' in cantidad and '<' in cantidad:
+                min_cantidad, max_cantidad = cantidad.split('<')
+                min_cantidad = min_cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad, cantidad__lt=max_cantidad)
+            elif '>' in cantidad:
+                min_cantidad = cantidad.replace('>', '')
+                queryset = queryset.filter(cantidad__gt=min_cantidad)
+            elif '<' in cantidad:
+                max_cantidad = cantidad.replace('<', '')
+                queryset = queryset.filter(cantidad__lt=max_cantidad)
+            else:
+                queryset = queryset.filter(cantidad=cantidad)
+
+        if unidad_de_medida is not None:
+            queryset = queryset.filter(unidad_de_medida__icontains=unidad_de_medida)
+
         return queryset
 
 class ProductoAlmacenViewSet(viewsets.ModelViewSet):
@@ -483,7 +532,6 @@ class RackViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Rack.objects.all().order_by('-id')
-        
         nombre = self.request.query_params.get('nombre', None)
         productID = self.request.query_params.get('productID', None)
 
