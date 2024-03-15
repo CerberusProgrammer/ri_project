@@ -9,3 +9,6 @@ ri_home/migrations/*
 ri_project/migrations/*
 pdfs/
 pdfs-produccion/
+*sqlite3
+.env
+.gitignore

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Message, ProductoRequisicion, Usuarios
+from .models import Estante, Message, Pedido, ProductoAlmacen, ProductoRequisicion, Rack, ProductoRequisicion, Usuarios
 from .models import Departamento
 from .models import Producto
 from .models import Servicio
@@ -40,6 +40,42 @@ class ProductosRequisicionAdmin(SimpleHistoryAdmin):
         return super().history_view(request, object_id, extra_context=extra_context)
 
 admin.site.register(ProductoRequisicion, ProductosRequisicionAdmin)
+
+class PedidosAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(Pedido, PedidosAdmin)
+
+class ProductosAlmacenAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(ProductoAlmacen, ProductosAlmacenAdmin)
+
+class RackAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(Rack, RackAdmin)
+
+class EstanteAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(Estante, EstanteAdmin)
 
 class UsuariosAdmin(SimpleHistoryAdmin):
     def history_view(self, request, object_id, extra_context=None):

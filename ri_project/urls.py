@@ -8,6 +8,8 @@ from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
 
+from ri_project.views import home
+
 schema_view = get_schema_view(
     openapi.Info(
         title="API de RI Compras",
@@ -23,6 +25,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', home, name='home'),
     path('api/', include('ri_compras.urls')),
     path('api/produccion/', include('ri_produccion.urls')),
     path('api/doc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),

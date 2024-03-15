@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Contacto
+from .models import Contacto, Estante, Pedido, ProductoAlmacen, Rack
 from .models import ServicioRequisicion
 from .models import Departamento
 from .models import Message
@@ -30,7 +30,6 @@ class DepartamentoSerializer(serializers.ModelSerializer):
     def get_lider(self, obj):
         lider = Usuarios.objects.filter(departamento=obj, rol='LIDER').first()
         return UsuarioDepartamentoSerializer(lider).data if lider else None
-
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -152,6 +151,36 @@ class UsuariosSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class RackSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Rack
+        fields = '__all__'
+        
+class EstanteSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Estante
+        fields = '__all__'
+
+class ProductoRequisicionSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ProductoRequisicion
+        fields = '__all__'
+
+class PedidoSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Pedido
+        fields = '__all__'
+
+class ProductoAlmacenSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ProductoAlmacen
+        fields = '__all__'
+
 class UsuariosVerySimpleSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -221,7 +250,7 @@ class RequisicionSerializer(serializers.ModelSerializer):
     usuario_id = serializers.IntegerField(write_only=True)
     proyecto = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=True)
     proveedor = serializers.PrimaryKeyRelatedField(queryset=Proveedor.objects.all())
-    productos = ProductoSerializer(many=True)
+    productos = ProductoRequisicionSerializer(many=True)
     servicios = ServicioSerializer(many=True)
     ordenes = serializers.SerializerMethodField()
     fecha_creacion = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z") # type: ignore
@@ -299,7 +328,7 @@ class OrdenDeCompraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrdenDeCompra
-        fields = ['id', 'fecha_emision', 'fecha_entrega', 'proveedor', 'proveedor_detail', 'total', 'requisicion', 'requisicion_detail', 'usuario', 'usuario_detail','estado', 'url_pdf']
+        fields = '__all__'
 
     def get_fecha_emision(self, obj):
         return timezone.localtime(obj.fecha_emision)
