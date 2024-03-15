@@ -172,7 +172,7 @@ class DepartamentoViewSet(viewsets.ModelViewSet):
             return Response({"error": "No se proporcionó un ID de departamento."})
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
+    queryset = Producto.objects.all().order_by('-id')
     serializer_class = ProductoSerializer
     ordering_fields = ['nombre']
 
@@ -187,7 +187,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = Producto.objects.all().order_by('-id')
-        
         identificador = self.request.query_params.get('identificador', None)
         nombre = self.request.query_params.get('nombre', None)
         descripcion = self.request.query_params.get('descripcion', None)
@@ -242,7 +241,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return queryset
 
 class ProductoAlmacenViewSet(viewsets.ModelViewSet):
-    queryset = ProductoAlmacen.objects.all()
+    queryset = ProductoAlmacen.objects.all().order_by('-id')
     serializer_class = ProductoAlmacenSerializer
     ordering_fields = ['nombre']
 
