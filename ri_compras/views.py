@@ -194,6 +194,8 @@ class ProductoViewSet(viewsets.ModelViewSet):
         divisa = self.request.query_params.get('divisa', None)
         cantidad = self.request.query_params.get('cantidad', None)
         unidad_de_medida = self.request.query_params.get('medida', None)
+        limit = self.request.query_params.get('limit', None)
+
 
         if identificador is not None:
             queryset = queryset.filter(identificador__icontains=identificador)
@@ -237,6 +239,13 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
         if unidad_de_medida is not None:
             queryset = queryset.filter(unidad_de_medida__icontains=unidad_de_medida)
+        
+        if limit is not None:
+            try:
+                limit = int(limit)
+                queryset = queryset[:limit]
+            except ValueError:
+                pass
 
         return queryset
 
