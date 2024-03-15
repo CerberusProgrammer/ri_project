@@ -261,22 +261,20 @@ class RequisicionSerializer(serializers.ModelSerializer):
         requisicion = Requisicion.objects.create(**validated_data)
 
         for producto_data in productos_data:
-            producto_data.pop('id', None)  # Elimina el id de producto_data si existe
-            producto, created = ProductoRequisicion.objects.get_or_create(**producto_data)
-            requisicion.productos.add(producto)
+            producto_requisicion = ProductoRequisicion.objects.create(**producto_data)
+            requisicion.productos.add(producto_requisicion)
+            producto_requisicion.save()
 
         for servicio_data in servicios_data:
-            servicio_data.pop('id', None)  # Elimina el id de servicio_data si existe
-            servicio, created = ServicioRequisicion.objects.get_or_create(**servicio_data)
-            requisicion.servicios.add(servicio)
+            servicio_requisicion = ServicioRequisicion.objects.create(**servicio_data)
+            requisicion.servicios.add(servicio_requisicion)
+            servicio_requisicion.save()
 
         if archivo_pdf is not None:
             requisicion.archivo_pdf = archivo_pdf
-            requisicion.save()
 
+        requisicion.save()
         return requisicion
-
-
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

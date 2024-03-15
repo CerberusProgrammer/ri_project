@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'ri_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ri_database',
+        'NAME': 'ri_data_test',
         'USER': 'postgres',
         'PASSWORD': '$RIAutorizacion00',
         'HOST': 'localhost',

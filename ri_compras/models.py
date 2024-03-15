@@ -264,7 +264,7 @@ class Requisicion(models.Model):
         username_formatted = self.usuario.nombre # type: ignore
         username_formatted = username_formatted.lower().replace(' ', '_')
         
-        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
+        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}' # type: ignore
 
 class OrdenDeCompra(models.Model):
     ESTADO_ENVIO = (

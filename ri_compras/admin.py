@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Message, Usuarios
+from .models import Message, ProductoRequisicion, Usuarios
 from .models import Departamento
 from .models import Producto
 from .models import Servicio
@@ -31,6 +31,15 @@ class ProductosAdmin(SimpleHistoryAdmin):
         return super().history_view(request, object_id, extra_context=extra_context)
 
 admin.site.register(Producto, ProductosAdmin)
+
+class ProductosRequisicionAdmin(SimpleHistoryAdmin):
+    def history_view(self, request, object_id, extra_context=None):
+        object = self.model.objects.get(pk=object_id)
+        history = object.history.all()
+
+        return super().history_view(request, object_id, extra_context=extra_context)
+
+admin.site.register(ProductoRequisicion, ProductosRequisicionAdmin)
 
 class UsuariosAdmin(SimpleHistoryAdmin):
     def history_view(self, request, object_id, extra_context=None):
