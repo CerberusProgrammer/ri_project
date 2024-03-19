@@ -270,6 +270,7 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
         id = self.request.query_params.get('id', None)
         rack_nombre = self.request.query_params.get('rack', None)
         estante_numero = self.request.query_params.get('estante', None)
+        liberado = self.request.query_params.get('liberado', None)
 
         if rack_nombre is not None:
             queryset = queryset.filter(posicion__rack__nombre=rack_nombre)
@@ -324,6 +325,12 @@ class ProductoAlmacenViewSet(viewsets.ModelViewSet):
             
         if id is not None:
             queryset = queryset.filter(id=id)
+        
+        if liberado is not None:
+            if liberado.lower() == 'true':
+                queryset = queryset.filter(Q(orden_compra__isnull=True) | Q(orden_liberada=True))
+            elif liberado.lower() == 'false':
+                queryset = queryset.filter(Q(orden_compra__isnull=False) & Q(orden_liberada=False))
 
         return queryset
 

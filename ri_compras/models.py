@@ -269,7 +269,6 @@ class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     fecha_entrega = models.DateTimeField(null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=30, decimal_places=6)
     requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")
@@ -277,6 +276,8 @@ class OrdenDeCompra(models.Model):
     orden_recibida = models.BooleanField(default=False)
     orden_compra_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
     factura_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
+    folio_factura = models.TextField()
+    total = models.DecimalField(max_digits=30, decimal_places=6)
 
     def __str__(self):
         username_formatted = self.requisicion.usuario.nombre
@@ -339,6 +340,9 @@ class Pedido(models.Model):
 
     def __str__(self):
         return f'{self.usuario_nombre} pidió {self.cantidad} de {self.producto_nombre} el {self.fecha_pedido}'
+
+class Factura(models.Model):
+    folio = models.TextField()
 
 class Recibo(models.Model):
     orden = models.ManyToManyField(OrdenDeCompra, blank=False)
