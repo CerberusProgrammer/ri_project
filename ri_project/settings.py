@@ -78,21 +78,14 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'app_ri_database.sqlite3',
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'ri_data_test',
+#         'USER': 'postgres',
+#         'PASSWORD': '$RIAutorizacion00',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
 #     }
 # }
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ri_data_test',
-        'USER': 'postgres',
-        'PASSWORD': '$RIAutorizacion00',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
