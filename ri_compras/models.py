@@ -276,7 +276,7 @@ class OrdenDeCompra(models.Model):
     orden_recibida = models.BooleanField(default=False)
     orden_compra_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
     factura_pdf = models.FileField(upload_to='pdfs/', blank=True, null=True)
-    folio_factura = models.TextField()
+    folio_factura = models.TextField(blank=True, null=True)
     total = models.DecimalField(max_digits=30, decimal_places=6)
 
     def __str__(self):
