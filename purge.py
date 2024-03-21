@@ -25,9 +25,9 @@ fila_inicio = 544
 archivo = "C:\\Users\\cerbe\\Downloads\\NUEVO INVENTARIO 3.xlsx"
 df = pd.read_excel(archivo)
 
-rack_endpoint = "http://localhost:8000/api/rack/"
-estante_endpoint = "http://localhost:8000/api/estantes/"
-producto_almacen_endpoint = "http://localhost:8000/api/productos_almacen/"
+rack_endpoint = "http://192.168.100.254/api/rack/"
+estante_endpoint = "http://192.168.100.254/api/estantes/"
+producto_almacen_endpoint = "http://192.168.100.254/api/productos_almacen/"
 
 headers = {
     "Authorization": "Token 089d96db78fc86302f71358506f4595131f3338f"
