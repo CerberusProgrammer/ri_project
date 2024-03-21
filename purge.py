@@ -20,7 +20,7 @@ class ProductoAlmacen:
         self.divisa = divisa
         self.posicion = posicion
 
-fila_inicio = 544
+fila_inicio = 583
 
 archivo = "C:\\Users\\cerbe\\Downloads\\NUEVO INVENTARIO 3.xlsx"
 df = pd.read_excel(archivo)
@@ -30,7 +30,7 @@ estante_endpoint = "http://192.168.100.254/api/estantes/"
 producto_almacen_endpoint = "http://192.168.100.254/api/productos_almacen/"
 
 headers = {
-    "Authorization": "Token 089d96db78fc86302f71358506f4595131f3338f"
+    "Authorization": "Token 84993c9fff91c584e0a79f5e282a67ad7e175d8b"
 }
 
 productos_almacen = []
