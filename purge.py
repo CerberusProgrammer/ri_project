@@ -1,7 +1,6 @@
 import pandas as pd
 import requests
 import json
-import re
 
 class Rack:
     def __init__(self, nombre):
@@ -21,12 +20,14 @@ class ProductoAlmacen:
         self.divisa = divisa
         self.posicion = posicion
 
-archivo = "C:\\Users\\cerbe\\Downloads\\NUEVO INVENTARIO 3.xlsx"
+fila_inicio = 544
 
+archivo = "C:\\Users\\cerbe\\Downloads\\NUEVO INVENTARIO 3.xlsx"
 df = pd.read_excel(archivo)
 
 rack_endpoint = "http://localhost:8000/api/rack/"
 estante_endpoint = "http://localhost:8000/api/estantes/"
+producto_almacen_endpoint = "http://localhost:8000/api/productos_almacen/"
 
 headers = {
     "Authorization": "Token 089d96db78fc86302f71358506f4595131f3338f"
@@ -35,6 +36,9 @@ headers = {
 productos_almacen = []
 
 for index, row in df.iterrows():
+    if index < fila_inicio - 1:
+        continue
+    
     print(f"Procesando fila {index + 1}...")
     rack_nombre = row['RACK']
     estante_numero = row['REPISA']
@@ -60,8 +64,6 @@ for index, row in df.iterrows():
             print(f"Error al crear el rack: {response.text}")
             continue
 
-    print(f"Rack ID: {rack_id}")
-
     response = requests.get(estante_endpoint, params={"estante": estante_numero, "rack": rack_id}, headers=headers)
     if response.status_code == 200 and response.text:
         try:
@@ -83,22 +85,26 @@ for index, row in df.iterrows():
             print(f"Error al crear el estante: {response.text}")
             continue
 
-    print(f"Estante ID: {estante_id}")
-
-    if pd.isnull(row['No. Parte']):
-        df.loc[index, 'No. Parte'] = row['Nombre del Material']
+    if pd.isna(row['No. Parte']):
+        row['No. Parte'] = row['Nombre del Material']
     
-    if pd.isnull(row['PRECIO UNITARIO']):
-        df.loc[index, 'PRECIO UNITARIO'] = 0
+    if pd.isna(row['PRECIO UNITARIO']):
+        row['PRECIO UNITARIO'] = 0
     
-    if pd.isnull(row['DIVISA']):
-        df.loc[index, 'DIVISA'] = 'MXN'
-
-    cantidad = int(row['Total en Existencia'].split(' ')[0])
+    if pd.isna(row['DIVISA']):
+        row['DIVISA'] = 'MXN'
+    
+    if pd.isnull(row['Total en Existencia']) or row['Total en Existencia'].split(' ')[0] == '':
+        cantidad = 0
+    else:
+        cantidad = int(row['Total en Existencia'].split(' ')[0])
 
     producto = ProductoAlmacen(row['Nombre del Material'], row['No. Parte'], row['PRECIO UNITARIO'], cantidad, row['DIVISA'], estante_id)
     productos_almacen.append(producto.__dict__)
     
-    print(f'producto: {producto.__dict__}')
-
-print(json.dumps(productos_almacen, indent=4))
+    response = requests.post(producto_almacen_endpoint, data=producto.__dict__, headers=headers)
+    if response.status_code == 201:
+        print(f"Producto almacenado correctamente: {response.json()}")
+    else:
+        print(f"Error al almacenar el producto: {response.text}")
+        continue
