@@ -8,32 +8,31 @@ from django.db import connection
 from ri_compras.models import ProductoRequisicion, Requisicion
 
 tablas = [
-    #!"authtoken_token",
-    #!"ri_compras_contacto",
-    #!"ri_compras_departamento",
-    #!"ri_compras_message",
-    #!"ri_compras_ordendecompra",
-    #!"ri_compras_producto",
-    #!"ri_compras_productorequisicion",
-    #!"ri_compras_project",
-    #!"ri_compras_proveedor",
-    #!"ri_compras_proveedor_contactos",
-    #!"ri_compras_recibo",
-    #!"ri_compras_recibo_orden",
-    #!"ri_compras_requisicion",
-    #!"ri_compras_requisicion_productos",
-    #!"ri_compras_requisicion_servicios",
-    #!"ri_compras_servicio",
-    #!"ri_compras_serviciorequisicion",
-    #!"ri_compras_usuarios",
-    
-    #!"ri_produccion_material",
-    #!"ri_produccion_notificacion"
-    #!"ri_produccion_pieza"
-    #!"ri_produccion_pieza_procesos"
-    #!"ri_produccion_piezaplaca"
-    #!"ri_produccion_placa"
-    #!"ri_produccion_proceso"
+    #"authtoken_token",
+    #"ri_compras_contacto",
+    #"ri_compras_departamento",
+    #"ri_compras_message",
+    #"ri_compras_ordendecompra",
+    #"ri_compras_producto",
+    #"ri_compras_productorequisicion",
+    #"ri_compras_project",
+    #"ri_compras_proveedor",
+    #"ri_compras_proveedor_contactos",
+    #"ri_compras_recibo",
+    #"ri_compras_recibo_orden",
+    #"ri_compras_requisicion",
+    #"ri_compras_requisicion_productos",
+    #"ri_compras_requisicion_servicios",
+    #"ri_compras_servicio",
+    #"ri_compras_serviciorequisicion",
+    #"ri_compras_usuarios",
+    #"ri_produccion_material",
+    #"ri_produccion_notificacion"
+    #"ri_produccion_pieza"
+    #"ri_produccion_pieza_procesos"
+    #"ri_produccion_piezaplaca"
+    #"ri_produccion_placa"
+    #"ri_produccion_proceso"
 ]
 
 def reset_sequences(tablas):
