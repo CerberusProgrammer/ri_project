@@ -131,7 +131,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
     telefono = models.CharField(max_length=15, blank=True)
     correo = models.EmailField(unique=True)
     rol = models.CharField(max_length=15, choices=PUESTOS, null=True)
-    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='usuarios', null=True)
+    departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, related_name='usuarios', null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['correo']
@@ -183,7 +183,7 @@ class Project(models.Model):
     presupuesto_inicial = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero inicial del proyecto.")
     presupuesto = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero actual del proyecto.", default=Decimal('0.0'))
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='proyectos')
+    usuario = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_name='proyectos', null=True)
 
     def __str__(self):
         return self.nombre
@@ -244,7 +244,7 @@ class Requisicion(models.Model):
     total = models.DecimalField(max_digits=30, decimal_places=6, null=True)
     aprobado = models.CharField(max_length=50, choices=ESTADO_APROBACION, default="PENDIENTE")
     ordenado = models.BooleanField(default=False)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='requisiciones', null=True)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_name='requisiciones', null=True)
     proyecto = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='requisiciones', null=True)
     productos = models.ManyToManyField(ProductoRequisicion, blank=True)
@@ -269,8 +269,8 @@ class OrdenDeCompra(models.Model):
     fecha_emision = models.DateTimeField(auto_now_add=True)
     fecha_entrega = models.DateTimeField(null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    requisicion = models.ForeignKey(Requisicion, on_delete=models.CASCADE, null=True)
-    usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='ordenes_de_compra', null=True)
+    requisicion = models.ForeignKey(Requisicion, on_delete=models.SET_NULL, null=True)
+    usuario = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_name='ordenes_de_compra', null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_ENVIO, default="EN SOLICITUD")
     url_pdf = models.CharField(max_length=255, null=True)
     orden_recibida = models.BooleanField(default=False)
