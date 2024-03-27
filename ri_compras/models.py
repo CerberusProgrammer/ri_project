@@ -184,6 +184,7 @@ class Project(models.Model):
     presupuesto = models.DecimalField(max_digits=30, decimal_places=6, help_text="Dinero actual del proyecto.", default=Decimal('0.0'))
     divisa = models.CharField(max_length=5, default="MXN", choices=MONEDAS)
     usuario = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_name='proyectos', null=True)
+    habilitado = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
