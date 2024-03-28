@@ -403,6 +403,57 @@ class RequisicionViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        departamento_nombre = self.request.query_params.get('departamento', None)
+        aprobado = self.request.query_params.get('aprobado', None)
+        ordenado = self.request.query_params.get('ordenado', None)
+        proyecto_nombre = self.request.query_params.get('proyecto', None)
+        fecha_creacion = self.request.query_params.get('fecha_creacion', None)
+        fecha_aprobado = self.request.query_params.get('fecha_aprobado', None)
+        fecha_entrega_estimada = self.request.query_params.get('fecha_entrega_estimada', None)
+        fecha_ordenado = self.request.query_params.get('fecha_ordenado', None)
+        motivo = self.request.query_params.get('motivo', None)
+        total = self.request.query_params.get('total', None)
+        usuario_id = self.request.query_params.get('usuario', None)
+        proveedor_id = self.request.query_params.get('proveedor', None)
+        tipo_de_cambio = self.request.query_params.get('tipo_de_cambio', None)
+        
+        if fecha_creacion is not None:
+            queryset = queryset.filter(fecha_creacion=fecha_creacion)
+        if fecha_aprobado is not None:
+            queryset = queryset.filter(fecha_aprobado=fecha_aprobado)
+        if fecha_entrega_estimada is not None:
+            queryset = queryset.filter(fecha_entrega_estimada=fecha_entrega_estimada)
+        if fecha_ordenado is not None:
+            queryset = queryset.filter(fecha_ordenado=fecha_ordenado)
+        if motivo is not None:
+            queryset = queryset.filter(motivo__icontains=motivo)
+        if total is not None:
+            queryset = queryset.filter(total=total)
+        if usuario_id is not None:
+            queryset = queryset.filter(usuario__id=usuario_id)
+        if proveedor_id is not None:
+            queryset = queryset.filter(proveedor__id=proveedor_id)
+        if tipo_de_cambio is not None:
+            queryset = queryset.filter(tipo_de_cambio=tipo_de_cambio)
+        if departamento_nombre is not None:
+            queryset = queryset.filter(usuario__departamento__nombre=departamento_nombre)
+            queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
+        if aprobado is not None:
+            aprobado = aprobado.upper()
+            if aprobado in dict(Requisicion.ESTADO_APROBACION).keys():
+                queryset = queryset.filter(aprobado=aprobado)
+        if ordenado is not None:
+            if ordenado.lower() == 'true':
+                queryset = queryset.filter(ordenado=True)
+            elif ordenado.lower() == 'false':
+                queryset = queryset.filter(ordenado=False)
+        if proyecto_nombre is not None:
+            queryset = queryset.filter(proyecto__nombre=proyecto_nombre)
+
+        return queryset
+    
     @action(detail=True, methods=['post'])
     def ultimas_requisiciones(self, request, pk=None):
         if pk is not None:
@@ -456,33 +507,6 @@ class RequisicionViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response({"error": "No se proporcionó un ID de usuario."})
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        departamento_nombre = self.request.query_params.get('departamento', None) # type: ignore
-        aprobado = self.request.query_params.get('aprobado', None) # type: ignore
-        ordenado = self.request.query_params.get('ordenado', None) # type: ignore
-        proyecto_nombre = self.request.query_params.get('proyecto', None) # type: ignore
-
-        if departamento_nombre is not None:
-            queryset = queryset.filter(usuario__departamento__nombre=departamento_nombre)
-            queryset = queryset.filter(Q(proyecto__isnull=True) | Q(proyecto__nombre=''))
-            
-        if aprobado is not None:
-            aprobado = aprobado.upper()  # Convertir a mayúsculas para coincidir con tus opciones
-            if aprobado in dict(Requisicion.ESTADO_APROBACION).keys():
-                queryset = queryset.filter(aprobado=aprobado)
-            
-        if ordenado is not None:
-            if ordenado.lower() == 'true':
-                queryset = queryset.filter(ordenado=True)
-            elif ordenado.lower() == 'false':
-                queryset = queryset.filter(ordenado=False)
-
-        if proyecto_nombre is not None:
-            queryset = queryset.filter(proyecto__nombre=proyecto_nombre)
-
-        return queryset
 
     @action(detail=True, methods=['post'])
     def update_producto(self, request, pk=None):
