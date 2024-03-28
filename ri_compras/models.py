@@ -254,10 +254,14 @@ class Requisicion(models.Model):
     tipo_de_cambio = models.DecimalField(max_digits=10, decimal_places=6, blank=True, null=True)
 
     def __str__(self):
-        username_formatted = self.usuario.nombre
-        username_formatted = username_formatted.lower().replace(' ', '_')
-        
-        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {self.usuario.departamento.nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}'
+        if self.usuario:
+            username_formatted = self.usuario.nombre.lower().replace(' ', '_')
+            departamento_nombre = self.usuario.departamento.nombre if self.usuario.departamento else "Sin departamento"
+        else:
+            username_formatted = "sin_usuario"
+            departamento_nombre = "Sin departamento"
+
+        return f'RC_{self.id}_{username_formatted} | {self.aprobado} | {departamento_nombre} | {self.fecha_creacion.day}/{self.fecha_creacion.month}/{self.fecha_creacion.year} {self.fecha_creacion.hour}:{self.fecha_creacion.minute}'
 
 class OrdenDeCompra(models.Model):
     ESTADO_ENVIO = (
@@ -355,8 +359,8 @@ class Recibo(models.Model):
         return f'Recibo #{self.id}'
 
 class Message(models.Model):
-    user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='messages')
-    from_user = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, related_query_name=None)
+    user = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_name='messages', null=True)
+    from_user = models.ForeignKey(Usuarios, on_delete=models.SET_NULL, related_query_name=None, null=True)
     title = models.CharField(max_length=100)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
