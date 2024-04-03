@@ -88,6 +88,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     ordering_fields = ['nombre']
     
+    def get_queryset(self):
+        queryset = Project.objects.all().order_by('-id')
+        nombre = self.request.query_params.get('nombre', None)
+        usuario = self.request.query_params.get('usuario', None)
+
+        if nombre is not None:
+            queryset = queryset.filter(nombre__icontains=nombre)
+        if usuario is not None:
+            queryset = queryset.filter(usuario__username=usuario)
+
+        return queryset
+    
     def list(self, request, *args, **kwargs):
         username = request.query_params.get('search', None)
         if username is not None:
