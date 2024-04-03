@@ -69,23 +69,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ri_project.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'app_ri_database.sqlite3',
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'data_main',
-#         'USER': 'postgres',
-#         'PASSWORD': '$RIAutorizacion00',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'app_ri_database.sqlite3',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'data_main',
+        'USER': 'postgres',
+        'PASSWORD': '$RIAutorizacion00',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="description" content="Orden de compra para RI Compras" />
@@ -12,63 +13,93 @@
       margin: 0;
       padding: 0;
     }
+
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 10px; /* Reducido a la mitad */
+      padding: 10px;
+      /* Reducido a la mitad */
       background-color: #fff;
       border: 1px solid #ddd;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
+
     .header {
       text-align: center;
-      padding: 10px 0; /* Reducido a la mitad */
+      padding: 10px 0;
+      /* Reducido a la mitad */
     }
+
     .header img {
       max-width: 200px;
     }
+
     .header h1 {
       margin: 0;
     }
+
     .details {
-      margin: 10px 0; /* Reducido a la mitad */
+      margin: 10px 0;
+      /* Reducido a la mitad */
     }
+
     .details td {
-      padding: 5px; /* Reducido a la mitad */
+      padding: 5px;
+      /* Reducido a la mitad */
     }
+
     .products {
       width: 100%;
-      margin: 10px 0; /* Reducido a la mitad */
+      margin: 10px 0;
+      /* Reducido a la mitad */
       border-collapse: collapse;
     }
+
     .products th {
       background-color: #f2f2f2;
-      padding: 5px; /* Reducido a la mitad */
+      padding: 5px;
+      /* Reducido a la mitad */
       border: 1px solid #ddd;
       text-align: left;
     }
+
     .products td {
-      padding: 5px; /* Reducido a la mitad */
+      padding: 5px;
+      /* Reducido a la mitad */
       border: 1px solid #ddd;
     }
-    .products th:nth-child(2), .products td:nth-child(2) {
-      width: 40%; /* 40% del ancho disponible */
+
+    .products th:nth-child(2),
+    .products td:nth-child(2) {
+      width: 40%;
+      /* 40% del ancho disponible */
     }
-    .products th:nth-child(3), .products td:nth-child(3), .products th:nth-child(4), .products td:nth-child(4) {
-      width: 20%; /* 20% del ancho disponible */
+
+    .products th:nth-child(3),
+    .products td:nth-child(3),
+    .products th:nth-child(4),
+    .products td:nth-child(4) {
+      width: 20%;
+      /* 20% del ancho disponible */
     }
+
     .totals {
       width: 100%;
-      margin: 10px 0; /* Reducido a la mitad */
+      margin: 10px 0;
+      /* Reducido a la mitad */
       border-collapse: collapse;
     }
+
     .totals td {
-      padding: 5px; /* Reducido a la mitad */
+      padding: 5px;
+      /* Reducido a la mitad */
       border: 1px solid #ddd;
       font-weight: bold;
     }
+
     .totals tfoot {
-      border-top: 1px solid #ddd; /* Reducido a la mitad */
+      border-top: 1px solid #ddd;
+      /* Reducido a la mitad */
     }
   </style>
 </head>
@@ -103,7 +134,8 @@
       <tr>
         <td>
           <strong>Cliente:</strong> {{ variables['proveedor_detail']['nombre'] }}<br>
-          <strong>Direccion:</strong> {{ variables['proveedor_detail']['direccion'] }} C.P. {{ variables['proveedor_detail']['codigo_postal'] }} {{ variables['proveedor_detail']['direccion_geografica']}}
+          <strong>Direccion:</strong> {{ variables['proveedor_detail']['direccion'] }} C.P. {{
+          variables['proveedor_detail']['codigo_postal'] }} {{ variables['proveedor_detail']['direccion_geografica']}}
         </td>
         <td>
           <strong>RFC:</strong> {{ variables['proveedor_detail']['rfc'] }}
@@ -123,19 +155,19 @@
       </thead>
       <tbody>
         {% for product in variables['requisicion_detail']['productos'] %}
-          <tr>
-            <td>{{ product.identificador }}</td>
-            <td colspan="3">{{ product.nombre }}</td>
-            <td>{{ product.cantidad }}</td>
-            <td>${{ product.costo }} {{ product.divisa }}</td>
-            <td>${{ product.costo_total }} {{ product.divisa }}
-          </tr>
+        <tr>
+          <td>{{ product.identificador }}</td>
+          <td colspan="3">{{ product.nombre }}</td>
+          <td>{{ product.cantidad }}</td>
+          <td>${{ product.costo }} {{ product.divisa }}</td>
+          <td>${{ product.costo_total }} {{ product.divisa }}
+        </tr>
         {% endfor %}
       </tbody>
     </table>
     {% endif %}
 
-    {% if variables['requisicion_detail']['service'] %}
+    {% if variables['requisicion_detail']['servicios'] %}
     <table class="products">
       <thead>
         <tr>
@@ -145,12 +177,12 @@
         </tr>
       </thead>
       <tbody>
-        {% for service in variables['requisicion_detail']['service'] %}
-          <tr>
-            <td>{{ service.nombre }}</td>
-            <td colspan="3">{{ service.descripcion }}</td>
-            <td>${{ service.costo }} {{ service.divisa }}</td>
-          </tr>
+        {% for service in variables['requisicion_detail']['servicios'] %}
+        <tr>
+          <td>{{ service.nombre }}</td>
+          <td colspan="3">{{ service.descripcion }}</td>
+          <td>${{ service.costo }} {{ service.divisa }}</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -197,4 +229,5 @@
     </div>
   </div>
 </body>
+
 </html>
