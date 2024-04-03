@@ -53,7 +53,7 @@ class SimpleProjectSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Project
-        fields = ['id', 'nombre', 'descripcion', 'usuario', 'presupuesto','habilitado']
+        fields = ['id', 'nombre', 'descripcion', 'usuario', 'presupuesto','habilitado', 'divisa']
 
 class SimpleProveedorSerializer(serializers.ModelSerializer):
     contactos = ContactoSerializer(many=True, read_only=True)
