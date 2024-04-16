@@ -90,7 +90,7 @@ class Pieza(models.Model):
     prioridad = models.BooleanField(default=False)
     
     def sin_placas_procesos(self):
-        return self.placas.count() == 0 and not self.requiere_nesteo and self.procesos.count() == 0 and Pieza.estatus=='aprobada'
+        return self.placas.count() == 0 and not self.requiere_nesteo and self.procesos.count() == 0 and Pieza.estatus=='Aprobada'
     
     def piezas_correctas(self):
         if not self.requiere_nesteo:
